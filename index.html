@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>UNIVERS C.O</title>
+<meta name="description" content="UNIVERS C.O : accès réservé">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0f2b46">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="UNIVERS C.O">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icone-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icone-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  /* Page verrouillée : rien ne peut glisser de côté ni rebondir (iPhone) */
+  html, body { margin: 0; height: 100%; width: 100%; overflow: hidden; overscroll-behavior: none; background: #f4f4f1; }
+  body { position: fixed; inset: 0; padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); box-sizing: border-box; font-family: -apple-system, system-ui, sans-serif; }
+  /* Sur iPhone, un cadre s'élargit à la taille de son contenu : 1px + min-width 100 % le garde à la largeur de l'écran */
+  iframe { position: relative; z-index: 1; display: block; width: 1px; min-width: 100%; max-width: 100%; height: 100%; border: 0; background: transparent; }
+  #attente { position: fixed; inset: 0; z-index: 0; display: grid; place-content: center; justify-items: center; gap: 14px; font: 600 16px system-ui, sans-serif; color: #0f2b46; text-align: center; padding: 0 24px; }
+  #attente img { width: 96px; height: 96px; border-radius: 22px; }
+  #attente small { font-weight: 400; font-size: 14px; color: #52514e; max-width: 280px; text-align: center; min-height: 20px; }
+  #attente button { font: 600 16px system-ui, sans-serif; border: 0; border-radius: 12px; padding: 12px 20px; background: #0f2b46; color: #fff; cursor: pointer; }
+  #attente button[hidden] { display: none; }
+  #attente.panne { z-index: 2; background: #f4f4f1; }
+  @media (prefers-color-scheme: dark) { html, body, #attente.panne { background: #121211; } #attente { color: #ffffff; } #attente small { color: #c3c2b7; } }
+  /* Face ID : la vérification se fait ici, sur la page de l'icône, car le cadre Google ne l'autorise pas */
+  .fid { position: fixed; left: 12px; right: 12px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 5; max-width: 480px; margin: 0 auto; background: #ffffff; border: 1px solid #d9e1d4; border-radius: 18px; box-shadow: 0 8px 28px rgb(10 40 25 / 18%); padding: 14px; display: grid; gap: 10px; color: #16261c; }
+  .fid[hidden], .voile[hidden] { display: none; }
+  .fid p { margin: 0; font-size: 14px; line-height: 1.45; color: #55665a; }
+  .fid strong { font-size: 16px; color: #0f2b46; }
+  .fid button { font: 600 16px system-ui, sans-serif; border-radius: 12px; padding: 13px 16px; border: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .fid .principal { background: #0f2b46; color: #ffffff; }
+  .fid .second { background: #eceae4; color: #0f2b46; }
+  .fid svg { width: 24px; height: 24px; }
+  .voile { position: fixed; inset: 0; z-index: 4; background: rgb(5 20 12 / 45%); }
+  @media (prefers-color-scheme: dark) {
+    .fid { background: #15201a; border-color: #2a3b31; color: #e8efe7; }
+    .fid p { color: #a2b3a6; } .fid strong { color: #8fd0a6; }
+    .fid .principal { background: #3d9a66; color: #06140c; } .fid .second { background: #1d2c23; color: #8fd0a6; }
+  }
+</style>
+</head>
+<body>
+<div id="attente"><img src="icone-192.png" alt="">Ouverture d’UNIVERS C.O…<small id="attente-etat" role="status"></small><button id="attente-reessayer" type="button" hidden>Réessayer</button></div>
+<!-- L'application elle-même (Google Apps Script, dans le compte Google dédié à DEXA). Cette page ne contient aucun chiffre : elle donne à l'application un nom, une icône et la connexion par Face ID. -->
+<iframe id="app" src="https://script.google.com/macros/s/AKfycbxFWDXVG2mbxCgWWTWI7zE0-2xtQT0jhzNkrw3YodUB79uaq_-CdXgIKZDx_Pmm-nMZrw/exec" title="UNIVERS C.O" allow="clipboard-write"></iframe>
+
+<div class="fid" id="fid-connexion" hidden role="region" aria-label="Connexion rapide">
+  <button class="principal" id="fid-go" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 9.5v1M15 9.5v1M12 9.5v3.5h-1M9.5 15.5a3.5 3.5 0 0 0 5 0"/></svg><span id="fid-go-txt">Se connecter avec Face ID</span></button>
+</div>
+<div class="voile" id="fid-voile" hidden></div>
+<div class="fid" id="fid-activer" hidden role="dialog" aria-modal="true" aria-labelledby="fid-titre">
+  <strong id="fid-titre">Activer Face ID</strong>
+  <p id="fid-texte">L’application s’ouvrira d’un regard, sans code. Votre visage reste sur le téléphone.</p>
+  <button class="principal" id="fid-oui" type="button">Activer</button>
+  <button class="second" id="fid-non" type="button">Plus tard</button>
+</div>
+
+<script>
+(function () {
+  var GROUPE = 'dexa';                                           // plusieurs applications partagent ce domaine
+  var RP = location.hostname;                                        // ex. dexa-suivi.github.io
+  var APP = /^https:\/\/[a-z0-9-]+-script\.googleusercontent\.com$/;                                       // origine du cadre de l'application
+  var ua = navigator.userAgent;
+  var ios = /iP(hone|ad|od)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var LIB = ios ? 'Face ID' : /Mac/.test(navigator.platform) ? 'Touch ID' : /Android/i.test(ua) ? 'l’empreinte' : /Windows/i.test(ua) ? 'Windows Hello' : 'l’empreinte ou le visage';
+  var lsGet = function (k) { try { return localStorage.getItem('dx.' + GROUPE + '.' + k); } catch (e) { return null; } };
+  var lsSet = function (k, v) { try { if (v == null) localStorage.removeItem('dx.' + GROUPE + '.' + k); else localStorage.setItem('dx.' + GROUPE + '.' + k, v); } catch (e) {} };
+  var app = null, origineApp = null, defi = null, enrol = null, webauthn = false, cleEnCours = null;
+  var $ = function (id) { return document.getElementById(id); };
+  var envoyer = function (m) { if (app) app.postMessage(m, origineApp); };
+  var b64u = function (buf) { var s = '', b = new Uint8Array(buf); for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+  var deB64u = function (t) { t = t.replace(/-/g, '+').replace(/_/g, '/'); while (t.length % 4) t += '='; var s = atob(t), b = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b; };
+  var hex = function (b) { return Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); };
+  var erreur = function (e) {
+    var n = e && e.name;
+    if (n === 'NotAllowedError' || n === 'AbortError') return LIB + ' annulé.';
+    if (n === 'InvalidStateError') return LIB + ' est déjà activé sur cet appareil.';
+    if (n === 'NotSupportedError') return 'Cet appareil ne propose pas ' + LIB + '.';
+    return LIB + ' n’a pas abouti. Réessayez ou utilisez votre code.';
+  };
+  $('fid-go-txt').textContent = 'Se connecter avec ' + LIB;
+  $('fid-titre').textContent = 'Activer ' + LIB;
+  if (!ios) $('fid-texte').textContent = 'L’application s’ouvrira sans code, avec ' + LIB + '. Votre empreinte ou votre visage restent sur l’appareil.';
+  var disponible = window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable
+    ? PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(function () { return false; }) : Promise.resolve(false);
+  disponible.then(function (ok) { webauthn = !!ok; if (app) annoncer(); });
+  /* La connexion et la dernière situation sont gardées ici : sur iPhone, le stockage du cadre Google est effacé entre deux ouvertures. */
+  function etatGarde() { try { return JSON.parse(lsGet('etat') || 'null'); } catch (e) { return null; } }
+  function annoncer() { envoyer({ dx: 'porte', webauthn: webauthn, libelle: LIB, actif: lsGet('faceid') === '1', jeton: lsGet('jeton'), etat: etatGarde() }); }
+
+  /* Clé publique (x, y) : directement si le navigateur la fournit, sinon lue dans la réponse CBOR. */
+  function clePublique(rep) {
+    if (rep.getPublicKey) { var spki = new Uint8Array(rep.getPublicKey()); if (spki.length >= 65) return { x: hex(spki.slice(-64, -32)), y: hex(spki.slice(-32)) }; }
+    var o = cbor(new Uint8Array(rep.attestationObject)), ad = o.authData, l = (ad[53] << 8) | ad[54];
+    var cle = cbor(ad.slice(55 + l));
+    return { x: hex(cle[-2]), y: hex(cle[-3]) };
+  }
+  function cbor(b) {
+    var i = 0;
+    function lire() {
+      var t = b[i++], maj = t >> 5, inf = t & 31, n = inf;
+      if (inf === 24) n = b[i++]; else if (inf === 25) { n = (b[i] << 8) | b[i + 1]; i += 2; } else if (inf === 26) { n = ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]) >>> 0; i += 4; }
+      if (maj === 0) return n; if (maj === 1) return -1 - n;
+      if (maj === 2) { var v = b.slice(i, i + n); i += n; return v; }
+      if (maj === 3) { var s = new TextDecoder().decode(b.slice(i, i + n)); i += n; return s; }
+      if (maj === 4) { var a = []; for (var k = 0; k < n; k++) a.push(lire()); return a; }
+      if (maj === 5) { var m = {}; for (var q = 0; q < n; q++) { var c = lire(); m[c] = lire(); } return m; }
+      return null;
+    }
+    return lire();
+  }
+
+  window.addEventListener('message', function (e) {
+    if (!APP.test(e.origin) || !e.data || typeof e.data.dx !== 'string') return;
+    app = e.source; origineApp = e.origin;
+    clearTimeout(minuteur); clearTimeout(lent); $('attente-etat').textContent = ''; $('attente').className = ''; $('attente-reessayer').hidden = true;
+    var m = e.data;
+    if (m.dx === 'bonjour') annoncer();
+    else if (m.dx === 'connexion') { defi = m.defi; $('fid-connexion').hidden = !(webauthn && lsGet('faceid') === '1' && defi); }
+    else if (m.dx === 'connecte') { defi = null; $('fid-connexion').hidden = true; }
+    else if (m.dx === 'enrolement') { enrol = m; $('fid-voile').hidden = false; $('fid-activer').hidden = false; $('fid-oui').focus(); }
+    else if (m.dx === 'faceid-ok') { lsSet('faceid', '1'); if (cleEnCours) lsSet('cle', cleEnCours); cleEnCours = null; annoncer(); }
+    else if (m.dx === 'faceid-oublie') { lsSet('faceid', null); lsSet('cle', null); annoncer(); }
+    else if (m.dx === 'session') { lsSet('jeton', typeof m.jeton === 'string' && m.jeton ? m.jeton : null); if (!m.jeton) lsSet('etat', null); }
+    else if (m.dx === 'etat') { if (m.g && m.g.j && m.g.j === lsGet('jeton')) lsSet('etat', JSON.stringify(m.g)); }
+  });
+  // L'application a peut-être dit bonjour avant que cette page écoute : on se présente à tous les cadres
+  // (le cadre de l'application est deux niveaux sous cette page) dès que le cadre principal est chargé.
+  function saluer(w, n) { try { for (var k = 0; k < w.frames.length; k++) { w.frames[k].postMessage({ dx: 'porte-prete' }, '*'); if (n < 3) saluer(w.frames[k], n + 1); } } catch (e) {} }
+  $('app').addEventListener('load', function () { setTimeout(function () { saluer($('app').contentWindow, 0); }, 400); setTimeout(function () { if (!app) saluer($('app').contentWindow, 0); }, 2500); });
+
+  /* Surveillance de l'ouverture : sur le réseau mobile, une connexion à Google reste parfois bloquée.
+     Si l'application ne s'est pas annoncée à temps, la page la recharge (deux fois), puis propose « Réessayer ». */
+  var SRC = $('app').getAttribute('src'), essai = 1, minuteur = null, lent = null;
+  function surveiller() {
+    clearTimeout(minuteur); clearTimeout(lent);
+    lent = setTimeout(function () { if (!app) $('attente-etat').textContent = 'Connexion lente, merci de patienter…'; }, 6000);
+    minuteur = setTimeout(function () {
+      if (app) return;
+      if (essai < 3) { essai++; $('attente-etat').textContent = 'Nouvel essai de connexion (' + essai + ' sur 3)…'; recharger(); }
+      else { $('attente').className = 'panne'; $('attente-etat').textContent = 'L’application ne répond pas. Vérifiez votre connexion (Wi-Fi ou données mobiles), puis réessayez.'; $('attente-reessayer').hidden = false; }
+    }, essai === 1 ? 15000 : 20000);
+  }
+  function recharger() { $('app').setAttribute('src', SRC + (SRC.indexOf('?') < 0 ? '?' : '&') + 'essai=' + essai + '-' + Date.now()); surveiller(); }
+  $('attente-reessayer').addEventListener('click', function () { essai = 1; $('attente').className = ''; $('attente-reessayer').hidden = true; $('attente-etat').textContent = 'Nouvel essai de connexion…'; recharger(); });
+  surveiller();
+
+  /* Connexion : demandée au toucher (obligatoire pour Face ID) avec le défi préparé par le serveur. */
+  $('fid-go').addEventListener('click', function () {
+    if (!defi) return;
+    var d = defi; defi = null; $('fid-connexion').hidden = true;
+    var cle = lsGet('cle'), opts = { challenge: deB64u(d), rpId: RP, userVerification: 'required', timeout: 60000 };
+    if (cle) opts.allowCredentials = [{ type: 'public-key', id: deB64u(cle) }];   // seulement la clé de ce groupe
+    navigator.credentials.get({ publicKey: opts })
+      .then(function (c) {
+        envoyer({ dx: 'faceid-assertion', id: b64u(c.rawId), clientDataJSON: b64u(c.response.clientDataJSON), authenticatorData: b64u(c.response.authenticatorData), signature: b64u(c.response.signature) });
+      })
+      .catch(function (e) { envoyer({ dx: 'faceid-erreur', message: erreur(e) }); });
+  });
+
+  /* Activation sur cet appareil (depuis Mon espace) : création de la clé, protégée par Face ID. */
+  function fermer() { $('fid-voile').hidden = true; $('fid-activer').hidden = true; }
+  $('fid-non').addEventListener('click', function () { fermer(); enrol = null; });
+  $('fid-oui').addEventListener('click', function () {
+    var m = enrol; enrol = null; fermer(); if (!m) return;
+    navigator.credentials.create({ publicKey: {
+      challenge: deB64u(m.defi), rp: { id: RP, name: 'UNIVERS C.O' },
+      user: { id: new TextEncoder().encode(GROUPE + ':' + m.user.id), name: m.user.nom, displayName: m.user.nom },
+      pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+      authenticatorSelection: { authenticatorAttachment: 'platform', residentKey: 'required', userVerification: 'required' },
+      attestation: 'none', timeout: 60000 } })
+      .then(function (c) {
+        var alg = c.response.getPublicKeyAlgorithm ? c.response.getPublicKeyAlgorithm() : -7, k = clePublique(c.response);
+        var appareil = ios ? (/iPad/.test(ua) ? 'iPad' : 'iPhone') : /Android/i.test(ua) ? 'Android' : /Mac/.test(navigator.platform) ? 'Mac' : /Windows/i.test(ua) ? 'PC Windows' : 'Appareil';
+        cleEnCours = b64u(c.rawId);
+        envoyer({ dx: 'faceid-cree', id: cleEnCours, x: k.x, y: k.y, alg: alg, clientDataJSON: b64u(c.response.clientDataJSON), appareil: appareil });
+      })
+      .catch(function (e) { envoyer({ dx: 'faceid-erreur', message: erreur(e) }); });
+  });
+})();
+</script>
+</body>
+</html>
