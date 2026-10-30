@@ -1,7 +1,7 @@
 /* UNIVERS C.O — cache de l'interface seulement (page, icônes). Les données ne passent jamais par ici :
    les échanges avec le service Google sont des envois (POST) vers une autre adresse, non mis en cache.
    La page s'ouvre tout de suite depuis le cache ; la version en ligne est relue en arrière-plan pour l'ouverture suivante. */
-var VERSION = 'univers-co-8c639636d6';
+var VERSION = 'univers-co-287860a7de';
 var FICHIERS = ['./', 'manifest.webmanifest', 'icone-192.png', 'icone-180.png', 'favicon.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(FICHIERS); }).then(function () { return self.skipWaiting(); }));
@@ -16,7 +16,8 @@ self.addEventListener('fetch', function (e) {
   var cle = e.request.mode === 'navigate' ? './' : e.request;
   e.respondWith(caches.open(VERSION).then(function (c) {
     return c.match(cle, { ignoreSearch: true }).then(function (garde) {
-      var frais = fetch(e.request).then(function (r) { if (r && r.ok) c.put(cle, r.clone()); return r; });
+      // no-cache : revalide auprès de GitHub (sinon le cache du navigateur peut resservir l'ancienne page pendant 10 minutes)
+      var frais = fetch(new Request(u.href, { cache: 'no-cache', credentials: 'same-origin' })).then(function (r) { if (r && r.ok) c.put(cle, r.clone()); return r; });
       if (garde) { e.waitUntil(frais.catch(function () {})); return garde; }
       return frais;
     });
