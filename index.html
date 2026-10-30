@@ -372,6 +372,9 @@ a.dx-btn{text-decoration:none;display:inline-flex;align-items:center;justify-con
 .dx-form .dx-mc-types{flex-wrap:wrap;overflow:visible}
 .dx-cache{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .dx-form label.dx-mc-ph{font-size:14px;color:var(--ink);margin-top:2px;align-self:flex-start;cursor:pointer}
+.dx-mc-etat{font-size:11.5px;font-weight:700;color:#fff;border-radius:9px;padding:2px 8px}
+.dx-mc-tab{display:flex;flex-direction:column;gap:4px;padding:8px 10px 10px;margin-top:4px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.dx-mc-tab[hidden]{display:none}
 </style>
 <script>
 // Témoin de démarrage : prévient la page d'accueil dès que la page s'exécute (elle relance l'ouverture sinon).
@@ -1847,16 +1850,20 @@ setInterval(()=>{if(document.visibilityState==='visible'&&ui.vue==='accueil'&&ET
 
 // ---------- main courante : le registre du service, quart après quart ----------
 // Les notes ne sont pas dans l'état général : elles arrivent à part (apiCourante) et sont gardées sur le téléphone.
-const COUL_MC={'Incident réseau':'#d4532a','Coupure ou baisse de pression':'#eb6834','Appel ou réclamation':'#2a78d6','Intervention':'#1a9b5c','Consigne':'#7a5af0','Information':'#5a6b7d','Relève':'#0f2b46'};
-const EMO_MC={'Incident réseau':'🚨','Coupure ou baisse de pression':'🚱','Appel ou réclamation':'📞','Intervention':'🛠️','Consigne':'📌','Information':'ℹ️','Relève':'🔄'};
+const COUL_MC={'Incident réseau':'#d4532a','Coupure ou baisse de pression':'#eb6834','Appel ou réclamation':'#2a78d6','Intervention':'#1a9b5c','Tablette':'#0f7a8a','Consigne':'#7a5af0','Information':'#5a6b7d','Relève':'#0f2b46'};
+const EMO_MC={'Incident réseau':'🚨','Coupure ou baisse de pression':'🚱','Appel ou réclamation':'📞','Intervention':'🛠️','Tablette':'📱','Consigne':'📌','Information':'ℹ️','Relève':'🔄'};
+// Tablettes des agents de terrain : état signalé (couleur de la pastille) ; les états qui demandent un suivi restent ouverts par défaut
+const ETATS_TAB={'Endommagée':'#d4532a','Perdue':'#c2371f','Retrouvée':'#1a7f4b','Remplacée':'#2a78d6','En maintenance':'#eb6834','Configuration pour mise en service':'#7a5af0'};
+const A_SUIVRE_TAB=['Endommagée','Perdue','En maintenance','Configuration pour mise en service'];
 const A_SUIVRE_MC=['Incident réseau','Coupure ou baisse de pression','Appel ou réclamation','Intervention'];
 const PERIODES_MC=[[7,'7 jours'],[30,'30 jours'],[90,'3 mois'],[365,'12 mois']];
 let MC=lsGet('mc',null);
-ui.mcEdit=null;ui.mcType='';ui.mcCherche='';ui.mcJours=lsGet('mcJours',30);ui.mcCharge=false;ui.mcPhotos={};ui.mcNouvType='Incident réseau';
+ui.mcEdit=null;ui.mcType='';ui.mcEtatTab='';ui.mcNouvEtat='';ui.mcCherche='';ui.mcJours=lsGet('mcJours',30);ui.mcCharge=false;ui.mcPhotos={};ui.mcNouvType='Incident réseau';
 const accesMC=()=>!!(ETAT&&ETAT.mc);
 const notesMC=()=>MC&&ETAT&&ETAT.moi&&MC.compte===ETAT.moi.id?MC.notes||[]:[];
 const heureMC=s=>{const d=new Date(s);return d.getHours()+' h '+String(d.getMinutes()).padStart(2,'0');};
 const quandMC=s=>{const d=new Date(s),j=isoJ(d),a=isoJ(new Date());return (j===a?'Aujourd’hui':j===ajoute(a,-1)?'Hier':libJour(j))+' à '+heureMC(s);};
+const titreMC=x=>x.tablette?'Tablette'+(x.tablette.numero?' n° '+x.tablette.numero:'')+' · '+x.tablette.etat:x.type;
 const libQuartMC=x=>(x.q==='J'?'Jour':'Nuit')+' du '+libLong(x.iso);
 /** Après l'actualisation des données principales : la Main courante arrive ensuite, sans les retarder. */
 function apresEtat(){if(accesMC()&&!ui.mcDemande){ui.mcDemande=true;chargerMC();}}
@@ -1874,7 +1881,7 @@ function appliquerMC(r){
 async function ecrireMC(fn,args,msgAttente,f){
   const btn=f&&f.querySelector('[type=submit]');if(btn){btn.disabled=true;btn.dataset.lib=btn.textContent;btn.textContent='Enregistrement…';}
   toast(msgAttente||'Enregistrement…');
-  try{const r=await appel(fn,...args);ui.mcEdit=null;appliquerMC(r);toast(r.message||'Enregistré.');return true;}
+  try{const r=await appel(fn,...args);ui.mcEdit=null;ui.mcNouvEtat='';appliquerMC(r);toast(r.message||'Enregistré.');return true;}
   catch(err){if(estSession(err))finSession();toast(messageErreur(err));if(btn){btn.disabled=false;btn.textContent=btn.dataset.lib;}return false;}
 }
 /** Photo réduite sur le téléphone (1600 pixels au plus, JPEG) : l'envoi reste court sur le réseau mobile. */
@@ -1891,8 +1898,8 @@ function noteMC(x,ou){
   const releve=x.type==='Relève',edit=ui.mcEdit&&ui.mcEdit.id===x.id&&ui.mcEdit.ou===ou;
   const etat=x.statut==='ouvert'?'<span class="dx-pill">À suivre</span>':x.statut==='clos'?'<span class="dx-badge">Clos</span>':'';
   let h=`<div class="dx-mc${x.statut?' '+x.statut:''}${releve?' releve':''}"><span class="dx-mc-ic" style="background:${COUL_MC[x.type]||'#5a6b7d'}">${EMO_MC[x.type]||'📝'}</span><div class="dx-mc-c">
-    <div class="dx-mc-t"><b>${esc(x.type)}</b>${x.lieu?' · '+esc(x.lieu):''}${etat}</div>
-    <div class="dx-mc-m">N° ${x.num} · ${esc(quandMC(x.le))} · ${esc(x.nom)}</div>
+    <div class="dx-mc-t">${x.tablette?`<b>Tablette${x.tablette.numero?' n° '+esc(x.tablette.numero):''}</b><span class="dx-mc-etat" style="background:${ETATS_TAB[x.tablette.etat]||'#5a6b7d'}">${esc(x.tablette.etat)}</span>`:`<b>${esc(x.type)}</b>`}${x.lieu?' · '+esc(x.lieu):''}${etat}</div>
+    <div class="dx-mc-m">N° ${x.num} · ${esc(quandMC(x.le))} · ${esc(x.nom)}</div>${x.tablette&&x.tablette.agent?`<div class="dx-mc-m">Détenteur : ${esc(x.tablette.agent)}</div>`:''}
     <div class="dx-mc-x">${esc(x.texte)}</div>`;
   (x.suites||[]).forEach(s=>{h+=`<div class="dx-mc-s"><span>${esc(quandMC(s.le))} · ${esc(s.nom)}${s.action?' · <b>'+(s.action==='clos'?'clos':'rouvert')+'</b>':''}</span>${esc(s.texte)}</div>`;});
   if(x.photo)h+=ui.mcPhotos[x.id]?`<img class="dx-mc-photo" src="${ui.mcPhotos[x.id]}" alt="Photo de la note n° ${x.num}">`:`<button class="dx-btn petit" type="button" data-a="mc-photo" data-id="${esc(x.id)}">📷 Voir la photo</button>`;
@@ -1908,16 +1915,21 @@ function formMC(){
   const t=ui.mcNouvType;
   return `<div class="dx-carte"><form class="dx-form dx-edit" id="fMC"><b>Nouvelle note</b><span class="dx-gris">${esc(libQuartMC(quartEnCours(new Date())))}</span>
     <label>Type</label><div class="dx-puces dx-mc-types">${Object.keys(COUL_MC).filter(k=>k!=='Relève').map(k=>`<button type="button" class="${k===t?'on':''}" data-a="mc-type-choix" data-t="${esc(k)}">${EMO_MC[k]} ${esc(k)}</button>`).join('')}</div>
+    <div id="mcTab" class="dx-mc-tab"${t==='Tablette'?'':' hidden'}>
+      <label>État de la tablette</label><div class="dx-puces dx-mc-types">${Object.keys(ETATS_TAB).map(e=>`<button type="button" class="${e===ui.mcNouvEtat?'on':''}" data-a="mc-etat-choix" data-e="${esc(e)}">${esc(e)}</button>`).join('')}</div>
+      <label for="mcTabNum">N° ou nom de la tablette</label><input id="mcTabNum" maxlength="40" placeholder="TAB-014" autocomplete="off" autocapitalize="characters">
+      <label for="mcTabAgent">Détenteur (agent de terrain)</label><input id="mcTabAgent" maxlength="60" placeholder="Nom de l’agent" autocomplete="off">
+    </div>
     <label for="mcLieu">Lieu (facultatif)</label><input id="mcLieu" list="mcLieux" maxlength="80" placeholder="Quartier, agence, rue…" autocomplete="off"><datalist id="mcLieux">${lieux.map(l=>`<option value="${esc(l)}">`).join('')}</datalist>
     <label for="mcTexte">Note</label><textarea id="mcTexte" rows="4" maxlength="2000" placeholder="Ce qui s’est passé, qui a appelé, ce qui a été fait…"></textarea>
-    <label class="dx-coche"><input type="checkbox" id="mcSuivre"${A_SUIVRE_MC.includes(t)?' checked':''}> Point à suivre (il reste ouvert jusqu’à ce qu’on le close)</label>
+    <label class="dx-coche"><input type="checkbox" id="mcSuivre"${(t==='Tablette'?(!ui.mcNouvEtat||A_SUIVRE_TAB.includes(ui.mcNouvEtat)):A_SUIVRE_MC.includes(t))?' checked':''}> Point à suivre (il reste ouvert jusqu’à ce qu’on le close)</label>
     <label>Photo (facultatif)</label><input id="mcPhoto" class="dx-cache" type="file" accept="image/*"><label class="dx-btn dx-mc-ph" for="mcPhoto" id="mcPhotoLib">📷 Ajouter une photo</label>
     <div class="dx-ligne"><button class="dx-btn plein" type="submit">Enregistrer la note</button><button class="dx-btn" type="button" data-a="mc-annuler">Annuler</button></div></form></div>`;
 }
 function formReleve(ouverts){
   return `<div class="dx-carte"><form class="dx-form dx-edit" id="fReleve"><b>🔄 Prendre la relève</b><span class="dx-gris">${esc(libQuartMC(quartEnCours(new Date())))}</span>
     <p>${ouverts.length?`<b>${ouverts.length} point${ouverts.length>1?'s':''} à suivre</b> vous ${ouverts.length>1?'sont transmis':'est transmis'} :`:'Aucun point à suivre : le quart précédent n’a rien laissé en cours.'}</p>
-    ${ouverts.map(x=>`<div class="dx-li"><span class="dx-emoji">${EMO_MC[x.type]||'📝'}</span><span><b>N° ${x.num}</b> · ${esc(x.type)}${x.lieu?' · '+esc(x.lieu):''}<br><span class="dx-gris">${esc(x.texte.slice(0,90))}${x.texte.length>90?'…':''}</span></span></div>`).join('')}
+    ${ouverts.map(x=>`<div class="dx-li"><span class="dx-emoji">${EMO_MC[x.type]||'📝'}</span><span><b>N° ${x.num}</b> · ${esc(titreMC(x))}${x.lieu?' · '+esc(x.lieu):''}<br><span class="dx-gris">${esc(x.texte.slice(0,90))}${x.texte.length>90?'…':''}</span></span></div>`).join('')}
     <label for="rlTexte">Consignes reçues ou remarques (facultatif)</label><textarea id="rlTexte" rows="3" maxlength="2000"></textarea>
     <div class="dx-ligne"><button class="dx-btn plein" type="submit">Je prends la relève</button><button class="dx-btn" type="button" data-a="mc-annuler">Annuler</button></div></form></div>`;
 }
@@ -1938,7 +1950,9 @@ function rendreJournal(){
   const types=Object.keys(COUL_MC).filter(k=>N.some(x=>x.type===k));
   h+=`<div class="dx-puces">${PERIODES_MC.map(([j,l])=>`<button type="button" class="${ui.mcJours===j?'on':''}" data-a="mc-periode" data-j="${j}">${l}</button>`).join('')}</div>`;
   if(types.length>1)h+=`<div class="dx-puces"><button type="button" class="${ui.mcType?'':'on'}" data-a="mc-filtre" data-t="">Tout <span>${N.length}</span></button>${types.map(k=>`<button type="button" class="${ui.mcType===k?'on':''}" data-a="mc-filtre" data-t="${esc(k)}">${EMO_MC[k]} ${esc(k)} <span>${N.filter(x=>x.type===k).length}</span></button>`).join('')}</div>`;
-  const L=N.filter(x=>(!ui.mcType||x.type===ui.mcType)&&(!q||[x.type,x.lieu,x.texte,x.nom,'n° '+x.num].concat((x.suites||[]).map(s=>s.nom+' '+s.texte)).join(' ').toLowerCase().includes(q)));
+  if(ui.mcType==='Tablette'){const E=Object.keys(ETATS_TAB).filter(e=>N.some(x=>x.tablette&&x.tablette.etat===e));
+    if(E.length>1)h+=`<div class="dx-puces"><button type="button" class="${ui.mcEtatTab?'':'on'}" data-a="mc-filtre-tab" data-e="">Tous les états</button>${E.map(e=>`<button type="button" class="${ui.mcEtatTab===e?'on':''}" data-a="mc-filtre-tab" data-e="${esc(e)}">${esc(e)} <span>${N.filter(x=>x.tablette&&x.tablette.etat===e).length}</span></button>`).join('')}</div>`;}
+  const L=N.filter(x=>(!ui.mcType||x.type===ui.mcType)&&(!ui.mcEtatTab||(x.tablette&&x.tablette.etat===ui.mcEtatTab))&&(!q||[x.type,x.lieu,x.texte,x.nom,'n° '+x.num].concat(x.tablette?[x.tablette.etat,x.tablette.numero,x.tablette.agent]:[]).concat((x.suites||[]).map(s=>s.nom+' '+s.texte)).join(' ').toLowerCase().includes(q)));
   if(!N.length)h+=`<div class="dx-carte"><p>Aucune note sur cette période. Notez ici les événements du quart : une casse, une coupure, un appel important, une intervention lancée, une consigne… Chaque note garde la date, l’heure et son auteur.</p></div>`;
   else if(!L.length)h+='<div class="dx-carte"><p class="dx-gris">Aucune note ne correspond à la recherche.</p></div>';
   const groupes=[];L.forEach(x=>{const k=x.quart.iso+'|'+x.quart.q;let g=groupes.find(y=>y.k===k);if(!g){g={k,x:x.quart,L:[]};groupes.push(g);}g.L.push(x);});
@@ -1952,22 +1966,26 @@ function carteMC(){
   let h=`<div class="dx-carte cliquable" data-a="vue" data-v="journal"><h3>${tuileIc('journal','p')}Main courante</h3>`;
   if(!MC)return h+'<p class="dx-gris">Chargement…</p></div>';
   h+=`<div class="dx-li"><span class="dx-emoji">📌</span><span>${ouverts.length?`<b>${ouverts.length} point${ouverts.length>1?'s':''} à suivre</b>`:'Aucun point à suivre'}</span><span class="d">Ouvrir</span></div>`;
-  if(der)h+=`<div class="dx-li"><span class="dx-emoji">${EMO_MC[der.type]||'📝'}</span><span>${esc(der.type)}${der.lieu?' · '+esc(der.lieu):''}</span><span class="d">${esc(quandMC(der.le))}</span></div>`;
+  if(der)h+=`<div class="dx-li"><span class="dx-emoji">${EMO_MC[der.type]||'📝'}</span><span>${esc(titreMC(der))}${der.lieu?' · '+esc(der.lieu):''}</span><span class="d">${esc(quandMC(der.le))}</span></div>`;
   return h+'</div>';
 }
 document.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-a^="mc-"]');if(!b)return;const a=b.dataset.a;
   if(a==='mc-nouveau'){ui.mcEdit='nouveau';rendreJournal();setTimeout(()=>{try{$('mcTexte').focus();}catch(x){}},50);}
   else if(a==='mc-releve'){ui.mcEdit='releve';rendreJournal();try{window.scrollTo(0,0);}catch(x){}}
-  else if(a==='mc-annuler'){ui.mcEdit=null;rendreJournal();}
-  else if(a==='mc-type-choix'){ui.mcNouvType=b.dataset.t;b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));const c=$('mcSuivre');if(c)c.checked=A_SUIVRE_MC.includes(b.dataset.t);}
+  else if(a==='mc-annuler'){ui.mcEdit=null;ui.mcNouvEtat='';rendreJournal();}
+  else if(a==='mc-type-choix'){ui.mcNouvType=b.dataset.t;b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+    const tab=b.dataset.t==='Tablette',z=$('mcTab');if(z)z.hidden=!tab;
+    const c=$('mcSuivre');if(c)c.checked=tab?(!ui.mcNouvEtat||A_SUIVRE_TAB.includes(ui.mcNouvEtat)):A_SUIVRE_MC.includes(b.dataset.t);}
+  else if(a==='mc-etat-choix'){ui.mcNouvEtat=b.dataset.e;b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));const c=$('mcSuivre');if(c)c.checked=A_SUIVRE_TAB.includes(b.dataset.e);}
+  else if(a==='mc-filtre-tab'){ui.mcEtatTab=b.dataset.e||'';rendreJournal();}
   else if(a==='mc-suite'){ui.mcEdit={id:b.dataset.id,ou:b.dataset.ou};rendreJournal();setTimeout(()=>{try{$('msTexte').focus();}catch(x){}},50);}
   else if(a==='mc-suite-clore'){const f=$('fSuiteMC');ecrireMC('apiCouranteEcrire',[SESSION.jeton,f.dataset.op||(f.dataset.op=newId()),'suite',{id:f.dataset.id,texte:$('msTexte').value,action:'clore',jours:ui.mcJours}],'Enregistrement…',f);}
   else if(a==='mc-clore'||a==='mc-rouvrir'){if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent=a==='mc-clore'?'Confirmer la clôture':'Confirmer';return;}
     b.disabled=true;ecrireMC('apiCouranteEcrire',[SESSION.jeton,newId(),'suite',{id:b.dataset.id,action:a==='mc-clore'?'clore':'rouvrir',jours:ui.mcJours}]);}
   else if(a==='mc-photo')voirPhotoMC(b.dataset.id);
   else if(a==='mc-periode'){ui.mcJours=+b.dataset.j;lsSet('mcJours',ui.mcJours);chargerMC();}
-  else if(a==='mc-filtre'){ui.mcType=b.dataset.t||'';rendreJournal();}
+  else if(a==='mc-filtre'){ui.mcType=b.dataset.t||'';ui.mcEtatTab='';rendreJournal();}
 });
 document.addEventListener('change',ev=>{if(ev.target&&ev.target.id==='mcPhoto'){const f=ev.target.files[0],l=$('mcPhotoLib');if(l)l.textContent=f?'📷 Photo choisie · changer':'📷 Ajouter une photo';}});
 document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='mcCherche'){ui.mcCherche=ev.target.value;const p=ev.target.selectionStart;rendreJournal();const i=$('mcCherche');if(i){i.focus();try{i.setSelectionRange(p,p);}catch(x){}}}});
@@ -1975,6 +1993,8 @@ document.addEventListener('submit',async ev=>{
   const f=ev.target;
   if(f.id==='fMC'){ev.preventDefault();
     const d={type:ui.mcNouvType,lieu:$('mcLieu').value,texte:$('mcTexte').value,suivre:$('mcSuivre').checked,jours:ui.mcJours},fi=$('mcPhoto').files[0];
+    if(d.type==='Tablette'){if(!ui.mcNouvEtat){toast('Choisissez l’état de la tablette.');return;}
+      d.tablette={etat:ui.mcNouvEtat,numero:$('mcTabNum').value,agent:$('mcTabAgent').value};}
     if(!d.texte.trim()){toast('Écrivez la note.');return;}
     const op=f.dataset.op||(f.dataset.op=newId());
     if(fi){try{toast('Préparation de la photo…');d.photo=await compresserPhoto(fi);}catch(err){toast(messageErreur(err));return;}
