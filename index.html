@@ -401,6 +401,40 @@ body{position:relative}
 @media (pointer:coarse){#dx-tableau select,#dx-tableau input{font-size:16px}}
 /* Tableau DEXA sur téléphone : le choix des mini-graphiques passe sous son libellé, sur toute la largeur */
 @media (max-width:520px){#dx-tableau .cardhead .ctl{display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%;min-width:0}#dx-tableau .cardhead .ctl select{width:100%;max-width:100%}}
+/* Programme du mois au modèle du service : feuille blanche, comme le document imprimé (même en thème sombre) */
+.dx-papier-zone{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:10px;border-radius:8px;border:1px solid var(--line)}
+.dx-papier{background:#fff;color:#111;padding:12px;width:max-content;font-family:Calibri,Carlito,Arial,sans-serif}
+.pq-tete{display:flex;align-items:center;gap:24px;margin-bottom:10px}.pq-tete b{font-size:11px;border:1px solid #000;padding:4px 8px}.pq-tete .pq-titre{font-size:13px;margin-left:120px}
+table.pq{border-collapse:collapse;font-size:10px;font-weight:700}
+.pq th,.pq td{border:1px solid #000;padding:2px;text-align:center;vertical-align:middle;color:#111}
+.pq tr:first-child th:first-child{border:0}
+.pq th.jn{background:#d9d9d9;height:64px;width:20px}.pq th.jn span{display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap}
+.pq th.lb{min-width:70px;padding:2px 6px}
+.pq td.num{font-weight:400}
+.pq td.nm{width:20px;min-width:20px;height:86px}.pq td.nm span{writing-mode:vertical-rl;text-orientation:upright;letter-spacing:-2px;white-space:nowrap;font-size:9.5px}
+.pq td.vac{color:#c00000;background:#fff}
+.pq-tete b{color:#111}
+.pq-hq{font-weight:700;text-decoration:underline;margin:14px 0 4px;font-size:11px}.pq-n{font-style:italic;font-size:10px;margin:1px 0}
+/* Annuaire */
+.dx-ann-dir summary{display:flex;align-items:center;gap:8px}
+.dx-ann-s{color:#fff;font-size:11px;font-weight:700;border-radius:6px;padding:2px 6px;flex-shrink:0}
+.dx-ann-ag{border-top:1px solid var(--line);padding-top:8px;margin-top:8px}
+.dx-ann-agt{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:4px}
+.dx-ann-fl{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12.5px;margin-bottom:6px;padding:6px 8px;border-radius:8px;background:var(--bg)}
+.dx-ann-p{padding:8px 0;border-bottom:1px dashed var(--line)}.dx-ann-p:last-child{border-bottom:0}
+.dx-ann-t{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}.dx-ann-t b{overflow-wrap:anywhere}.dx-ann-t h3{margin:0}
+.dx-ann-mod{margin-left:auto}
+.dx-ann-f{font-size:11px;font-weight:700;border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--ink2)}
+.dx-ann-t .dx-gris{font-size:12px}
+.dx-ann-nums{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.dx-ann-num{display:inline-flex;align-items:center;gap:4px}
+.dx-ann-tel{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:17px;background:#1a9b5c;color:#fff!important;text-decoration:none;font-size:13.5px;font-weight:600;white-space:nowrap}
+.dx-ann-tel svg{width:15px;height:15px}
+.dx-ann-sans{font-size:12px;margin-top:4px}
+.dx-ann-res{border-top:1px solid var(--line);padding-top:6px;margin-top:6px}.dx-ann-res>.dx-gris{font-size:11.5px}
+.dx-us-z{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.dx-us-z span{font-size:12px;border:1px solid var(--line);border-radius:12px;padding:3px 9px;background:var(--bg)}
+.dx-us-z span.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
+
 </style>
 <script>
 // Témoin de démarrage : prévient la page d'accueil dès que la page s'exécute (elle relance l'ouverture sinon).
@@ -446,6 +480,7 @@ body{position:relative}
   <section class="dx-vue" id="v-equipe" data-vue="equipe" hidden></section>
   <section class="dx-vue" id="v-documents" data-vue="documents" hidden></section>
   <section class="dx-vue" id="v-journal" data-vue="journal" hidden></section>
+  <section class="dx-vue" id="v-annuaire" data-vue="annuaire" hidden></section>
   <section class="dx-vue" id="v-stats" data-vue="stats" hidden></section>
   <section class="dx-vue" id="v-donnees" data-vue="donnees" hidden>
     <div class="dx-vide" id="dx-vide" hidden></div>
@@ -1002,7 +1037,7 @@ let ETAT=null,AFFICHE_V=null,CHARGE=false;
 const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 /** Délai maximal par fonction : sur le réseau mobile, un appel à Google peut rester sans réponse. */
-const DELAIS={apiEtat:15000,apiConnexion:15000,apiChangerCode:20000,apiCodeOublie:30000,apiDefiFaceID:12000,apiConnexionFaceID:20000,apiEnregistrerFaceID:30000,apiRetirerFaceID:30000,apiImporterDrive:240000,apiComptes:20000,apiCompte:30000,apiJournal:20000,apiDeconnexion:10000,apiPlateforme:30000,apiDocEnvoyer:180000,apiDocOuvrir:120000,apiTrace:20000,apiStats:40000,apiCourante:30000,apiCouranteEcrire:40000,apiCourantePhoto:180000,apiCouranteVoirPhoto:120000,apiCouranteVoirAudio:120000};
+const DELAIS={apiEtat:15000,apiConnexion:15000,apiChangerCode:20000,apiCodeOublie:30000,apiDefiFaceID:12000,apiConnexionFaceID:20000,apiEnregistrerFaceID:30000,apiRetirerFaceID:30000,apiImporterDrive:240000,apiComptes:20000,apiCompte:30000,apiJournal:20000,apiDeconnexion:10000,apiPlateforme:30000,apiDocEnvoyer:180000,apiDocOuvrir:120000,apiTrace:20000,apiStats:40000,apiCourante:30000,apiCouranteEcrire:40000,apiCourantePhoto:180000,apiCouranteVoirPhoto:120000,apiCouranteVoirAudio:120000,apiAnnuaire:30000,apiAnnuaireEcrire:40000,apiAnnuaireImporter:180000};
 /** Page d'accueil (DX.api) : appel direct du service de données par fetch, une seule connexion Google.
  *  Corps en text/plain : pas de requête préalable (CORS). Les refus gardent la forme « REFUS: … » de google.script.run. */
 function appelDirect(fn,args){
@@ -1088,7 +1123,7 @@ function ajusterSousTitre(){
 }
 function finSession(msg){
   ui.planif=null;
-  SESSION.jeton=null;lsSet('jeton',null);lsSet('etat',null);lsSet('mc',null);MC=null;ui.mcDemande=false;versPorte({dx:'session',jeton:null});
+  SESSION.jeton=null;lsSet('jeton',null);lsSet('etat',null);lsSet('mc',null);MC=null;ui.mcDemande=false;lsSet('ann',null);ANN=null;ui.annDemande=false;versPorte({dx:'session',jeton:null});
   ETAT=null;AFFICHE_V=null;CHARGE=false;ui.depuisCache=null;ui.comptes=null;ui.journal=null;ui.import=null;ui.codeMontre=null;
   try{Object.values(Chart.instances||{}).forEach(c=>c.destroy());}catch(x){}
   $('dx-tableau').innerHTML=TABLEAU_VIERGE;fermerMenu();majEcran();if(msg)toast(msg);
@@ -1160,7 +1195,7 @@ function fermerMenu(){$('dx-menu').hidden=true;document.body.classList.remove('d
 const ROLES_LIB={admin:'Administrateur',hierarchie:'Hiérarchie (tout)',direction:'Directeur (sa direction)',agence:'Chef d\'agence (son agence)'};
 function renderMenu(){
   const m=ETAT&&ETAT.moi;if(!m){$('dxMenuCorps').innerHTML='';return;}
-  let h=`<section class="dx-carte"><h3>Aller à</h3><div class="dx-raccourcis">${[['orga','organigramme','Organigramme','#0f7a8a'],['vue','documents','Documents du service','#8a6d3b']].concat(ETAT&&ETAT.mc?[['vue','journal','Main courante','#5a6b7d']]:[],m.role==='admin'?[['vue','stats','Statistiques d’utilisation','#c2410c']]:[]).map(([act,k,l,co])=>`<button type="button" class="dx-btn" data-a="${act}" data-v="${k}"><span class="dx-ic p" style="background:${co}">${svgI(k)}</span>${l}</button>`).join('')}</div></section>`;
+  let h=`<section class="dx-carte"><h3>Aller à</h3><div class="dx-raccourcis">${[['orga','organigramme','Organigramme','#0f7a8a'],['vue','documents','Documents du service','#8a6d3b']].concat(ETAT&&ETAT.mc?[['vue','journal','Main courante','#5a6b7d'],['vue','annuaire','Annuaire','#3d6fd8']]:[],m.role==='admin'?[['vue','stats','Statistiques d’utilisation','#c2410c']]:[]).map(([act,k,l,co])=>`<button type="button" class="dx-btn" data-a="${act}" data-v="${k}"><span class="dx-ic p" style="background:${co}">${svgI(k)}</span>${l}</button>`).join('')}</div></section>`;
   h+=`<section class="dx-carte"><h3>Mon compte</h3><p><b>${esc(m.nom)}</b> · ${esc(m.roleLib)}${m.perimetre?' · '+esc(libPerimetre(m)):''}<br><span class="dx-gris">Identifiant : ${esc(m.id)}</span></p>
     <div id="fidZone">${zoneFaceID()}</div>
     <div class="dx-ligne"><button class="dx-btn" type="button" data-a="changer-code">Changer mon code</button><button class="dx-btn" type="button" data-a="deconnexion">Se déconnecter</button></div></section>`;
@@ -1362,12 +1397,12 @@ const ICONES={
 };
 const svgI=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONES[k]||''}</svg>`;
 const MODULES=[['quarts','Quarts','#f2b01e',1],['equipe','Équipe','#2a78d6',1],['organigramme','Organigramme','#0f7a8a',1],['documents','Documents','#8a6d3b',1],
-  ['donnees','Données DEXA','#0f2b46',1],['journal','Main courante','#5a6b7d',1],['assistant','Allô C.O','#7a5af0',0],['reunion','Réunions','#14a3a3',0],['agenda','Agenda','#eb6834',0],
-  ['tablette','Tablettes','#1a9b5c',0],['annuaire','Annuaire','#3d6fd8',0],['projets','Projets','#d4532a',0],['social','Vie du service','#e0457b',0]];
+  ['donnees','Données DEXA','#0f2b46',1],['journal','Main courante','#5a6b7d',1],['annuaire','Annuaire','#3d6fd8',1],['assistant','Allô C.O','#7a5af0',0],['reunion','Réunions','#14a3a3',0],['agenda','Agenda','#eb6834',0],
+  ['tablette','Tablettes','#1a9b5c',0],['projets','Projets','#d4532a',0],['social','Vie du service','#e0457b',0]];
 ICONES.documents=ICONES.docs;
 const couleurMod=k=>k==='stats'?'#c2410c':(MODULES.find(m=>m[0]===k)||[0,0,'#0f2b46'])[2];
 const tuileIc=(k,taille)=>`<span class="dx-ic${taille?' '+taille:''}" style="background:${couleurMod(k)}">${svgI(k)}</span>`;
-const VUES=['accueil','quarts','equipe','documents','journal','donnees','stats'];
+const VUES=['accueil','quarts','equipe','documents','journal','annuaire','donnees','stats'];
 ui.vue=VUES.includes(location.hash.slice(1))?location.hash.slice(1):(VUES.includes(lsGet('vue','accueil'))?lsGet('vue','accueil'):'accueil');
 ui.moisQ=null;ui.qEdit=null;ui.agentEdit=null;ui.planif=null;ui.cycleOuvert=false;
 ui.stats=null;ui.statsJours=lsGet('statsJours',30);ui.statsCharge=false;ui.statsPoint=null;
@@ -1450,6 +1485,8 @@ function allerVue(v){
   if(!VUES.includes(v))return;
   ui.vue=v;lsSet('vue',v);ui.qEdit=null;ui.mcEdit=null;
   if(v==='journal'&&(!MC||Date.now()-(MC.recu||0)>60000))setTimeout(chargerMC,0);
+  if(v==='annuaire'&&(!ANN||Date.now()-(ANN.recu||0)>60000))setTimeout(chargerAnn,0);
+  if(v!=='annuaire')ui.annEdit=null;
   document.querySelectorAll('.dx-vue').forEach(s=>s.hidden=s.dataset.vue!==v);
   renderNav();rendrePlateforme();afficherTableau();
   try{window.scrollTo(0,0);}catch(x){}
@@ -1478,7 +1515,9 @@ function rendrePlateformeVue(){
   else if(ui.vue==='documents')rendreDocuments();
   else if(ui.vue==='stats')rendreStats();
   else if(ui.vue==='journal'&&!formMCOuvert())rendreJournal();
+  else if(ui.vue==='annuaire'&&!formAnnOuvert())rendreAnnuaire();
   if(ui.vue==='journal'&&accesMC()&&!ui.mcDemande){ui.mcDemande=true;chargerMC();}
+  if(ui.vue==='annuaire'&&accesMC()&&!ui.annDemande){ui.annDemande=true;chargerAnn();}
   if(!ui.ouvertureTracee){ui.ouvertureTracee=true;tracer('ouverture','');}
   if(ui.vue!=='equipe')tracer('vue',ui.vue);
 }
@@ -1523,7 +1562,7 @@ function rendreAccueil(){
   if(lignes.length)h+=`<div class="dx-carte"><h3>${tuileIc('agenda','p')}Aujourd’hui</h3>${lignes.join('')}</div>`;
   h+=carteMC();
   h+=chiffreDexa();
-  const modsV=MODULES.filter(m=>m[0]!=='journal'||accesMC());
+  const modsV=MODULES.filter(m=>(m[0]!=='journal'&&m[0]!=='annuaire')||accesMC());
   const nA=modsV.filter(m=>m[3]).length,mods=estAdmin()?modsV.slice(0,nA).concat([['stats','Statistiques','#c2410c',1]],modsV.slice(nA)):modsV;
   h+=`<div class="dx-tuiles">${mods.map(([k,l,c,actif])=>`<button type="button" class="dx-tuile${actif?'':' bientot'}" ${actif?(k==='organigramme'?'data-a="orga"':`data-a="vue" data-v="${k}"`):'data-a="bientot"'}>${tuileIc(k,'g')}<span>${l}</span>${actif?'':'<em>bientôt</em>'}</button>`).join('')}</div>`;
   $('v-accueil').innerHTML=h;
@@ -1545,6 +1584,7 @@ function rendreQuarts(){
   h+=`<div class="dx-mois"><button class="dx-btn petit" type="button" data-a="mois" data-n="-1" aria-label="Mois précédent">‹</button><b>${esc(libMois(mois))}</b><button class="dx-btn petit" type="button" data-a="mois" data-n="1" aria-label="Mois suivant">›</button>${mois!==moisDe(auj)?'<button class="dx-btn petit" type="button" data-a="mois" data-n="0">Aujourd’hui</button>':''}</div>`;
   if(vac)h+=`<div class="dx-alerte">${svgI('alerte')}<span><b>${vac} quart${vac>1?'s':''} à pourvoir</b> ce mois-ci.</span>${admin?'<button class="dx-btn petit" type="button" data-a="proposer">Proposer des remplacements</button>':''}</div>`;
   if(ui.planif&&ui.planif.mois===mois)h+=blocPropositions();
+  h+=carteProgramme(mois);
   // Liste des jours
   h+='<div class="dx-carte dx-prog">';
   jours.forEach(j=>{
@@ -1679,6 +1719,7 @@ function formAgent(a){
   return `<form class="dx-form dx-edit" id="fAgent" data-id="${a?esc(a.id):''}"><b>${a?'Modifier '+esc(a.nom):'Nouvelle personne'}</b>
     <label for="agNom">Nom</label><input id="agNom" maxlength="60" autocapitalize="words" value="${a?esc(a.nom):''}" placeholder="Prénom Nom">
     <label for="agFonction">Fonction</label><select id="agFonction">${ORDRE_F.map(f=>`<option value="${f}"${(a?a.fonction:ui.fonctionNouv||'quart')===f?' selected':''}>${esc(F[f]||f)}</option>`).join('')}</select>
+    <label for="agCourt">Nom sur le programme de quart (facultatif)</label><input id="agCourt" maxlength="20" autocapitalize="characters" autocomplete="off" value="${a?esc(a.court||''):''}" placeholder="${a?esc(nomCourt(a)):'KRA'}">
     <label for="agTel">Téléphone</label><input id="agTel" inputmode="tel" maxlength="30" value="${a?esc(a.tel||''):''}" placeholder="07 00 00 00 00">
     <label>Anniversaire (facultatif)</label>${choixAnniv(a&&a.anniv)}
     <label for="agCompte">Identifiant de son compte (facultatif)</label><input id="agCompte" autocapitalize="none" maxlength="30" value="${a?esc(a.compte||''):''}" placeholder="prenom.nom">
@@ -1882,7 +1923,7 @@ document.addEventListener('submit',ev=>{
   else if(f.id==='fDoc'){ev.preventDefault();envoyerDoc(f);}
   else if(f.id==='fAgent'){ev.preventDefault();const anniv=/^\d{2}-\d{2}$/.test($('agAnniv').value)?$('agAnniv').value:'';
     const id=f.dataset.id;ui.agentEdit=null;
-    ecrirePlat('agent',{id:id||null,nom:$('agNom').value,fonction:$('agFonction').value,tel:$('agTel').value,anniv,compte:$('agCompte').value});}
+    ecrirePlat('agent',{id:id||null,nom:$('agNom').value,court:$('agCourt').value,fonction:$('agFonction').value,tel:$('agTel').value,anniv,compte:$('agCompte').value});}
 });
 window.addEventListener('hashchange',()=>{const v=location.hash.slice(1);if(VUES.includes(v))allerVue(v);});
 // L'heure tourne : l'accueil (quart en cours, relève) se met à jour chaque minute
@@ -1906,7 +1947,7 @@ const quandMC=s=>{const d=new Date(s),j=isoJ(d),a=isoJ(new Date());return (j===a
 const titreMC=x=>x.tablette?'Tablette'+(x.tablette.numero?' n° '+x.tablette.numero:'')+' · '+x.tablette.etat:x.type;
 const libQuartMC=x=>(x.q==='J'?'Jour':'Nuit')+' du '+libLong(x.iso);
 /** Après l'actualisation des données principales : la Main courante arrive ensuite, sans les retarder. */
-function apresEtat(){if(accesMC()&&!ui.mcDemande){ui.mcDemande=true;chargerMC();}}
+function apresEtat(){if(accesMC()&&!ui.mcDemande){ui.mcDemande=true;chargerMC();}apresEtatAnn();}
 async function chargerMC(){
   if(!accesMC()||!SESSION.jeton||ui.mcCharge)return;
   ui.mcCharge=true;if(ui.vue==='journal'&&!formMCOuvert())rendreJournal();
@@ -2120,6 +2161,267 @@ document.addEventListener('submit',async ev=>{
 });
 // Main courante ouverte : nouvelles notes des collègues toutes les 3 minutes
 setInterval(()=>{if(document.visibilityState==='visible'&&ui.vue==='journal'&&!ui.mcEdit&&ETAT)chargerMC();},180000);
+
+// ---------- programme de quart du mois, au modèle du service (« PROGRAMME DE QUART JUIN 2026.xlsx ») ----------
+// Une colonne par jour, une ligne par quart (jour, nuit), une couleur par place dans la rotation (un remplaçant garde la couleur
+// de la place qu'il tient), puis la liste « HORS QUART » (DEXA, DEXI, SDMR et les absents du mois). Export Excel fabriqué
+// sur le téléphone (aucune autorisation Google de plus).
+const JOURS_M=['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
+const COUL_ROT=['FFFF00','F4B183','00B0F0','92D050','FFC000','C9A0DC'];
+ui.pqVoir=false;
+/** Nom affiché sur le programme : celui choisi dans la fiche, sinon le premier mot du nom. */
+function nomCourt(a){return a?String(a.court||String(a.nom||'').trim().split(/\s+/)[0]||'').toUpperCase():'';}
+const hModele=s=>{const [h,m]=String(s||'0:00').split(':');return Number(h)+'H'+m;};
+function programmeMois(mois){
+  const ordre=(P().cycle&&P().cycle.ordre)||[],jours=joursDuMois(mois),H=horaires(),[y,m]=mois.split('-').map(Number);
+  const cellule=(j,q)=>{const x=quart(j,q);return x.agent?{nom:nomCourt(agent(x.agent)),rang:Math.max(0,ordre.indexOf(x.base))}:{nom:'À POURVOIR',rang:-1};};
+  const debut=jours[0],fin=jours[jours.length-1];
+  const date=iso=>moisDe(iso)===mois?String(+iso.slice(8)):(+iso.slice(8))+'/'+iso.slice(5,7);
+  const absM=id=>(P().absences||[]).filter(x=>x.agent===id&&x.au>=debut&&x.du<=fin).sort((a,b)=>a.du.localeCompare(b.du))
+    .map(x=>'('+((x.motif||'absent').toUpperCase())+(x.du<=debut&&x.au>=fin?'':x.du===x.au?' LE '+date(x.du):' DU '+date(x.du)+' AU '+date(x.au))+')').join(' ');
+  const hq=agents().filter(a=>HORS_QUART.includes(a.fonction)).sort((a,b)=>HORS_QUART.indexOf(a.fonction)-HORS_QUART.indexOf(b.fonction)||a.nom.localeCompare(b.nom,'fr'));
+  const absents=agents().filter(a=>!HORS_QUART.includes(a.fonction)&&absM(a.id)).sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
+  return {mois,titre:'QUART '+MOIS_L[m-1].toUpperCase()+' '+y,onglet:MOIS_L[m-1].toUpperCase(),
+    jours:jours.map(j=>({iso:j,nom:JOURS_M[versDate(j).getDay()],num:+j.slice(8)})),
+    lignes:[{lib:hModele(H.J[0])+' - '+hModele(H.J[1]),q:'J'},{lib:hModele(H.N[0])+' - '+hModele(H.N[1]),q:'N'}].map(l=>Object.assign(l,{c:jours.map(j=>cellule(j,l.q))})),
+    hors:hq.concat(absents).map(a=>(a.nom.toUpperCase()+' '+absM(a.id)).trim())};
+}
+/** Aperçu dans l'application : une feuille blanche, comme le modèle imprimé (défilement horizontal sur téléphone). */
+function apercuProgramme(p){
+  const coul=c=>c.rang<0?'class="nm vac"':`class="nm" style="background:#${COUL_ROT[c.rang%COUL_ROT.length]}"`;
+  return `<div class="dx-papier-zone"><div class="dx-papier"><div class="pq-tete"><b>CGIO - CO</b><b class="pq-titre">${esc(p.titre)}</b></div>
+    <table class="pq"><tr><th></th>${p.jours.map(j=>`<th class="jn"><span>${j.nom}</span></th>`).join('')}</tr>
+    <tr><th class="lb">HORAIRES</th>${p.jours.map(j=>`<td class="num">${j.num}</td>`).join('')}</tr>
+    ${p.lignes.map(l=>`<tr><th class="lb">${esc(l.lib)}</th>${l.c.map(c=>`<td ${coul(c)}><span>${esc(c.nom)}</span></td>`).join('')}</tr>`).join('')}</table>
+    <p class="pq-hq">HORS QUART</p>${p.hors.length?p.hors.map(t=>`<p class="pq-n">${esc(t)}</p>`).join(''):'<p class="pq-n">—</p>'}</div></div>`;
+}
+function carteProgramme(mois){
+  const [y,m]=mois.split('-').map(Number);
+  return `<div class="dx-carte"><h3>📄 Programme du mois (modèle du service)</h3>
+    <p class="dx-gris">Même présentation que le « PROGRAMME DE QUART » : une couleur par place dans la rotation, les remplacements et la liste « Hors quart » compris.</p>
+    <div class="dx-ligne"><button class="dx-btn${ui.pqVoir?'':' plein'}" type="button" data-a="pq-voir">${ui.pqVoir?'Masquer le programme':'Afficher le programme'}</button>
+    <button class="dx-btn" type="button" data-a="pq-excel" data-n="1">⬇︎ Excel : ${esc(MOIS_L[m-1])}</button>
+    ${m>1?`<button class="dx-btn" type="button" data-a="pq-excel" data-n="an">⬇︎ Excel : janvier → ${esc(MOIS_L[m-1])} ${y}</button>`:''}</div>
+    ${ui.pqVoir?apercuProgramme(programmeMois(mois)):''}</div>`;
+}
+
+// ---------- classeur Excel (.xlsx) : XML du format Office et archive zip « sans compression », faits ici ----------
+// En-tête XML écrit en deux morceaux : le chevron suivi du point d'interrogation est réservé aux modèles HTML de Google Apps Script
+const DECL_XML='<'+'?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+const xmlEsc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const colL=n=>{let s='';while(n>0){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}return s;};
+const crcT=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+const crc32=b=>{let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=crcT[(c^b[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;};
+function zipStocke(fichiers,type){
+  const enc=new TextEncoder(),parts=[],centre=[];let off=0;
+  fichiers.forEach(f=>{const nom=enc.encode(f.nom),d=enc.encode(f.txt),crc=crc32(d);
+    const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(12,0x21,true);
+    h.setUint32(14,crc,true);h.setUint32(18,d.length,true);h.setUint32(22,d.length,true);h.setUint16(26,nom.length,true);parts.push(new Uint8Array(h.buffer),nom,d);
+    const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(14,0x21,true);
+    c.setUint32(16,crc,true);c.setUint32(20,d.length,true);c.setUint32(24,d.length,true);c.setUint16(28,nom.length,true);c.setUint32(42,off,true);centre.push(new Uint8Array(c.buffer),nom);
+    off+=30+nom.length+d.length;});
+  const tc=centre.reduce((s,x)=>s+x.length,0),e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,fichiers.length,true);e.setUint16(10,fichiers.length,true);e.setUint32(12,tc,true);e.setUint32(16,off,true);
+  return new Blob(parts.concat(centre,[new Uint8Array(e.buffer)]),{type});
+}
+// Styles : 1 titre · 2 nom du jour (gris, vertical) · 3 libellé · 4 n° du jour · 5 à 10 couleurs de la rotation · 11 à pourvoir · 12 HORS QUART · 13 noms hors quart · 14 CGIO - CO
+const STYLES_PQ=(()=>{const al=(o)=>'<alignment '+o+'/>',X=(f,fi,b,a)=>`<xf numFmtId="0" fontId="${f}" fillId="${fi}" borderId="${b}" xfId="0" applyFont="1" applyFill="1" applyBorder="1"${a?' applyAlignment="1">'+al(a)+'</xf>':'/>'}`;
+  const c='horizontal="center" vertical="center"';
+  return DECL_XML+'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+  +'<fonts count="7"><font><sz val="11"/><name val="Calibri"/><family val="2"/></font><font><sz val="10"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="10"/><name val="Calibri"/><family val="2"/></font>'
+  +'<font><b/><u/><sz val="11"/><name val="Calibri"/><family val="2"/></font><font><i/><sz val="10"/><name val="Calibri"/><family val="2"/></font><font><b/><sz val="12"/><name val="Calibri"/><family val="2"/></font>'
+  +'<font><b/><sz val="10"/><color rgb="FFC00000"/><name val="Calibri"/><family val="2"/></font></fonts>'
+  +'<fills count="9"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFD9D9D9"/><bgColor indexed="64"/></patternFill></fill>'
+  +COUL_ROT.map(k=>`<fill><patternFill patternType="solid"><fgColor rgb="FF${k}"/><bgColor indexed="64"/></patternFill></fill>`).join('')+'</fills>'
+  +'<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color indexed="64"/></left><right style="thin"><color indexed="64"/></right><top style="thin"><color indexed="64"/></top><bottom style="thin"><color indexed="64"/></bottom><diagonal/></border></borders>'
+  +'<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="15">'
+  +X(0,0,0)+X(5,0,1,c)+X(2,2,1,c+' textRotation="90" wrapText="1"')+X(2,0,1,c+' wrapText="1"')+X(1,0,1,c)
+  +COUL_ROT.map((k,i)=>X(2,3+i,1,c+' textRotation="255"')).join('')+X(6,0,1,c+' textRotation="255"')+X(3,0,0)+X(4,0,0)+X(2,0,1,c)
+  +'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';})();
+function feuilleProgramme(p){
+  const t=(r,s,v)=>`<c r="${r}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`,n=(r,s,v)=>`<c r="${r}" s="${s}"><v>${v}</v></c>`;
+  const N=p.jours.length,der=colL(N+1),rows=[];
+  const ligne=(r,cells,ht)=>rows.push(`<row r="${r}"${ht?` ht="${ht}" customHeight="1"`:''}>${cells.join('')}</row>`);
+  ligne(2,[t('A2',14,'CGIO - CO'),t('M2',1,p.titre)].concat(['N','O','P','Q','R','S','T'].map(c=>`<c r="${c}2" s="1"/>`)),18);
+  ligne(7,[`<c r="A7" s="0"/>`].concat(p.jours.map((j,i)=>t(colL(i+2)+'7',2,j.nom))),61);
+  ligne(8,[t('A8',3,'HORAIRES')].concat(p.jours.map((j,i)=>n(colL(i+2)+'8',4,j.num))),13);
+  p.lignes.forEach((l,k)=>{const lg=Math.max(5,...l.c.map(c=>c.nom.length));
+    ligne(9+k,[t('A'+(9+k),3,l.lib)].concat(l.c.map((c,i)=>t(colL(i+2)+(9+k),c.rang<0?11:5+c.rang%COUL_ROT.length,c.nom))),Math.max(60,lg*11+8));});
+  ligne(12,[t('A12',12,'HORS QUART')]);
+  p.hors.forEach((h,i)=>ligne(13+i,[t('A'+(13+i),13,h)],13));
+  return DECL_XML+'<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+    +`<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><dimension ref="A2:${der}${Math.max(12,12+p.hors.length)}"/><sheetViews><sheetView showGridLines="0" workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="15"/>`
+    +`<cols><col min="1" max="1" width="13" customWidth="1"/><col min="2" max="${N+1}" width="4.3" customWidth="1"/></cols><sheetData>${rows.join('')}</sheetData>`
+    +'<mergeCells count="1"><mergeCell ref="M2:T2"/></mergeCells><printOptions horizontalCentered="1"/>'
+    +'<pageMargins left="0.24" right="0.16" top="0.5" bottom="0.3" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="1"/></worksheet>';
+}
+function classeurProgramme(L){
+  const R='http://schemas.openxmlformats.org/officeDocument/2006/relationships',f=[];
+  f.push({nom:'[Content_Types].xml',txt:DECL_XML+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+    +L.map((p,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')+'</Types>'});
+  f.push({nom:'_rels/.rels',txt:DECL_XML+`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${R}/officeDocument" Target="xl/workbook.xml"/></Relationships>`});
+  f.push({nom:'xl/workbook.xml',txt:DECL_XML+`<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="${R}"><bookViews><workbookView activeTab="${L.length-1}"/></bookViews><sheets>`
+    +L.map((p,i)=>`<sheet name="${xmlEsc(p.onglet)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')+'</sheets></workbook>'});
+  f.push({nom:'xl/_rels/workbook.xml.rels',txt:DECL_XML+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    +L.map((p,i)=>`<Relationship Id="rId${i+1}" Type="${R}/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')+`<Relationship Id="rId${L.length+1}" Type="${R}/styles" Target="styles.xml"/></Relationships>`});
+  f.push({nom:'xl/styles.xml',txt:STYLES_PQ});
+  L.forEach((p,i)=>f.push({nom:`xl/worksheets/sheet${i+1}.xml`,txt:feuilleProgramme(p)}));
+  return zipStocke(f,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+}
+/** Sur téléphone : feuille de partage (Enregistrer dans Fichiers, WhatsApp, e-mail…) ; sinon téléchargement. */
+function remettreFichier(blob,nom){
+  const telecharger=()=>{const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=nom;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove();},4000);};
+  let f=null;try{f=new File([blob],nom,{type:blob.type});}catch(x){}
+  if(f&&/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)&&navigator.canShare&&navigator.canShare({files:[f]}))
+    navigator.share({files:[f],title:nom}).catch(e=>{if(!e||e.name!=='AbortError')telecharger();});
+  else telecharger();
+}
+function exporterProgramme(n){
+  const fin=ui.moisQ,[y,m]=fin.split('-').map(Number);
+  const L=n==='an'?Array.from({length:m},(_,i)=>y+'-'+String(i+1).padStart(2,'0')):[fin];
+  remettreFichier(classeurProgramme(L.map(programmeMois)),'PROGRAMME DE QUART '+MOIS_L[m-1].toUpperCase()+' '+y+'.xlsx');
+  tracer('programme-excel',fin);
+}
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-a^="pq-"]');if(!b)return;
+  if(b.dataset.a==='pq-voir'){ui.pqVoir=!ui.pqVoir;garderSaisie($('v-quarts'),rendreQuarts);}
+  else if(b.dataset.a==='pq-excel'){try{exporterProgramme(b.dataset.n);}catch(err){toast('Le fichier Excel n’a pas pu être préparé.');}}
+});
+
+// ---------- Annuaire : agences et équipes (DEXA, DEXI, SDMR) et usines ----------
+// Repris de « Fichiers Ordonnancement » par l'administrateur, puis tenu à jour ici par le Centre d'ordonnancement.
+// La dernière version reçue est gardée sur le téléphone : l'annuaire s'ouvre tout de suite, même sans réseau.
+let ANN=lsGet('ann',null);
+ui.annCherche='';ui.annService=lsGet('annService','');ui.annOnglet='contacts';ui.annEdit=null;ui.annCharge=false;ui.annOuverts={};ui.annDemande=false;
+const SERVICES_A=['DEXA','DEXI','SDMR','Autre'];
+const COUL_SERV={DEXA:'#2a78d6',DEXI:'#1a9b5c',SDMR:'#d4532a',Autre:'#5a6b7d'};
+const contactsA=()=>ANN&&ETAT&&ETAT.moi&&ANN.compte===ETAT.moi.id?ANN.contacts||[]:[];
+const usinesA=()=>ANN&&ETAT&&ETAT.moi&&ANN.compte===ETAT.moi.id?ANN.usines||[]:[];
+const formAnnOuvert=()=>!!(ui.annEdit&&$('v-annuaire')&&$('v-annuaire').querySelector('form'));
+const sansAccents=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+/** Numéros ivoiriens à 10 chiffres trouvés dans un texte (« 07 08 12 59 89 / 01-02… », « whatsapp1 0767332794 »). */
+function numerosA(s){const L=[];String(s||'').replace(/(?:\+?225[\s.-]?)?(0\d(?:[\s.-]?\d){8})/g,(m,n)=>{const d=n.replace(/\D/g,'');if(d.length===10&&!L.includes(d))L.push(d);return m;});return L;}
+const fmtTelA=d=>d.replace(/(\d\d)(?=\d)/g,'$1 ');
+// 01, 05 et 07 : mobiles (WhatsApp possible) ; 21, 25, 27 : fixes
+const boutonsTel=(s,nom)=>numerosA(s).map(d=>`<span class="dx-ann-num"><a class="dx-ann-tel" href="tel:+225${d}" aria-label="Appeler ${esc(nom)} au ${fmtTelA(d)}">${svgI('tel')}${fmtTelA(d)}</a>${/^0[157]/.test(d)?`<a class="dx-mini" style="background:#25a35a" href="https://wa.me/225${d}" target="_blank" rel="noopener" aria-label="WhatsApp ${esc(nom)}">${svgI('wa')}</a>`:''}</span>`).join('');
+
+function apresEtatAnn(){if(accesMC()&&ui.vue==='annuaire'&&!ui.annDemande){ui.annDemande=true;chargerAnn();}}
+async function chargerAnn(){
+  if(!accesMC()||!SESSION.jeton||ui.annCharge)return;
+  ui.annCharge=true;if(ui.vue==='annuaire'&&!formAnnOuvert())rendreAnnuaire();
+  try{appliquerAnn(await appelFiable('apiAnnuaire',SESSION.jeton));}
+  catch(err){if(estSession(err))finSession();else if(ui.vue==='annuaire')toast(messageErreur(err));}
+  ui.annCharge=false;if(ui.vue==='annuaire'&&!formAnnOuvert())rendreAnnuaireGarde();
+}
+function appliquerAnn(r){
+  ANN=Object.assign({},r,{compte:ETAT&&ETAT.moi?ETAT.moi.id:'',recu:Date.now()});delete ANN.message;lsSet('ann',ANN);
+  if(ui.vue==='annuaire'&&!formAnnOuvert())rendreAnnuaireGarde();
+}
+async function ecrireAnn(fn,args,attente,f){
+  const btn=f&&f.querySelector('[type=submit]');if(btn){btn.disabled=true;btn.dataset.lib=btn.textContent;btn.textContent='Enregistrement…';}
+  toast(attente||'Enregistrement…');
+  try{const r=await appel(fn,...args);ui.annEdit=null;appliquerAnn(r);rendreAnnuaire();toast(r.message||'Enregistré.');return true;}
+  catch(err){if(estSession(err))finSession();toast(messageErreur(err));if(btn){btn.disabled=false;btn.textContent=btn.dataset.lib;}return false;}
+}
+const rendreAnnuaireGarde=()=>garderSaisie($('v-annuaire'),rendreAnnuaire);
+
+function ficheA(x){
+  if(ui.annEdit===x.id)return formContactA(x);
+  return `<div class="dx-ann-p"><div class="dx-ann-t"><b>${esc(x.nom)}</b>${x.fonction?`<span class="dx-ann-f">${esc(x.fonction)}</span>`:''}${x.matricule?`<span class="dx-gris">Mle ${esc(x.matricule)}</span>`:''}
+    <button class="dx-btn petit dx-ann-mod" type="button" data-a="ann-modifier" data-id="${esc(x.id)}">Modifier</button></div>
+    ${x.tel?`<div class="dx-ann-nums">${boutonsTel(x.tel,x.nom)||`<span class="dx-gris">${esc(x.tel)}</span>`}</div>`:'<div class="dx-gris dx-ann-sans">Pas de numéro</div>'}</div>`;
+}
+/** Une agence : son nom, la flotte ou les WhatsApp de l'agence (communs à ses agents), puis ses agents. */
+function agenceA(nom,L){
+  const fl=[...new Set(L.map(x=>x.flotte).filter(Boolean))];
+  return `<div class="dx-ann-ag"><div class="dx-ann-agt"><b>${esc(nom||'Sans agence')}</b><span class="dx-gris">${L.length} agent${L.length>1?'s':''}</span></div>
+    ${fl.map(f=>`<div class="dx-ann-fl"><span class="dx-gris">${esc(f.replace(/\b0\d(?:[\s.-]?\d){8}\b/g,'').replace(/[·\s]+$/,'').trim()||'Tablette ou flotte')}</span>${boutonsTel(f,nom)}</div>`).join('')}
+    ${L.map(ficheA).join('')}</div>`;
+}
+function formContactA(x){
+  const C=contactsA(),dl=(id,k)=>`<datalist id="${id}">${[...new Set(C.map(c=>c[k]).filter(Boolean))].sort().map(v=>`<option value="${esc(v)}">`).join('')}</datalist>`;
+  return `<form class="dx-form dx-edit" id="fAnn" data-id="${x?esc(x.id):''}"><b>${x?'Modifier '+esc(x.nom):'Nouveau contact'}</b>
+    <label for="anService">Service</label><select id="anService">${SERVICES_A.map(s=>`<option${(x?x.service:ui.annService||'DEXA')===s?' selected':''}>${s}</option>`).join('')}</select>
+    <label for="anDir">Direction</label><input id="anDir" list="anDirs" maxlength="60" autocomplete="off" autocapitalize="characters" value="${x?esc(x.direction||''):''}" placeholder="DRANE, DR SUD-EST, DM DRABO…">${dl('anDirs','direction')}
+    <label for="anAg">Agence ou secteur</label><input id="anAg" list="anAgs" maxlength="80" autocomplete="off" autocapitalize="characters" value="${x?esc(x.agence||''):''}">${dl('anAgs','agence')}
+    <label for="anFn">Fonction</label><input id="anFn" list="anFns" maxlength="30" autocomplete="off" autocapitalize="characters" value="${x?esc(x.fonction||''):''}" placeholder="RT, CEQ, AR…">${dl('anFns','fonction')}
+    <label for="anNom">Nom</label><input id="anNom" maxlength="80" autocomplete="off" autocapitalize="characters" value="${x?esc(x.nom):''}">
+    <label for="anMle">Matricule (facultatif)</label><input id="anMle" maxlength="20" autocomplete="off" autocapitalize="characters" value="${x?esc(x.matricule||''):''}">
+    <label for="anTel">Téléphones</label><input id="anTel" inputmode="tel" maxlength="120" autocomplete="off" value="${x?esc(x.tel||''):''}" placeholder="07 00 00 00 00 / 01 00 00 00 00">
+    <label for="anFl">Tablette, flotte ou WhatsApp de l’agence (facultatif)</label><input id="anFl" maxlength="200" autocomplete="off" value="${x?esc(x.flotte||''):''}">
+    ${x&&x.modifPar?`<span class="dx-gris">Dernière modification : ${esc(x.modifPar)}, ${esc(new Date(x.maj).toLocaleDateString('fr-FR'))}</span>`:''}
+    <div class="dx-ligne"><button class="dx-btn plein" type="submit">Enregistrer</button><button class="dx-btn" type="button" data-a="ann-annuler">Annuler</button>${x?`<button class="dx-btn danger" type="button" data-a="ann-retirer" data-id="${esc(x.id)}">Retirer</button>`:''}</div></form>`;
+}
+function formUsineA(u){
+  return `<form class="dx-form dx-edit" id="fUsine" data-id="${u?esc(u.id):''}"><b>${u?'Modifier l’usine '+esc(u.nom):'Nouvelle usine'}</b>
+    <label for="usNom">Usine</label><input id="usNom" maxlength="60" autocomplete="off" autocapitalize="characters" value="${u?esc(u.nom):''}">
+    <label for="usZones">Zones desservies (une par ligne)</label><textarea id="usZones" rows="6" maxlength="6000">${u?esc((u.zones||[]).join('\n')):''}</textarea>
+    <div class="dx-ligne"><button class="dx-btn plein" type="submit">Enregistrer</button><button class="dx-btn" type="button" data-a="ann-annuler">Annuler</button>${u?`<button class="dx-btn danger" type="button" data-a="us-retirer" data-id="${esc(u.id)}">Retirer</button>`:''}</div></form>`;
+}
+function rendreAnnuaire(){
+  const zone=$('v-annuaire');if(!zone||!ETAT)return;
+  if(!accesMC()){zone.innerHTML='<div class="dx-carte"><p>L’Annuaire est réservé au Centre d’ordonnancement.</p></div>';return;}
+  const C=contactsA(),U=usinesA(),q=sansAccents(ui.annCherche.trim()),qn=q.replace(/\D/g,'');
+  let h=`<div class="dx-titre-vue">${tuileIc('annuaire','p')}<div><h2>Annuaire</h2><p>${C.length} contact${C.length>1?'s':''} · ${U.length} usine${U.length>1?'s':''}${ui.annCharge?' · mise à jour…':''}</p></div></div>`;
+  if(!ANN&&ui.annCharge){zone.innerHTML=h+'<div class="dx-carte"><p class="dx-gris">Chargement de l’annuaire…</p></div>';return;}
+  h+=`<div class="dx-puces"><button type="button" class="${ui.annOnglet==='contacts'?'on':''}" data-a="ann-onglet" data-o="contacts">📇 Agences et équipes</button><button type="button" class="${ui.annOnglet==='usines'?'on':''}" data-a="ann-onglet" data-o="usines">🏭 Usines et zones</button></div>`;
+  h+=`<div class="dx-cherche">${svgI('loupe')}<input id="annCherche" type="search" placeholder="${ui.annOnglet==='usines'?'Rechercher : usine ou quartier…':'Rechercher : nom, agence, fonction, numéro…'}" value="${esc(ui.annCherche)}" aria-label="Rechercher dans l’annuaire"></div>`;
+  if(ui.annOnglet==='usines'){
+    const L=U.filter(u=>!q||sansAccents(u.nom+' '+(u.zones||[]).join(' ')).includes(q)).sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
+    h+=ui.annEdit==='usine'?`<div class="dx-carte">${formUsineA(null)}</div>`:`<div class="dx-ligne dx-mc-actions"><button class="dx-btn" type="button" data-a="us-nouveau">+ Ajouter une usine</button></div>`;
+    if(!U.length)h+='<div class="dx-carte"><p>Aucune usine pour l’instant. Elles arrivent avec l’import de « Fichiers Ordonnancement ».</p></div>';
+    else if(!L.length)h+='<div class="dx-carte"><p class="dx-gris">Aucune usine ne dessert ce quartier dans l’annuaire.</p></div>';
+    L.forEach(u=>{h+=ui.annEdit===u.id?`<div class="dx-carte">${formUsineA(u)}</div>`:`<div class="dx-carte dx-us"><div class="dx-ann-t"><h3>🏭 ${esc(u.nom)}</h3><button class="dx-btn petit dx-ann-mod" type="button" data-a="us-modifier" data-id="${esc(u.id)}">Modifier</button></div>
+      <div class="dx-us-z">${(u.zones||[]).map(z=>`<span${q&&sansAccents(z).includes(q)?' class="on"':''}>${esc(z)}</span>`).join('')}</div></div>`;});
+  }else{
+    const parS=s=>C.filter(x=>x.service===s).length;
+    h+=`<div class="dx-puces"><button type="button" class="${ui.annService?'':'on'}" data-a="ann-service" data-s="">Tous <span>${C.length}</span></button>${SERVICES_A.filter(s=>parS(s)).map(s=>`<button type="button" class="${ui.annService===s?'on':''}" data-a="ann-service" data-s="${s}">${s} <span>${parS(s)}</span></button>`).join('')}</div>`;
+    h+=ui.annEdit==='nouveau'?`<div class="dx-carte">${formContactA(null)}</div>`:`<div class="dx-ligne dx-mc-actions"><button class="dx-btn" type="button" data-a="ann-nouveau">+ Ajouter un contact</button></div>`;
+    const L=C.filter(x=>(!ui.annService||x.service===ui.annService)&&(!q||sansAccents([x.nom,x.agence,x.direction,x.fonction,x.matricule,x.service].join(' ')).includes(q)||(qn.length>=4&&String(x.tel+' '+x.flotte).replace(/\D/g,'').includes(qn))));
+    if(!C.length)h+=`<div class="dx-carte"><p>L’annuaire est vide.${estAdmin()?' Importez-le depuis « Fichiers Ordonnancement » (en bas de cette page).':' L’administrateur doit d’abord l’importer depuis « Fichiers Ordonnancement ».'}</p></div>`;
+    else if(!L.length)h+='<div class="dx-carte"><p class="dx-gris">Aucun contact ne correspond à la recherche.</p></div>';
+    else if(q){
+      h+=`<div class="dx-carte"><h3>${L.length} résultat${L.length>1?'s':''}</h3>${L.slice(0,80).map(x=>`<div class="dx-ann-res"><span class="dx-gris">${esc([x.service,x.direction,x.agence].filter(Boolean).join(' · '))}</span>${ficheA(x)}</div>`).join('')}${L.length>80?'<p class="dx-gris">Précisez la recherche pour voir les autres.</p>':''}</div>`;
+    }else{
+      // Service → direction (repliée) → agences
+      const ordre=[];L.forEach(x=>{const k=x.service+'|'+x.direction;if(!ordre.includes(k))ordre.push(k);});
+      ordre.forEach(k=>{const [s,dir]=k.split('|'),M=L.filter(x=>x.service===s&&x.direction===dir),ouv=!!ui.annOuverts[k];
+        const ags=[];M.forEach(x=>{if(!ags.includes(x.agence))ags.push(x.agence);});
+        h+=`<details class="dx-carte dx-details dx-ann-dir" data-k="${esc(k)}"${ouv?' open':''}><summary><span class="dx-ann-s" style="background:${COUL_SERV[s]||'#5a6b7d'}">${esc(s)}</span><b>${esc(dir||'Sans direction')}</b><span class="dx-nb">${M.length}</span></summary>
+          ${ouv?ags.map(a=>agenceA(a,M.filter(x=>x.agence===a))).join(''):''}</details>`;});
+    }
+    if(estAdmin())h+=`<details class="dx-carte dx-details"><summary><b>Importer depuis « Fichiers Ordonnancement »</b></summary>
+      <p class="dx-gris">Reprend les onglets Annuaire DEXA, Annuaire DEXI, Annuaire SDMR et Usines et zones desservies (jamais les autres onglets). Une fiche déjà modifiée dans l’application garde sa version ; les nouvelles fiches sont ajoutées.</p>
+      <p class="dx-gris">Le classeur doit être partagé en lecture avec le compte Google de l’application.</p>
+      ${ANN&&ANN.importe?`<p class="dx-gris">Dernier import : ${esc(new Date(ANN.importe.le).toLocaleString('fr-FR',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}))} par ${esc(ANN.importe.par)} (${ANN.importe.fiches} lignes lues).</p>`:''}
+      <button class="dx-btn plein" type="button" data-a="ann-importer">${ANN&&ANN.importe?'Réimporter':'Importer'}</button></details>`;
+  }
+  zone.innerHTML=h;
+}
+document.addEventListener('toggle',ev=>{const d=ev.target;if(d&&d.classList&&d.classList.contains('dx-ann-dir')){const k=d.dataset.k,o=d.open;if(!!ui.annOuverts[k]===o)return;ui.annOuverts[k]=o;if(o)rendreAnnuaireGarde();}},true);
+document.addEventListener('click',async ev=>{
+  const b=ev.target.closest('[data-a^="ann-"],[data-a^="us-"]');if(!b)return;const a=b.dataset.a;
+  if(a==='ann-onglet'){ui.annOnglet=b.dataset.o;ui.annEdit=null;ui.annCherche='';rendreAnnuaire();}
+  else if(a==='ann-service'){ui.annService=b.dataset.s||'';lsSet('annService',ui.annService);rendreAnnuaireGarde();}
+  else if(a==='ann-nouveau'){ui.annEdit='nouveau';rendreAnnuaire();setTimeout(()=>{try{$('anNom').focus();}catch(x){}},50);}
+  else if(a==='us-nouveau'){ui.annEdit='usine';rendreAnnuaire();setTimeout(()=>{try{$('usNom').focus();}catch(x){}},50);}
+  else if(a==='ann-modifier'||a==='us-modifier'){ui.annEdit=b.dataset.id;rendreAnnuaireGarde();}
+  else if(a==='ann-annuler'){ui.annEdit=null;rendreAnnuaireGarde();}
+  else if(a==='ann-retirer'||a==='us-retirer'){if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Confirmer le retrait';return;}
+    b.disabled=true;ecrireAnn('apiAnnuaireEcrire',[SESSION.jeton,newId(),a==='ann-retirer'?'retirer':'usine-retirer',{id:b.dataset.id}]);}
+  else if(a==='ann-importer'){if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Confirmer l’import';return;}
+    b.disabled=true;b.textContent='Import en cours…';toast('Lecture de « Fichiers Ordonnancement »…');
+    try{const r=await appel('apiAnnuaireImporter',SESSION.jeton);appliquerAnn(r);ui.annOuverts={};rendreAnnuaire();toast(r.message||'Import terminé.');}
+    catch(err){if(estSession(err))finSession();toast(messageErreur(err));b.disabled=false;b.dataset.armed='';b.textContent='Importer';}}
+});
+document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='annCherche'){ui.annCherche=ev.target.value;const p=ev.target.selectionStart;rendreAnnuaireGarde();const i=$('annCherche');if(i){i.focus();try{i.setSelectionRange(p,p);}catch(x){}}}});
+document.addEventListener('submit',ev=>{
+  const f=ev.target;
+  if(f.id==='fAnn'){ev.preventDefault();
+    ecrireAnn('apiAnnuaireEcrire',[SESSION.jeton,f.dataset.op||(f.dataset.op=newId()),'fiche',{id:f.dataset.id||null,service:$('anService').value,direction:$('anDir').value,agence:$('anAg').value,fonction:$('anFn').value,nom:$('anNom').value,matricule:$('anMle').value,tel:$('anTel').value,flotte:$('anFl').value}],'Enregistrement…',f);}
+  else if(f.id==='fUsine'){ev.preventDefault();
+    ecrireAnn('apiAnnuaireEcrire',[SESSION.jeton,f.dataset.op||(f.dataset.op=newId()),'usine',{id:f.dataset.id||null,nom:$('usNom').value,zones:$('usZones').value}],'Enregistrement…',f);}
+});
 
 // ================= démarrage =================
 renderNav();

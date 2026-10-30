@@ -1,7 +1,7 @@
 /* UNIVERS C.O — cache de l'interface seulement (page, icônes). Les données ne passent jamais par ici :
    les échanges avec le service Google sont des envois (POST) vers une autre adresse, non mis en cache.
    La page s'ouvre tout de suite depuis le cache ; la version en ligne est relue en arrière-plan pour l'ouverture suivante. */
-var VERSION = 'univers-co-89c201ab07';
+var VERSION = 'univers-co-9ee0632000';
 var FICHIERS = ['./', 'manifest.webmanifest', 'icone-192.png', 'icone-180.png', 'favicon.png'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(FICHIERS); }).then(function () { return self.skipWaiting(); }));
