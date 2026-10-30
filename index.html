@@ -375,6 +375,19 @@ a.dx-btn{text-decoration:none;display:inline-flex;align-items:center;justify-con
 .dx-mc-etat{font-size:11.5px;font-weight:700;color:#fff;border-radius:9px;padding:2px 8px}
 .dx-mc-tab{display:flex;flex-direction:column;gap:4px;padding:8px 10px 10px;margin-top:4px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
 .dx-mc-tab[hidden]{display:none}
+/* dictée et notes vocales */
+.dx-lab{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+.dx-lab label{margin-top:0}
+.dx-dicter{padding:5px 10px;font-size:12.5px}
+.dx-dicter.on{background:#c2371f;border-color:#c2371f;color:#fff}
+.dx-vocal{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dx-vocal audio,.dx-mc-audio{width:100%;max-width:340px;height:40px}
+.dx-mc-audio{display:block;margin-top:8px}
+.dx-vocal.enr{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.dx-vocal.enr .dx-btn{margin-left:auto}
+.dx-rec{width:12px;height:12px;border-radius:50%;background:#c2371f;animation:dxrec 1s infinite}
+@keyframes dxrec{50%{opacity:.25}}
+.dx-mc .dx-btn.petit.dx-mc-ecoute{margin-top:6px;margin-right:6px}
 </style>
 <script>
 // Témoin de démarrage : prévient la page d'accueil dès que la page s'exécute (elle relance l'ouverture sinon).
@@ -976,7 +989,7 @@ let ETAT=null,AFFICHE_V=null,CHARGE=false;
 const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 /** Délai maximal par fonction : sur le réseau mobile, un appel à Google peut rester sans réponse. */
-const DELAIS={apiEtat:15000,apiConnexion:15000,apiChangerCode:20000,apiCodeOublie:30000,apiDefiFaceID:12000,apiConnexionFaceID:20000,apiEnregistrerFaceID:30000,apiRetirerFaceID:30000,apiImporterDrive:240000,apiComptes:20000,apiCompte:30000,apiJournal:20000,apiDeconnexion:10000,apiPlateforme:30000,apiDocEnvoyer:180000,apiDocOuvrir:120000,apiTrace:20000,apiStats:40000,apiCourante:30000,apiCouranteEcrire:40000,apiCourantePhoto:180000,apiCouranteVoirPhoto:120000};
+const DELAIS={apiEtat:15000,apiConnexion:15000,apiChangerCode:20000,apiCodeOublie:30000,apiDefiFaceID:12000,apiConnexionFaceID:20000,apiEnregistrerFaceID:30000,apiRetirerFaceID:30000,apiImporterDrive:240000,apiComptes:20000,apiCompte:30000,apiJournal:20000,apiDeconnexion:10000,apiPlateforme:30000,apiDocEnvoyer:180000,apiDocOuvrir:120000,apiTrace:20000,apiStats:40000,apiCourante:30000,apiCouranteEcrire:40000,apiCourantePhoto:180000,apiCouranteVoirPhoto:120000,apiCouranteVoirAudio:120000};
 /** Page d'accueil (DX.api) : appel direct du service de données par fetch, une seule connexion Google.
  *  Corps en text/plain : pas de requête préalable (CORS). Les refus gardent la forme « REFUS: … » de google.script.run. */
 function appelDirect(fn,args){
@@ -1428,8 +1441,22 @@ function allerVue(v){
   renderNav();rendrePlateforme();afficherTableau();
   try{window.scrollTo(0,0);}catch(x){}
 }
+/** Une mise à jour arrivée en arrière-plan ne doit jamais effacer une saisie en cours (texte tapé ou dicté). */
+function garderSaisie(zone,rendre){
+  if(!zone){rendre();return;}
+  const g={},a=document.activeElement;
+  zone.querySelectorAll('form input[id],form textarea[id],form select[id]').forEach(e=>{if(e.type!=='file')g[e.id]=e.type==='checkbox'?e.checked:e.value;});
+  const f=a&&a.id&&zone.contains(a)?{id:a.id,s:a.selectionStart,e:a.selectionEnd}:null;
+  rendre();
+  Object.keys(g).forEach(id=>{const e=$(id);if(!e||!zone.contains(e))return;if(e.type==='checkbox')e.checked=g[id];else e.value=g[id];});
+  if(f){const e=$(f.id);if(e){try{e.focus({preventScroll:true});if(f.s!=null)e.setSelectionRange(f.s,f.e);}catch(x){}}}
+}
+const formMCOuvert=()=>!!(ui.mcEdit&&$('v-journal')&&$('v-journal').querySelector('form'));
 function rendrePlateforme(){
   if(!ETAT){return;}
+  garderSaisie($('v-'+ui.vue),rendrePlateformeVue);
+}
+function rendrePlateformeVue(){
   renderNav();
   document.querySelectorAll('.dx-vue').forEach(s=>s.hidden=s.dataset.vue!==ui.vue);
   if(ui.vue==='accueil')rendreAccueil();
@@ -1437,7 +1464,7 @@ function rendrePlateforme(){
   else if(ui.vue==='equipe')rendreEquipe();
   else if(ui.vue==='documents')rendreDocuments();
   else if(ui.vue==='stats')rendreStats();
-  else if(ui.vue==='journal')rendreJournal();
+  else if(ui.vue==='journal'&&!formMCOuvert())rendreJournal();
   if(ui.vue==='journal'&&accesMC()&&!ui.mcDemande){ui.mcDemande=true;chargerMC();}
   if(!ui.ouvertureTracee){ui.ouvertureTracee=true;tracer('ouverture','');}
   if(ui.vue!=='equipe')tracer('vue',ui.vue);
@@ -1869,20 +1896,73 @@ const libQuartMC=x=>(x.q==='J'?'Jour':'Nuit')+' du '+libLong(x.iso);
 function apresEtat(){if(accesMC()&&!ui.mcDemande){ui.mcDemande=true;chargerMC();}}
 async function chargerMC(){
   if(!accesMC()||!SESSION.jeton||ui.mcCharge)return;
-  ui.mcCharge=true;if(ui.vue==='journal')rendreJournal();
+  ui.mcCharge=true;if(ui.vue==='journal'&&!formMCOuvert())rendreJournal();
   try{appliquerMC(await appelFiable('apiCourante',SESSION.jeton,ui.mcJours));}
   catch(err){if(estSession(err))finSession();else if(ui.vue==='journal')toast(messageErreur(err));}
-  ui.mcCharge=false;if(ui.vue==='journal')rendreJournal();
+  ui.mcCharge=false;if(ui.vue==='journal'&&!formMCOuvert())rendreJournal();
 }
 function appliquerMC(r){
   MC=Object.assign({},r,{compte:ETAT&&ETAT.moi?ETAT.moi.id:'',recu:Date.now()});delete MC.message;lsSet('mc',MC);
-  if(ui.vue==='journal')rendreJournal();else if(ui.vue==='accueil')rendreAccueil();
+  // Formulaire ouvert (note en cours, dictée…) : la liste sera redessinée à sa fermeture
+  if(ui.vue==='journal'){if(!formMCOuvert())rendreJournal();}else if(ui.vue==='accueil')rendreAccueil();
 }
 async function ecrireMC(fn,args,msgAttente,f){
   const btn=f&&f.querySelector('[type=submit]');if(btn){btn.disabled=true;btn.dataset.lib=btn.textContent;btn.textContent='Enregistrement…';}
   toast(msgAttente||'Enregistrement…');
-  try{const r=await appel(fn,...args);ui.mcEdit=null;ui.mcNouvEtat='';appliquerMC(r);toast(r.message||'Enregistré.');return true;}
+  arreterDictee();
+  try{const r=await appel(fn,...args);ui.mcEdit=null;ui.mcNouvEtat='';oublierVocal();appliquerMC(r);toast(r.message||'Enregistré.');return true;}
   catch(err){if(estSession(err))finSession();toast(messageErreur(err));if(btn){btn.disabled=false;btn.textContent=btn.dataset.lib;}return false;}
+}
+// ---------- dictée (reconnaissance vocale du téléphone) et notes vocales ----------
+const RECO=window.SpeechRecognition||window.webkitSpeechRecognition;
+let dictee=null;
+const boutonDicter=cible=>RECO?`<button type="button" class="dx-btn petit dx-dicter" data-a="dicter" data-cible="${cible}">🎤 Dicter</button>`:'';
+function dicter(b){
+  if(dictee){try{dictee.stop();}catch(x){}return;}
+  const t=$(b.dataset.cible);if(!t)return;
+  let r;try{r=new RECO();}catch(x){toast('La dictée n’est pas disponible ici : utilisez le micro du clavier.');return;}
+  r.lang='fr-FR';r.continuous=true;r.interimResults=true;
+  const base=t.value&&!/\s$/.test(t.value)?t.value+' ':t.value;
+  r.onresult=ev=>{let fin='',prov='';for(let i=0;i<ev.results.length;i++){const x=ev.results[i];if(x.isFinal)fin+=x[0].transcript;else prov+=x[0].transcript;}
+    let s=(fin+prov).replace(/^\s+/,'');if(!base.trim())s=s.replace(/^./,c=>c.toUpperCase());t.value=(base+s).slice(0,+t.maxLength>0?+t.maxLength:2000);};
+  r.onerror=e=>{toast(e.error==='not-allowed'||e.error==='service-not-allowed'?'La dictée n’est pas autorisée ici : utilisez le micro du clavier.':e.error==='no-speech'?'Aucune parole entendue.':'Dictée interrompue.');};
+  r.onend=()=>{dictee=null;b.textContent='🎤 Dicter';b.classList.remove('on');};
+  try{r.start();}catch(x){toast('La dictée n’a pas pu démarrer.');return;}
+  dictee=r;b.textContent='⏹ Arrêter la dictée';b.classList.add('on');
+}
+function arreterDictee(){if(dictee){try{dictee.stop();}catch(x){}dictee=null;}}
+const ENR_OK=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder);
+const VOCAL_MAX=180;
+let enr=null;ui.mcVocal=null;ui.mcAudios={};
+const mmss=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+function zoneVocal(){
+  if(!ENR_OK)return '';
+  if(enr)return `<div class="dx-vocal enr"><span class="dx-rec" aria-hidden="true"></span><b id="vcTemps">${mmss((Date.now()-enr.t0)/1000)}</b><span class="dx-gris">Enregistrement… (3 min au plus)</span><button class="dx-btn petit" type="button" data-a="vocal-stop">⏹ Arrêter</button></div>`;
+  if(ui.mcVocal)return `<div class="dx-vocal"><audio controls preload="metadata" src="${ui.mcVocal.url}"></audio><button class="dx-btn petit" type="button" data-a="vocal-retirer">Retirer</button></div>`;
+  return `<button class="dx-btn" type="button" data-a="vocal-start">🎙️ Enregistrer une note vocale</button>`;
+}
+const majVocal=()=>{const z=$('mcVocal');if(z)z.innerHTML=zoneVocal();};
+async function demarrerVocal(){
+  if(enr)return;
+  let flux;try{flux=await navigator.mediaDevices.getUserMedia({audio:true});}
+  catch(e){toast(e&&e.name==='NotAllowedError'?'Micro refusé : autorisez le micro pour UNIVERS C.O dans les réglages du téléphone.':'Le micro n’est pas disponible.');return;}
+  const type=['audio/mp4','audio/webm;codecs=opus','audio/webm'].find(x=>{try{return MediaRecorder.isTypeSupported(x);}catch(e){return false;}})||'';
+  let rec;try{rec=new MediaRecorder(flux,type?{mimeType:type,audioBitsPerSecond:32000}:undefined);}catch(e){flux.getTracks().forEach(x=>x.stop());toast('L’enregistrement n’est pas possible sur cet appareil.');return;}
+  const morceaux=[];rec.ondataavailable=e=>{if(e.data&&e.data.size)morceaux.push(e.data);};
+  rec.onstop=()=>{flux.getTracks().forEach(x=>x.stop());const duree=Math.round((Date.now()-enr.t0)/1000);clearInterval(enr.minuteur);enr=null;
+    const blob=new Blob(morceaux,{type:(rec.mimeType||type||'audio/mp4')});
+    if(blob.size){if(ui.mcVocal)URL.revokeObjectURL(ui.mcVocal.url);ui.mcVocal={blob,url:URL.createObjectURL(blob),type:blob.type,duree};}
+    majVocal();};
+  enr={rec,t0:Date.now(),minuteur:setInterval(()=>{const s=(Date.now()-enr.t0)/1000;const e=$('vcTemps');if(e)e.textContent=mmss(s);if(s>=VOCAL_MAX)arreterVocal();},500)};
+  rec.start(1000);majVocal();
+}
+function arreterVocal(){if(enr&&enr.rec.state!=='inactive')enr.rec.stop();}
+function oublierVocal(){if(enr){enr.rec.onstop=null;try{enr.rec.stop();enr.rec.stream.getTracks().forEach(x=>x.stop());}catch(x){}clearInterval(enr.minuteur);enr=null;}if(ui.mcVocal){URL.revokeObjectURL(ui.mcVocal.url);ui.mcVocal=null;}}
+async function ecouterMC(id){
+  toast('Ouverture de la note vocale…');
+  try{const r=await appelFiable('apiCouranteVoirAudio',SESSION.jeton,id);ui.mcAudios[id]='data:'+r.type+';base64,'+r.b64;rendreJournalGarde();
+    const a=document.querySelector(`audio[data-id="${id}"]`);if(a)try{a.play();}catch(x){}}
+  catch(err){if(estSession(err))finSession();toast(messageErreur(err));}
 }
 /** Photo réduite sur le téléphone (1600 pixels au plus, JPEG) : l'envoi reste court sur le réseau mobile. */
 function compresserPhoto(f){return new Promise((res,rej)=>{const u=URL.createObjectURL(f),im=new Image();
@@ -1891,7 +1971,7 @@ function compresserPhoto(f){return new Promise((res,rej)=>{const u=URL.createObj
   im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('REFUS: Cette image ne peut pas être lue. Choisissez une photo.'));};im.src=u;});}
 async function voirPhotoMC(id){
   toast('Ouverture de la photo…');
-  try{const r=await appelFiable('apiCouranteVoirPhoto',SESSION.jeton,id);ui.mcPhotos[id]='data:'+r.type+';base64,'+r.b64;rendreJournal();}
+  try{const r=await appelFiable('apiCouranteVoirPhoto',SESSION.jeton,id);ui.mcPhotos[id]='data:'+r.type+';base64,'+r.b64;rendreJournalGarde();}
   catch(err){if(estSession(err))finSession();toast(messageErreur(err));}
 }
 function noteMC(x,ou){
@@ -1902,9 +1982,10 @@ function noteMC(x,ou){
     <div class="dx-mc-m">N° ${x.num} · ${esc(quandMC(x.le))} · ${esc(x.nom)}</div>${x.tablette&&x.tablette.agent?`<div class="dx-mc-m">Détenteur : ${esc(x.tablette.agent)}</div>`:''}
     <div class="dx-mc-x">${esc(x.texte)}</div>`;
   (x.suites||[]).forEach(s=>{h+=`<div class="dx-mc-s"><span>${esc(quandMC(s.le))} · ${esc(s.nom)}${s.action?' · <b>'+(s.action==='clos'?'clos':'rouvert')+'</b>':''}</span>${esc(s.texte)}</div>`;});
+  if(x.audio)h+=ui.mcAudios[x.id]?`<audio class="dx-mc-audio" controls data-id="${esc(x.id)}" src="${ui.mcAudios[x.id]}"></audio>`:`<button class="dx-btn petit dx-mc-ecoute" type="button" data-a="mc-ecouter" data-id="${esc(x.id)}">▶︎ Écouter la note vocale${x.audio.duree?' ('+mmss(x.audio.duree)+')':''}</button>`;
   if(x.photo)h+=ui.mcPhotos[x.id]?`<img class="dx-mc-photo" src="${ui.mcPhotos[x.id]}" alt="Photo de la note n° ${x.num}">`:`<button class="dx-btn petit" type="button" data-a="mc-photo" data-id="${esc(x.id)}">📷 Voir la photo</button>`;
   if(!releve){
-    if(edit)h+=`<form class="dx-form dx-edit" id="fSuiteMC" data-id="${esc(x.id)}"><label for="msTexte">Suite donnée</label><textarea id="msTexte" rows="3" maxlength="1000" placeholder="Équipe arrivée sur place, fuite colmatée, client rappelé…"></textarea>
+    if(edit)h+=`<form class="dx-form dx-edit" id="fSuiteMC" data-id="${esc(x.id)}"><div class="dx-lab"><label for="msTexte">Suite donnée</label>${boutonDicter('msTexte')}</div><textarea id="msTexte" rows="3" maxlength="1000" placeholder="Équipe arrivée sur place, fuite colmatée, client rappelé…"></textarea>
       <div class="dx-ligne"><button class="dx-btn plein" type="submit">Ajouter la suite</button>${x.statut==='ouvert'?'<button class="dx-btn" type="button" data-a="mc-suite-clore">Ajouter et clore</button>':''}<button class="dx-btn" type="button" data-a="mc-annuler">Annuler</button></div></form>`;
     else h+=`<div class="dx-ligne"><button class="dx-btn petit" type="button" data-a="mc-suite" data-id="${esc(x.id)}" data-ou="${ou}">Ajouter une suite</button>${x.statut==='ouvert'?`<button class="dx-btn petit" type="button" data-a="mc-clore" data-id="${esc(x.id)}">Clore</button>`:x.statut==='clos'?`<button class="dx-btn petit" type="button" data-a="mc-rouvrir" data-id="${esc(x.id)}">Rouvrir</button>`:''}</div>`;
   }
@@ -1921,18 +2002,21 @@ function formMC(){
       <label for="mcTabAgent">Détenteur (agent de terrain)</label><input id="mcTabAgent" maxlength="60" placeholder="Nom de l’agent" autocomplete="off">
     </div>
     <label for="mcLieu">Lieu (facultatif)</label><input id="mcLieu" list="mcLieux" maxlength="80" placeholder="Quartier, agence, rue…" autocomplete="off"><datalist id="mcLieux">${lieux.map(l=>`<option value="${esc(l)}">`).join('')}</datalist>
-    <label for="mcTexte">Note</label><textarea id="mcTexte" rows="4" maxlength="2000" placeholder="Ce qui s’est passé, qui a appelé, ce qui a été fait…"></textarea>
+    <div class="dx-lab"><label for="mcTexte">Note</label>${boutonDicter('mcTexte')}</div><textarea id="mcTexte" rows="4" maxlength="2000" placeholder="Ce qui s’est passé, qui a appelé, ce qui a été fait…"></textarea>
     <label class="dx-coche"><input type="checkbox" id="mcSuivre"${(t==='Tablette'?(!ui.mcNouvEtat||A_SUIVRE_TAB.includes(ui.mcNouvEtat)):A_SUIVRE_MC.includes(t))?' checked':''}> Point à suivre (il reste ouvert jusqu’à ce qu’on le close)</label>
     <label>Photo (facultatif)</label><input id="mcPhoto" class="dx-cache" type="file" accept="image/*"><label class="dx-btn dx-mc-ph" for="mcPhoto" id="mcPhotoLib">📷 Ajouter une photo</label>
+    <label>Note vocale (facultatif)</label><div id="mcVocal">${zoneVocal()}</div>
     <div class="dx-ligne"><button class="dx-btn plein" type="submit">Enregistrer la note</button><button class="dx-btn" type="button" data-a="mc-annuler">Annuler</button></div></form></div>`;
 }
 function formReleve(ouverts){
   return `<div class="dx-carte"><form class="dx-form dx-edit" id="fReleve"><b>🔄 Prendre la relève</b><span class="dx-gris">${esc(libQuartMC(quartEnCours(new Date())))}</span>
     <p>${ouverts.length?`<b>${ouverts.length} point${ouverts.length>1?'s':''} à suivre</b> vous ${ouverts.length>1?'sont transmis':'est transmis'} :`:'Aucun point à suivre : le quart précédent n’a rien laissé en cours.'}</p>
     ${ouverts.map(x=>`<div class="dx-li"><span class="dx-emoji">${EMO_MC[x.type]||'📝'}</span><span><b>N° ${x.num}</b> · ${esc(titreMC(x))}${x.lieu?' · '+esc(x.lieu):''}<br><span class="dx-gris">${esc(x.texte.slice(0,90))}${x.texte.length>90?'…':''}</span></span></div>`).join('')}
-    <label for="rlTexte">Consignes reçues ou remarques (facultatif)</label><textarea id="rlTexte" rows="3" maxlength="2000"></textarea>
+    <div class="dx-lab"><label for="rlTexte">Consignes reçues ou remarques (facultatif)</label>${boutonDicter('rlTexte')}</div><textarea id="rlTexte" rows="3" maxlength="2000"></textarea>
     <div class="dx-ligne"><button class="dx-btn plein" type="submit">Je prends la relève</button><button class="dx-btn" type="button" data-a="mc-annuler">Annuler</button></div></form></div>`;
 }
+/** Redessin demandé pendant qu'un formulaire est peut-être ouvert (écoute, photo, filtre, recherche) : la saisie est gardée. */
+const rendreJournalGarde=()=>garderSaisie($('v-journal'),rendreJournal);
 function rendreJournal(){
   const zone=$('v-journal');if(!zone||!ETAT)return;
   if(!accesMC()){zone.innerHTML='<div class="dx-carte"><p>La Main courante est réservée au Centre d’ordonnancement.</p></div>';return;}
@@ -1970,35 +2054,42 @@ function carteMC(){
   return h+'</div>';
 }
 document.addEventListener('click',ev=>{
-  const b=ev.target.closest('[data-a^="mc-"]');if(!b)return;const a=b.dataset.a;
+  const b=ev.target.closest('[data-a^="mc-"],[data-a="dicter"],[data-a^="vocal-"]');if(!b)return;const a=b.dataset.a;
   if(a==='mc-nouveau'){ui.mcEdit='nouveau';rendreJournal();setTimeout(()=>{try{$('mcTexte').focus();}catch(x){}},50);}
   else if(a==='mc-releve'){ui.mcEdit='releve';rendreJournal();try{window.scrollTo(0,0);}catch(x){}}
-  else if(a==='mc-annuler'){ui.mcEdit=null;ui.mcNouvEtat='';rendreJournal();}
+  else if(a==='mc-annuler'){arreterDictee();oublierVocal();ui.mcEdit=null;ui.mcNouvEtat='';rendreJournal();}
+  else if(a==='dicter')dicter(b);
+  else if(a==='vocal-start')demarrerVocal();
+  else if(a==='vocal-stop')arreterVocal();
+  else if(a==='vocal-retirer'){oublierVocal();majVocal();}
+  else if(a==='mc-ecouter')ecouterMC(b.dataset.id);
   else if(a==='mc-type-choix'){ui.mcNouvType=b.dataset.t;b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
     const tab=b.dataset.t==='Tablette',z=$('mcTab');if(z)z.hidden=!tab;
     const c=$('mcSuivre');if(c)c.checked=tab?(!ui.mcNouvEtat||A_SUIVRE_TAB.includes(ui.mcNouvEtat)):A_SUIVRE_MC.includes(b.dataset.t);}
   else if(a==='mc-etat-choix'){ui.mcNouvEtat=b.dataset.e;b.parentNode.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));const c=$('mcSuivre');if(c)c.checked=A_SUIVRE_TAB.includes(b.dataset.e);}
-  else if(a==='mc-filtre-tab'){ui.mcEtatTab=b.dataset.e||'';rendreJournal();}
+  else if(a==='mc-filtre-tab'){ui.mcEtatTab=b.dataset.e||'';rendreJournalGarde();}
   else if(a==='mc-suite'){ui.mcEdit={id:b.dataset.id,ou:b.dataset.ou};rendreJournal();setTimeout(()=>{try{$('msTexte').focus();}catch(x){}},50);}
   else if(a==='mc-suite-clore'){const f=$('fSuiteMC');ecrireMC('apiCouranteEcrire',[SESSION.jeton,f.dataset.op||(f.dataset.op=newId()),'suite',{id:f.dataset.id,texte:$('msTexte').value,action:'clore',jours:ui.mcJours}],'Enregistrement…',f);}
   else if(a==='mc-clore'||a==='mc-rouvrir'){if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent=a==='mc-clore'?'Confirmer la clôture':'Confirmer';return;}
     b.disabled=true;ecrireMC('apiCouranteEcrire',[SESSION.jeton,newId(),'suite',{id:b.dataset.id,action:a==='mc-clore'?'clore':'rouvrir',jours:ui.mcJours}]);}
   else if(a==='mc-photo')voirPhotoMC(b.dataset.id);
   else if(a==='mc-periode'){ui.mcJours=+b.dataset.j;lsSet('mcJours',ui.mcJours);chargerMC();}
-  else if(a==='mc-filtre'){ui.mcType=b.dataset.t||'';ui.mcEtatTab='';rendreJournal();}
+  else if(a==='mc-filtre'){ui.mcType=b.dataset.t||'';ui.mcEtatTab='';rendreJournalGarde();}
 });
 document.addEventListener('change',ev=>{if(ev.target&&ev.target.id==='mcPhoto'){const f=ev.target.files[0],l=$('mcPhotoLib');if(l)l.textContent=f?'📷 Photo choisie · changer':'📷 Ajouter une photo';}});
-document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='mcCherche'){ui.mcCherche=ev.target.value;const p=ev.target.selectionStart;rendreJournal();const i=$('mcCherche');if(i){i.focus();try{i.setSelectionRange(p,p);}catch(x){}}}});
+document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='mcCherche'){ui.mcCherche=ev.target.value;const p=ev.target.selectionStart;rendreJournalGarde();const i=$('mcCherche');if(i){i.focus();try{i.setSelectionRange(p,p);}catch(x){}}}});
 document.addEventListener('submit',async ev=>{
   const f=ev.target;
   if(f.id==='fMC'){ev.preventDefault();
     const d={type:ui.mcNouvType,lieu:$('mcLieu').value,texte:$('mcTexte').value,suivre:$('mcSuivre').checked,jours:ui.mcJours},fi=$('mcPhoto').files[0];
     if(d.type==='Tablette'){if(!ui.mcNouvEtat){toast('Choisissez l’état de la tablette.');return;}
       d.tablette={etat:ui.mcNouvEtat,numero:$('mcTabNum').value,agent:$('mcTabAgent').value};}
-    if(!d.texte.trim()){toast('Écrivez la note.');return;}
+    if(enr){toast('Arrêtez d’abord l’enregistrement de la note vocale.');return;}
+    if(!d.texte.trim()&&!ui.mcVocal){toast('Écrivez la note ou enregistrez une note vocale.');return;}
     const op=f.dataset.op||(f.dataset.op=newId());
-    if(fi){try{toast('Préparation de la photo…');d.photo=await compresserPhoto(fi);}catch(err){toast(messageErreur(err));return;}
-      ecrireMC('apiCourantePhoto',[SESSION.jeton,op,d],'Envoi de la note et de la photo…',f);}
+    if(ui.mcVocal){try{d.audio=await lireFichier(ui.mcVocal.blob);d.audioType=ui.mcVocal.type;d.audioDuree=ui.mcVocal.duree;}catch(err){toast('La note vocale n’a pas pu être lue.');return;}}
+    if(fi){try{toast('Préparation de la photo…');d.photo=await compresserPhoto(fi);}catch(err){toast(messageErreur(err));return;}}
+    if(fi||d.audio)ecrireMC('apiCourantePhoto',[SESSION.jeton,op,d],fi&&d.audio?'Envoi de la note, de la photo et du vocal…':fi?'Envoi de la note et de la photo…':'Envoi de la note vocale…',f);
     else ecrireMC('apiCouranteEcrire',[SESSION.jeton,op,'ajouter',d],'Enregistrement de la note…',f);}
   else if(f.id==='fSuiteMC'){ev.preventDefault();if(!$('msTexte').value.trim()){toast('Écrivez la suite.');return;}
     ecrireMC('apiCouranteEcrire',[SESSION.jeton,f.dataset.op||(f.dataset.op=newId()),'suite',{id:f.dataset.id,texte:$('msTexte').value,jours:ui.mcJours}],'Enregistrement…',f);}
