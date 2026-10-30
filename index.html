@@ -212,9 +212,10 @@ body:not([data-ecran="app"]) .dx-nav{display:none}
 .dx-li .d{margin-left:auto;color:var(--ink3);font-size:12px;text-align:right}
 .dx-emoji{width:18px;text-align:center}
 .dx-kpis{display:flex;gap:10px}
-.dx-kpis div{flex:1;background:var(--bg);border-radius:12px;padding:10px}
-.dx-kpis b{display:block;font-size:19px}
-.dx-kpis span{font-size:11px;color:var(--ink2)}
+/* Cases chiffrées : chiffre et libellé centrés ; le libellé passe à la ligne au lieu de déborder (30/10/2026) */
+.dx-kpis div{flex:1;min-width:0;background:var(--bg);border-radius:12px;padding:10px 6px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dx-kpis b{display:block;font-size:19px;line-height:1.25}
+.dx-kpis span{display:block;max-width:100%;font-size:11px;line-height:1.3;color:var(--ink2);overflow-wrap:break-word;word-break:normal}
 .dx-kpis em{font-style:normal;font-weight:700}
 .dx-tuiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:14px 8px;margin:6px 0 14px}
 .dx-tuile{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;font-size:11.5px;color:var(--ink2);background:none;border:0;cursor:pointer;text-align:center}
@@ -229,14 +230,15 @@ body:not([data-ecran="app"]) .dx-nav{display:none}
 .dx-alerte svg{width:20px;height:20px;color:var(--orange)}
 .dx-alerte span{flex:1;min-width:160px}
 .dx-prog{padding:6px 10px}
-.dx-jour{display:grid;grid-template-columns:62px 1fr 1fr;gap:6px;align-items:center;padding:4px 0;border-top:1px solid var(--line)}
+.dx-jour{display:grid;grid-template-columns:58px 1fr 1fr;gap:5px;align-items:center;padding:4px 0;border-top:1px solid var(--line)}
 .dx-jour:first-child{border-top:0}
 .dx-jour.we .dx-jl{color:var(--orange)}
 .dx-jour.auj{background:rgba(42,120,214,.08);border-radius:8px}
 .dx-jl{font-size:12.5px;font-weight:600;color:var(--ink2);padding-left:4px}
-.dx-slot{display:flex;align-items:center;gap:6px;min-width:0;font:inherit;font-size:12.5px;padding:6px 8px;border-radius:8px;border:1px solid transparent;background:var(--bg);color:var(--ink);text-align:left;cursor:default}
+.dx-slot{display:flex;align-items:center;gap:6px;min-width:0;font:inherit;font-size:12.5px;padding:6px 7px;min-height:34px;border-radius:8px;border:1px solid transparent;background:var(--bg);color:var(--ink);text-align:left;cursor:default}
 button.dx-slot[data-a]{cursor:pointer}
-.dx-slot span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Nom complet, sur deux lignes au plus (plus de « Bamba Seyd… ») */
+.dx-slot span{overflow:hidden;line-height:1.2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow-wrap:break-word}
 .dx-slot svg{width:15px;height:15px;flex-shrink:0}
 .dx-slot.J svg{color:#d99a0b}
 .dx-slot.N svg{color:#7a5af0}
@@ -253,7 +255,7 @@ button.dx-slot[data-a]{cursor:pointer}
 .dx-large{width:100%;margin-bottom:12px}
 .pos{color:var(--good)}.neg{color:var(--bad)}
 .dx-form .dx-ligne label{display:flex;align-items:center;gap:6px;font-size:12.5px}
-.dx-form input[type=time]{width:auto}
+.dx-form input[type=time]{width:auto;padding:10px 8px}
 @media(min-width:900px){.dx-vue{padding:16px 24px}#v-accueil,#v-quarts,#v-equipe{max-width:760px}}
 .dx-logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#2a78d6,#7a5af0);display:grid;place-items:center;font-weight:800;font-size:12px;letter-spacing:.5px;color:#fff;flex-shrink:0}
 .dx-carte a.dx-mini,a.dx-mini{color:#fff}
@@ -263,7 +265,9 @@ button.dx-slot[data-a]{cursor:pointer}
 .dx-seg button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border:0;background:none;border-radius:9px;padding:8px;font:inherit;font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer}
 .dx-seg button svg{width:16px;height:16px}
 .dx-seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.dx-kpis.dx-carte{flex-wrap:wrap}.dx-kpis.dx-carte div{min-width:64px}
+/* Quatre cases : sur une ligne si la place le permet, sinon deux par ligne */
+.dx-kpis.dx-carte{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:520px){.dx-kpis.dx-carte{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* Organigramme */
 .dx-org{display:flex;flex-direction:column;align-items:center;margin-bottom:10px}
 .dx-org-niv{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;width:100%}
@@ -395,6 +399,8 @@ a.dx-btn{text-decoration:none;display:inline-flex;align-items:center;justify-con
 html,body{overflow-x:hidden;max-width:100%;overscroll-behavior:none}
 body{position:relative}
 @media (pointer:coarse){#dx-tableau select,#dx-tableau input{font-size:16px}}
+/* Tableau DEXA sur téléphone : le choix des mini-graphiques passe sous son libellé, sur toute la largeur */
+@media (max-width:520px){#dx-tableau .cardhead .ctl{display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%;min-width:0}#dx-tableau .cardhead .ctl select{width:100%;max-width:100%}}
 </style>
 <script>
 // Témoin de démarrage : prévient la page d'accueil dès que la page s'exécute (elle relance l'ouverture sinon).
