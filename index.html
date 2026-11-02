@@ -482,6 +482,11 @@ table.pq{border-collapse:collapse;font-size:10px;font-weight:700}
 /* Réglage du cycle : un cadre par binôme (jour + nuit) */
 .dx-binome{border:1px solid var(--line);border-radius:12px;padding:8px 12px 12px;margin:10px 0;min-width:0}
 .dx-binome legend{font-weight:700;font-size:14px;padding:0 4px}
+/* Comptes de l'équipe en une fois */
+.dx-ceq-l{display:flex;flex-direction:column;gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+.dx-ceq-c{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dx-ceq-c input{width:20px;height:20px}
+.dx-gros-i{font-size:17px;letter-spacing:.08em}
 </style>
 <script>
 // Témoin de démarrage : prévient la page d'accueil dès que la page s'exécute (elle relance l'ouverture sinon).
@@ -1087,7 +1092,7 @@ let ETAT=null,AFFICHE_V=null,CHARGE=false;
 const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 /** Délai maximal par fonction : sur le réseau mobile, un appel à Google peut rester sans réponse. */
-const DELAIS={apiEtat:15000,apiConnexion:15000,apiChangerCode:20000,apiCodeOublie:30000,apiDefiFaceID:12000,apiConnexionFaceID:20000,apiEnregistrerFaceID:30000,apiRetirerFaceID:30000,apiImporterDrive:240000,apiComptes:20000,apiCompte:30000,apiJournal:20000,apiDeconnexion:10000,apiPlateforme:30000,apiDocEnvoyer:180000,apiDocOuvrir:120000,apiTrace:20000,apiStats:40000,apiCourante:30000,apiCouranteEcrire:40000,apiCourantePhoto:180000,apiCouranteVoirPhoto:120000,apiCouranteVoirAudio:120000,apiAnnuaire:30000,apiAnnuaireEcrire:40000,apiAnnuaireImporter:180000,apiAgenda:30000,apiAgendaEcrire:40000,apiService:40000};
+const DELAIS={apiEtat:15000,apiConnexion:15000,apiChangerCode:20000,apiCodeOublie:30000,apiDefiFaceID:12000,apiConnexionFaceID:20000,apiEnregistrerFaceID:30000,apiRetirerFaceID:30000,apiImporterDrive:240000,apiComptes:20000,apiCompte:30000,apiJournal:20000,apiDeconnexion:10000,apiPlateforme:30000,apiDocEnvoyer:180000,apiDocOuvrir:120000,apiTrace:20000,apiStats:40000,apiCourante:30000,apiCouranteEcrire:40000,apiCourantePhoto:180000,apiCouranteVoirPhoto:120000,apiCouranteVoirAudio:120000,apiAnnuaire:30000,apiAnnuaireEcrire:40000,apiAnnuaireImporter:180000,apiAgenda:30000,apiAgendaEcrire:40000,apiService:40000,apiComptesEquipe:120000};
 /** Page d'accueil (DX.api) : appel direct du service de données par fetch, une seule connexion Google.
  *  Corps en text/plain : pas de requête préalable (CORS). Les refus gardent la forme « REFUS: … » de google.script.run. */
 function appelDirect(fn,args){
@@ -1149,7 +1154,7 @@ function appliquerEtat(e,deCache){
 const TABLEAU_VIERGE=$('dx-tableau').innerHTML;
 /** Services du Centre (02/11/2026) : DEXA (état général), DEXI et SDMR (chargés à la demande, gardés sur le téléphone). */
 /** Numéro affiché dans le menu : il permet de vérifier que le téléphone a bien pris la dernière version. */
-const VERSION_APP='22';
+const VERSION_APP='23';
 const SERVICES_D=['DEXA','DEXI','SDMR'];
 ui.svc=lsGet('svc','DEXA');
 const SVCD={};
@@ -1213,7 +1218,7 @@ function ajusterSousTitre(){
 function finSession(msg){
   ui.planif=null;
   SESSION.jeton=null;lsSet('jeton',null);lsSet('etat',null);lsSet('mc',null);MC=null;ui.mcDemande=false;lsSet('ann',null);ANN=null;ui.annDemande=false;lsSet('ag',null);AG=null;ui.agDemande=false;SERVICES_D.forEach(x=>{lsSet('svc:'+x,null);delete SVCD[x];ui['svcVu'+x]=false;});versPorte({dx:'session',jeton:null});
-  ETAT=null;AFFICHE_V=null;CHARGE=false;ui.depuisCache=null;ui.comptes=null;ui.journal=null;ui.import=null;ui.codeMontre=null;
+  ETAT=null;AFFICHE_V=null;CHARGE=false;ui.depuisCache=null;ui.comptes=null;ui.journal=null;ui.import=null;ui.codeMontre=null;ui.codesEquipe=null;ui.ceqOuvert=false;
   try{Object.values(Chart.instances||{}).forEach(c=>c.destroy());}catch(x){}
   $('dx-tableau').innerHTML=TABLEAU_VIERGE;fermerMenu();majEcran();if(msg)toast(msg);
 }
@@ -1318,9 +1323,60 @@ function zoneComptes(){
     const ed=ui.edition===c.id;
     return `<li class="${c.actif?'':'inactif'}"><div><b>${esc(c.nom)}</b> <span class="dx-gris">(${esc(c.id)})</span><br>${esc(c.roleLib)}${c.perimetre?' · '+esc(c.perimetre):''}${c.actif?'':' · <b>désactivé</b>'}${c.codeDepart?' · <span class="dx-gris">code provisoire pas encore changé</span>':''}<br><span class="dx-gris">${c.derniere?'Dernière connexion le '+esc(dateFr(c.derniere)):'Jamais connecté'}</span></div>
       ${ed?formCompte(c):`<div class="dx-ligne"><button class="dx-btn petit" type="button" data-a="c-modifier" data-id="${esc(c.id)}">Modifier</button><button class="dx-btn petit" type="button" data-a="c-code" data-id="${esc(c.id)}">Nouveau code</button>${c.id===ETAT.moi.id?'':`<button class="dx-btn petit${c.actif?' danger':''}" type="button" data-a="${c.actif?'c-desactiver':'c-activer'}" data-id="${esc(c.id)}">${c.actif?'Désactiver':'Réactiver'}</button>`}</div>`}</li>`;}).join('')+'</ul>';
+  h+=zoneComptesEquipe();
   h+=ui.edition==='nouveau'?formCompte(null):'<button class="dx-btn" type="button" data-a="c-nouveau">Ajouter un compte</button>';
   return h+'<div class="dx-msg" id="cptMsg" hidden></div>';
 }
+// ---------- comptes de l'équipe en une fois (02/11/2026) ----------
+const sansAcc=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,'');
+/** Identifiant proposé : prénom.nom (la fiche s'écrit « Nom Prénom ») ; N'Cho Joseph → joseph.ncho. */
+function idPropose(nom){const m=sansAcc(nom).split(/\s+/).filter(Boolean);return m.length>1?m[1]+'.'+m[0]:(m[0]||'');}
+/** Compte existant au même nom (mots identiques, dans n'importe quel ordre) : on relie au lieu de créer. */
+function compteDuNom(nom){const k=sansAcc(nom).split(/\s+/).filter(Boolean).sort().join(' ');return (ui.comptes.comptes||[]).find(c=>sansAcc(c.nom).split(/\s+/).filter(Boolean).sort().join(' ')===k)||null;}
+function lignesComptesEquipe(){
+  const ids=new Set((ui.comptes.comptes||[]).map(c=>c.id)),pris=new Set(ids),L=[];
+  agents().filter(a=>!a.compte||!ids.has(a.compte)).sort((a,b)=>ORDRE_F.indexOf(a.fonction)-ORDRE_F.indexOf(b.fonction)||a.nom.localeCompare(b.nom,'fr')).forEach(a=>{
+    const ex=compteDuNom(a.nom);
+    if(ex&&!agents().some(b=>b.compte===ex.id)){L.push({a,id:ex.id,relier:true});return;}
+    let id=idPropose(a.nom),base=id,n=2;while(pris.has(id))id=base+n++;
+    pris.add(id);L.push({a,id,relier:false});
+  });
+  return L;
+}
+function zoneComptesEquipe(){
+  if(ui.codesEquipe)return `<div class="dx-code"><p><b>Codes provisoires de l'équipe</b> : notez-les ou copiez-les maintenant, ils ne seront plus affichés.</p>
+    <ul class="dx-liste">${ui.codesEquipe.map(c=>`<li><b>${esc(c.nom)}</b><br>Identifiant : <b>${esc(c.id)}</b> · Code : <b class="dx-gros-i">${esc(c.code)}</b></li>`).join('')}</ul>
+    <p class="dx-gris">Chacun se connecte sur https://univers-co.github.io et choisit son propre code à la première connexion.</p>
+    <div class="dx-ligne"><button class="dx-btn plein" type="button" data-a="ceq-copier">Copier la liste</button><button class="dx-btn" type="button" data-a="ceq-vu">J'ai noté les codes</button></div></div>`;
+  const deja=agents().filter(a=>a.compte&&(ui.comptes.comptes||[]).some(c=>c.id===a.compte));
+  if(!ui.ceqOuvert){const n=lignesComptesEquipe().length;
+    return n?`<div class="dx-carte dx-ceq"><p><b>${n} membre${n>1?'s':''} de l'équipe sans compte relié.</b> Créez-les en une fois : chacun reçoit un identifiant et un code provisoire, relié à sa fiche.</p><button class="dx-btn plein" type="button" data-a="ceq-ouvrir">Créer les comptes de l'équipe</button></div>`:'';}
+  const L=lignesComptesEquipe();
+  return `<form class="dx-form dx-carte dx-ceq" id="fComptesEq"><p><b>Comptes de l'équipe</b> : rôle Hiérarchie (tout voir, sans les réglages). Décochez ceux qui n'en ont pas besoin ; l'identifiant se modifie.</p>
+    ${L.map((x,i)=>`<div class="dx-ceq-l"><label class="dx-ceq-c"><input type="checkbox" data-ceq="${i}" checked> <b>${esc(x.a.nom)}</b> <span class="dx-gris">${esc(libF(x.a.fonction))}</span></label>
+      <input id="ceqId${i}" data-agent="${esc(x.a.id)}" data-relier="${x.relier?1:''}" value="${esc(x.id)}" autocapitalize="none" autocomplete="off" maxlength="30"${x.relier?' readonly':''} aria-label="Identifiant de ${esc(x.a.nom)}">
+      ${x.relier?'<span class="dx-gris">Compte existant : il sera relié à la fiche, sans nouveau code.</span>':''}</div>`).join('')}
+    ${deja.length?`<p class="dx-gris">Déjà relié${deja.length>1?'s':''} : ${deja.map(a=>esc(a.nom)+' ('+esc(a.compte)+')').join(', ')}.</p>`:''}
+    <div class="dx-ligne"><button class="dx-btn plein" type="submit">Créer les comptes cochés</button><button class="dx-btn" type="button" data-a="ceq-fermer">Annuler</button></div></form>`;
+}
+async function creerComptesEquipe(f){
+  const liste=[...f.querySelectorAll('[data-ceq]')].filter(c=>c.checked).map(c=>{const e=$('ceqId'+c.dataset.ceq);return {agent:e.dataset.agent,id:e.value.trim(),relier:!!e.dataset.relier};});
+  if(!liste.length){toast('Cochez au moins une personne.');return;}
+  const b=f.querySelector('[type=submit]');b.disabled=true;toast('Création des comptes…');
+  try{const r=await appel('apiComptesEquipe',SESSION.jeton,newId(),liste);
+    ui.comptes=r.comptes;ui.ceqOuvert=false;ui.codesEquipe=r.codes.length?r.codes:null;appliquerEtat(r.etat);renderMenu();
+    toast(r.codes.length+' compte'+(r.codes.length>1?'s':'')+' créé'+(r.codes.length>1?'s':'')+(r.erreurs.length?' ; '+r.erreurs.length+' refusé'+(r.erreurs.length>1?'s':''):'')+'.');
+    if(r.erreurs.length){const m=$('cptMsg');if(m){m.hidden=false;m.textContent=r.erreurs.join(' ');}}}
+  catch(e){b.disabled=false;if(estSession(e))return finSession();toast(messageErreur(e));}
+}
+document.addEventListener('submit',ev=>{if(ev.target&&ev.target.id==='fComptesEq'){ev.preventDefault();creerComptesEquipe(ev.target);}});
+document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-a^="ceq-"]');if(!b)return;const a=b.dataset.a;
+  if(a==='ceq-ouvrir'){ui.ceqOuvert=true;renderMenu();}
+  else if(a==='ceq-fermer'){ui.ceqOuvert=false;renderMenu();}
+  else if(a==='ceq-vu'){if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Confirmer : les codes disparaîtront';return;}ui.codesEquipe=null;renderMenu();}
+  else if(a==='ceq-copier'){const t='UNIVERS C.O : https://univers-co.github.io\n'+ui.codesEquipe.map(c=>c.nom+' : identifiant '+c.id+', code provisoire '+c.code).join('\n');
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Liste copiée.'),()=>toast('Copie impossible : notez les codes.'));}
+});
 function formCompte(c){
   const r=c?c.role:'agence';
   return `<form class="dx-form" id="fCompte" data-id="${c?esc(c.id):''}">
