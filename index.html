@@ -185,8 +185,13 @@ body[data-ecran="app"]{padding-bottom:calc(74px + env(safe-area-inset-bottom))}
 body:not([data-ecran="app"]) .dx-nav{display:none}
 .dx-hero{background:var(--head);color:#fff;border-radius:16px;padding:16px 18px;margin-bottom:12px}
 .dx-hero-l1{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.dx-marque-p{font-weight:800;letter-spacing:.12em;font-size:13px}
-.dx-hero small{font-size:11px;opacity:.75}
+.dx-marque-p{font-weight:800;letter-spacing:.1em;font-size:22px;line-height:1.1}
+.dx-hero small{font-size:13px;opacity:.8}
+/* Logo de l'application (la goutte, même image que l'icône du téléphone), détaché du fond par un liseré clair */
+.dx-hero-logo{width:52px;height:52px;border-radius:13px;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.4),0 2px 6px rgba(0,0,0,.3)}
+.dx-hero-l1{gap:12px}
+/* Image de fond de l'en-tête (photo de la salle du Centre, fond-accueil.jpg) : voile bleu nuit plus dense à gauche, côté texte */
+.dx-hero{background-color:var(--head);background-image:linear-gradient(100deg,rgba(14,26,46,.88) 0%,rgba(14,26,46,.62) 55%,rgba(14,26,46,.38) 100%),url(fond-accueil.jpg);background-size:cover;background-position:center 45%;text-shadow:0 1px 3px rgba(0,0,0,.35)}
 .dx-hero h2{font-size:21px;font-weight:700}
 .dx-hero p{font-size:13px;opacity:.8;margin-top:2px}
 .dx-ic{display:inline-grid;place-items:center;color:#fff;border-radius:9px;width:28px;height:28px;flex-shrink:0;vertical-align:middle}
@@ -396,8 +401,10 @@ a.dx-btn{text-decoration:none;display:inline-flex;align-items:center;justify-con
 .dx-astuce{font-size:12px;color:var(--ink3)}
 
 /* iPhone : page figée (rien ne glisse de côté ni ne rebondit) et aucun champ sous 16 px (sinon Safari zoome et l'écran glisse) */
-html,body{overflow-x:hidden;max-width:100%;overscroll-behavior:none}
-body{position:relative}
+/* body en « clip » et non « hidden » : sinon il devient lui-même une zone de défilement vide qui, avec overscroll-behavior,
+   bloque la molette et le trackpad de l'ordinateur */
+html{overflow-x:hidden;max-width:100%;overscroll-behavior-y:none}
+body{overflow-x:clip;max-width:100%;position:relative}
 @media (pointer:coarse){#dx-tableau select,#dx-tableau input{font-size:16px}}
 /* Tableau DEXA sur téléphone : le choix des mini-graphiques passe sous son libellé, sur toute la largeur */
 @media (max-width:520px){#dx-tableau .cardhead .ctl{display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%;min-width:0}#dx-tableau .cardhead .ctl select{width:100%;max-width:100%}}
@@ -468,6 +475,8 @@ table.pq{border-collapse:collapse;font-size:10px;font-weight:700}
 .dx-ag-q{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink2);margin-bottom:6px;flex-wrap:wrap}.dx-ag-q svg{width:14px;height:14px}.dx-ag-q span{margin-right:8px}
 .dx-ag-auj{border-color:var(--blue)}
 
+/* Volet « Changer un Ordonnanceur de la rotation » : la liste des changements se détache du bouton */
+#dRot h3{margin:16px 0 4px}
 </style>
 <script>
 // Témoin de démarrage : prévient la page d'accueil dès que la page s'exécute (elle relance l'ouverture sinon).
@@ -518,6 +527,7 @@ table.pq{border-collapse:collapse;font-size:10px;font-weight:700}
   <section class="dx-vue" id="v-agenda" data-vue="agenda" hidden></section>
   <section class="dx-vue" id="v-stats" data-vue="stats" hidden></section>
   <section class="dx-vue" id="v-donnees" data-vue="donnees" hidden>
+    <div class="dx-seg dx-svc" id="dx-svc" role="tablist" aria-label="Service" hidden></div>
     <div class="dx-vide" id="dx-vide" hidden></div>
     <div id="dx-tableau">
 <div class="wrap">
@@ -762,7 +772,7 @@ const DATA = __D.data;  // [année, agence, direction, mois, type, traitées, da
 const YEAR_CUR = __D.annee, YEAR_PREV = __D.anneePrec, NUM_MOIS = __D.numMois;
 const MOIS = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sept','Oct','Nov','Déc'].slice(0,NUM_MOIS);  // un libellé par mois renseigné
 const MOIS_LONG = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-const CATS = ['Branchement cassé','Fuite robinet de prise','Traversée cassée','Fuite compteur','Défaillance compteur','Travaux divers','Autres actions'];
+const CATS = __D.cats || ['Branchement cassé','Fuite robinet de prise','Traversée cassée','Fuite compteur','Défaillance compteur','Travaux divers','Autres actions'];
 const $ = id => document.getElementById(id);
 const fmt = n => Math.round(n).toLocaleString('fr-FR');
 const pct = (x,d=1) => (x*100).toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d})+' %';
@@ -773,7 +783,7 @@ const agg = rows => rows.reduce((a,r)=>{a.n+=r[5];a.d+=r[6];a.t+=r[7];a.p+=r[8];
 const rate = a => a.n? a.d/a.n : NaN;
 const tmtOf = a => a.n? a.t/a.n : NaN;
 const AG = [...new Map(DATA.map(r=>[r[1],r[2]])).entries()].map(([a,d])=>({a,d}));
-const DRS = ['DRANE','DRYOP','DRAS','DRABO'];
+const DRS = __D.drs || ['DRANE','DRYOP','DRAS','DRABO'];
 const ml = i => MOIS_LONG[i-1].toLowerCase();
 
 // ---------- filtres ----------
@@ -1036,10 +1046,10 @@ function insights(){
   document.querySelectorAll('.lblCur').forEach(e=>e.textContent=YEAR_CUR);
   const opt=(sel,v,txt)=>{const o=document.querySelector(`${sel} option[value="${v}"]`); if(o) o.textContent=txt;};
   opt('#hmMode','r26',`Taux ${YEAR_CUR}`); opt('#hmMode','r25',`Taux ${YEAR_PREV}`); opt('#hmMode','d',`Écart ${YEAR_CUR} vs ${YEAR_PREV} (points)`);
-  $('pageTitle').textContent = `Tableau de bord DEXA ${YEAR_CUR} : traitement des réclamations`;
-  document.title = `UNIVERS C.O – Tableau de bord DEXA ${YEAR_CUR}`;
+  $('pageTitle').textContent = `Tableau de bord ${__D.svc||'DEXA'} ${YEAR_CUR} : traitement des réclamations`;
+  document.title = `UNIVERS C.O – Tableau de bord ${__D.svc||'DEXA'} ${YEAR_CUR}`;
   const per = ml(1)+'–'+ml(NUM_MOIS);
-  $('pageSub').textContent = `Données ${per} ${YEAR_CUR}, comparées à ${per} ${YEAR_PREV} · ${AG.length} agences · ${DRS.length} directions régionales`;
+  $('pageSub').textContent = `Données ${per} ${YEAR_CUR}`+(DATA.some(r=>r[0]===YEAR_PREV)?`, comparées à ${per} ${YEAR_PREV}`:'')+` · ${AG.length} ${__D.unite||'agences'} · ${DRS.length} directions régionales`;
   $('footerNote').textContent = NUM_MOIS<12 ? `Les mois au-delà de ${ml(NUM_MOIS)} ${YEAR_CUR} ne sont pas encore renseignés dans le fichier source.` : '';
 })();
 function render(){ insights(); renderKPIs(); renderCharts(); renderAnomalies(); renderHeat(); renderDetail(); }
@@ -1072,7 +1082,7 @@ let ETAT=null,AFFICHE_V=null,CHARGE=false;
 const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 /** Délai maximal par fonction : sur le réseau mobile, un appel à Google peut rester sans réponse. */
-const DELAIS={apiEtat:15000,apiConnexion:15000,apiChangerCode:20000,apiCodeOublie:30000,apiDefiFaceID:12000,apiConnexionFaceID:20000,apiEnregistrerFaceID:30000,apiRetirerFaceID:30000,apiImporterDrive:240000,apiComptes:20000,apiCompte:30000,apiJournal:20000,apiDeconnexion:10000,apiPlateforme:30000,apiDocEnvoyer:180000,apiDocOuvrir:120000,apiTrace:20000,apiStats:40000,apiCourante:30000,apiCouranteEcrire:40000,apiCourantePhoto:180000,apiCouranteVoirPhoto:120000,apiCouranteVoirAudio:120000,apiAnnuaire:30000,apiAnnuaireEcrire:40000,apiAnnuaireImporter:180000,apiAgenda:30000,apiAgendaEcrire:40000};
+const DELAIS={apiEtat:15000,apiConnexion:15000,apiChangerCode:20000,apiCodeOublie:30000,apiDefiFaceID:12000,apiConnexionFaceID:20000,apiEnregistrerFaceID:30000,apiRetirerFaceID:30000,apiImporterDrive:240000,apiComptes:20000,apiCompte:30000,apiJournal:20000,apiDeconnexion:10000,apiPlateforme:30000,apiDocEnvoyer:180000,apiDocOuvrir:120000,apiTrace:20000,apiStats:40000,apiCourante:30000,apiCouranteEcrire:40000,apiCourantePhoto:180000,apiCouranteVoirPhoto:120000,apiCouranteVoirAudio:120000,apiAnnuaire:30000,apiAnnuaireEcrire:40000,apiAnnuaireImporter:180000,apiAgenda:30000,apiAgendaEcrire:40000,apiService:40000};
 /** Page d'accueil (DX.api) : appel direct du service de données par fetch, une seule connexion Google.
  *  Corps en text/plain : pas de requête préalable (CORS). Les refus gardent la forme « REFUS: … » de google.script.run. */
 function appelDirect(fn,args){
@@ -1132,22 +1142,58 @@ function appliquerEtat(e,deCache){
   majEcran();afficherTableau();renderBarre();rendrePlateforme();if(!$('dx-menu').hidden)renderMenu();
 }
 const TABLEAU_VIERGE=$('dx-tableau').innerHTML;
+/** Services du Centre (02/11/2026) : DEXA (état général), DEXI et SDMR (chargés à la demande, gardés sur le téléphone). */
+const SERVICES_D=['DEXA','DEXI','SDMR'];
+ui.svc=lsGet('svc','DEXA');
+const SVCD={};
+function svcCourant(){return ETAT&&ETAT.mc&&SERVICES_D.includes(ui.svc)?ui.svc:'DEXA';}
+function donneesTableau(){
+  const s=svcCourant();
+  if(s==='DEXA')return{svc:'DEXA',data:ETAT.data,annee:ETAT.annee,anneePrec:ETAT.anneePrec,numMois:ETAT.numMois,source:ETAT.source,v:ETAT.vd};
+  if(!SVCD[s]){const g=lsGet('svc:'+s,null);if(g&&g.data)SVCD[s]=g;}
+  return SVCD[s]||null;
+}
+async function chargerService(s){
+  if(ui['svcEnCours'+s]||!SESSION.jeton)return;
+  ui['svcEnCours'+s]=true;
+  try{
+    const d=await appelFiable('apiService',SESSION.jeton,s,SVCD[s]&&SVCD[s].v||null);
+    if(!d.inchange){SVCD[s]=d;lsSet('svc:'+s,d.vide?null:d);}
+  }catch(e){if(estSession(e))return finSession('Votre connexion a expiré. Reconnectez-vous.');if(!SVCD[s])SVCD[s]={svc:s,erreur:messageErreur(e)};}
+  finally{ui['svcEnCours'+s]=false;}
+  if(ui.vue==='donnees'&&svcCourant()===s){AFFICHE_V='?';afficherTableau();}
+}
+function renderSvc(){
+  const z=$('dx-svc');if(!z)return;
+  z.hidden=!(ETAT&&ETAT.mc);if(z.hidden)return;
+  const s=svcCourant();
+  z.innerHTML=SERVICES_D.map(x=>`<button type="button" role="tab" aria-selected="${x===s}" class="${x===s?'on':''}" data-svc="${x}">${x}</button>`).join('');
+}
+document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-svc]');if(!b)return;ui.svc=b.dataset.svc;lsSet('svc',ui.svc);renderSvc();afficherTableau();try{window.scrollTo(0,0);}catch(x){}});
 /** Lance (ou relance, si les données ont changé) le tableau de bord, tel qu'il était dans le fichier HTML. */
-function cleTableau(){return ETAT?[ETAT.vd,ETAT.moi&&ETAT.moi.role,ETAT.moi&&ETAT.moi.perimetre,ETAT.annee,ETAT.numMois,(ETAT.data||[]).length].join('|'):null;}
+function cleTableau(){const d=ETAT&&donneesTableau();return ETAT?[svcCourant(),d&&d.v,d&&(d.data||[]).length,ETAT.moi&&ETAT.moi.role,ETAT.moi&&ETAT.moi.perimetre,d&&d.annee,d&&d.numMois].join('|'):null;}
 function afficherTableau(){
-  if(!ETAT||ui.vue!=='donnees'||cleTableau()===AFFICHE_V)return;
-  const vide=!ETAT.data||!ETAT.data.length;
+  if(!ETAT||ui.vue!=='donnees')return;
+  renderSvc();
+  const s=svcCourant(),d=donneesTableau();
+  if(s!=='DEXA'&&!ui['svcVu'+s]){ui['svcVu'+s]=true;chargerService(s);}   // une relecture par ouverture (version comparée côté serveur)
+  if(cleTableau()===AFFICHE_V)return;
+  const vide=!d||!d.data||!d.data.length;
   $('dx-vide').hidden=!vide;$('dx-tableau').hidden=vide;
   if(vide){
-    $('dx-vide').innerHTML=ETAT.moi&&ETAT.moi.role==='admin'
+    $('dx-vide').innerHTML=s!=='DEXA'
+      ?(!d?'<h2>Chargement des données '+s+'…</h2><p>Un instant : elles seront ensuite gardées sur le téléphone.</p>'
+        :d.erreur?'<h2>Données '+s+' indisponibles</h2><p>'+esc(d.erreur)+'</p>'
+        :'<h2>Aucune donnée '+s+' pour l\'instant</h2><p>Les chiffres '+s+' apparaîtront dès leur reprise dans l\'application.</p>')
+      :ETAT.moi&&ETAT.moi.role==='admin'
       ?'<h2>Aucune donnée pour l\'instant</h2><p>Déposez un RAPPORT_DEXA du GMAO dans le Google Drive de l\'application, puis ouvrez le <b>Menu</b> › « Importer maintenant ».</p>'
       :'<h2>Aucune donnée pour l\'instant</h2><p>Le tableau de bord de votre périmètre apparaîtra dès que les données du mois auront été importées.</p>';
-    AFFICHE_V=cleTableau();return;
+    AFFICHE_V=d&&!d.erreur?cleTableau():null;return;
   }
   if(AFFICHE_V!==null){try{Object.values(Chart.instances||{}).forEach(c=>c.destroy());}catch(x){}$('dx-tableau').innerHTML=TABLEAU_VIERGE;}
-  window.lancerTableau({data:ETAT.data,annee:ETAT.annee,anneePrec:ETAT.anneePrec,numMois:ETAT.numMois});
-  const s=$('sourceLine');if(s)s.textContent=ETAT.source||'';
-  ajusterSousTitre();
+  window.lancerTableau({svc:s,data:d.data,annee:d.annee,anneePrec:d.anneePrec,numMois:d.numMois,cats:d.cats,drs:d.drs,unite:s==='SDMR'?'DM':'agences'});
+  const so=$('sourceLine');if(so)so.textContent=d.source||'';
+  if(s==='DEXA')ajusterSousTitre();
   AFFICHE_V=cleTableau();
 }
 /** Pour un directeur ou un chef d'agence, le sous-titre nomme son périmètre (et non 16 agences, 4 directions). */
@@ -1158,7 +1204,7 @@ function ajusterSousTitre(){
 }
 function finSession(msg){
   ui.planif=null;
-  SESSION.jeton=null;lsSet('jeton',null);lsSet('etat',null);lsSet('mc',null);MC=null;ui.mcDemande=false;lsSet('ann',null);ANN=null;ui.annDemande=false;lsSet('ag',null);AG=null;ui.agDemande=false;versPorte({dx:'session',jeton:null});
+  SESSION.jeton=null;lsSet('jeton',null);lsSet('etat',null);lsSet('mc',null);MC=null;ui.mcDemande=false;lsSet('ann',null);ANN=null;ui.annDemande=false;lsSet('ag',null);AG=null;ui.agDemande=false;SERVICES_D.forEach(x=>{lsSet('svc:'+x,null);delete SVCD[x];ui['svcVu'+x]=false;});versPorte({dx:'session',jeton:null});
   ETAT=null;AFFICHE_V=null;CHARGE=false;ui.depuisCache=null;ui.comptes=null;ui.journal=null;ui.import=null;ui.codeMontre=null;
   try{Object.values(Chart.instances||{}).forEach(c=>c.destroy());}catch(x){}
   $('dx-tableau').innerHTML=TABLEAU_VIERGE;fermerMenu();majEcran();if(msg)toast(msg);
@@ -1432,7 +1478,7 @@ const ICONES={
 };
 const svgI=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONES[k]||''}</svg>`;
 const MODULES=[['quarts','Quarts','#f2b01e',1],['equipe','Équipe','#2a78d6',1],['organigramme','Organigramme','#0f7a8a',1],['documents','Documents','#8a6d3b',1],
-  ['donnees','Données DEXA','#0f2b46',1],['journal','Main courante','#5a6b7d',1],['annuaire','Annuaire','#3d6fd8',1],['reunion','Réunions','#14a3a3',1],['agenda','Agenda','#eb6834',1],['assistant','Allô C.O','#7a5af0',0],
+  ['donnees','Données','#0f2b46',1],['journal','Main courante','#5a6b7d',1],['annuaire','Annuaire','#3d6fd8',1],['reunion','Réunions','#14a3a3',1],['agenda','Agenda','#eb6834',1],['assistant','Allô C.O','#7a5af0',0],
   ['tablette','Tablettes','#1a9b5c',0],['projets','Projets','#d4532a',0],['social','Vie du service','#e0457b',0]];
 ICONES.documents=ICONES.docs;
 const couleurMod=k=>k==='stats'?'#c2410c':(MODULES.find(m=>m[0]===k)||[0,0,'#0f2b46'])[2];
@@ -1468,11 +1514,13 @@ const estAdmin=()=>!!(ETAT&&ETAT.moi&&ETAT.moi.role==='admin');
 const horaires=()=>(P().cycle&&P().cycle.horaires)||{J:['07:30','19:30'],N:['19:30','07:30']};
 const libQuart=q=>{const h=horaires()[q];return (q==='J'?'Jour':'Nuit')+' · '+hFr(h[0])+' – '+hFr(h[1]);};
 function absence(id,iso){return (P().absences||[]).find(x=>x.agent===id&&x.du<=iso&&iso<=x.au)||null;}
+/** Rotation en vigueur le jour iso : l'ordre de départ, puis chaque changement daté (« X prend la place de Y à partir du … »). */
+function ordreAu(iso){const c=P().cycle||{},o=(c.ordre||[]).slice();(c.changements||[]).filter(x=>x.du<=iso).sort((a,b)=>a.du.localeCompare(b.du)).forEach(x=>{const i=o.indexOf(x.sort);if(i>=0)o[i]=x.entre;});return o;}
 function codeCycle(k,iso){const c=P().cycle||{};if(!c.debut||!c.motif)return null;const L=c.motif.length,d=ecart(c.debut,iso)-(Number(c.pas)||0)*k;return c.motif[((d%L)+L)%L];}
 /** Qui tient le quart q (J ou N) du jour iso. extra : modifications supplémentaires (propositions pas encore enregistrées). */
 function quart(iso,q,extra){
-  const c=P().cycle||{};let base=null;
-  (c.ordre||[]).forEach((id,k)=>{if(!base&&codeCycle(k,iso)===q)base=id;});
+  let base=null;
+  ordreAu(iso).forEach((id,k)=>{if(!base&&codeCycle(k,iso)===q)base=id;});
   const m=(extra&&extra[iso+'|'+q])||(P().modifs||{})[iso+'|'+q];
   if(m)return {agent:m.agent==='vacant'?null:m.agent,base,modifie:true,motif:m.motif||'',vacant:m.agent==='vacant'};
   if(base&&absence(base,iso))return {agent:null,base,vacant:true,motif:'absence de '+nomAg(base)};
@@ -1573,7 +1621,7 @@ function chiffreDexa(){
 }
 function rendreAccueil(){
   const now=new Date(),iso=isoJ(now),prenom=String(ETAT.moi.nom||'').split(/\s+/)[0];
-  let h=`<div class="dx-hero"><div class="dx-hero-l1"><span class="dx-logo">C.O</span><div><div class="dx-marque-p">UNIVERS C.O</div><small>Centre d’ordonnancement</small></div></div>
+  let h=`<div class="dx-hero"><div class="dx-hero-l1"><img class="dx-hero-logo" src="${(document.querySelector('#cxForm img')||{}).src||''}" alt="" width="52" height="52"><div><div class="dx-marque-p">UNIVERS C.O</div><small>Centre d’ordonnancement</small></div></div>
     <h2>Bonjour ${esc(prenom)} 👋</h2><p>${esc(libLong(iso).replace(/^./,c=>c.toUpperCase()))}</p></div>`;
   // En quart maintenant
   if(cycleRegle()){
@@ -1642,7 +1690,7 @@ function rendreQuarts(){
   const abs=(P().absences||[]).filter(x=>x.au>=debut&&x.du<=fin).sort((a,b)=>a.du.localeCompare(b.du));
   h+=`<div class="dx-carte"><h3>Absences et congés</h3>${abs.length?abs.map(x=>`<div class="dx-li"><span class="dx-emoji">🏖️</span><span>${esc(nomAg(x.agent))} · ${esc(x.motif)}</span><span class="d">${esc(libJour(x.du))}${x.au!==x.du?' → '+esc(libJour(x.au)):''}</span>${admin?`<button class="dx-btn petit" type="button" data-a="abs-retirer" data-id="${esc(x.id)}">Retirer</button>`:''}</div>`).join(''):'<p class="dx-gris">Aucune absence ce mois-ci.</p>'}
     ${admin?formAbsence(debut):''}</div>`;
-  if(admin)h+=formCycle(false);
+  if(admin)h+=formRotation(mois)+formCycle(false);
   $('v-quarts').innerHTML=h;
 }
 function editeurSlot(j,q){
@@ -1666,13 +1714,32 @@ function formAbsence(defaut){
     <label for="abMotif">Motif</label><input id="abMotif" maxlength="60" placeholder="Congé, maladie, formation…">
     <button class="dx-btn plein" type="submit">Enregistrer l’absence</button></form></details>`;
 }
+/** Options d'une liste de choix : toute l'équipe active, par fonction (quart, suppléants, hors quart, autres), nom court entre parenthèses. */
+function optionsEquipe(sel,exclure){
+  const ex=exclure||[],F=['quart','remplacant','dexa','dexi','sdmr','autre','chefservice','sousdirecteur','directeur'];
+  return F.map(f=>{const G=agents().filter(a=>a.fonction===f&&(a.id===sel||!ex.includes(a.id))).sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
+    return G.length?`<optgroup label="${esc(libF(f))}">${G.map(a=>`<option value="${esc(a.id)}"${a.id===sel?' selected':''}>${esc(a.nom)}${a.court?' ('+esc(a.court)+')':''}</option>`).join('')}</optgroup>`:'';}).join('');
+}
+/** Changer un Ordonnanceur de la rotation à partir d'une date (ex. « GONLI remplace AMINE à partir du 15 ») : il garde la place et la couleur. */
+function formRotation(mois){
+  const c=P().cycle||{},auj=isoJ(new Date()),du=ui.rotDu||(moisDe(auj)===mois?auj:mois+'-01'),o=ordreAu(du).filter(Boolean);
+  const ch=(c.changements||[]).slice().sort((a,b)=>a.du.localeCompare(b.du));
+  return `<details class="dx-carte dx-details"${ui.rotOuvert?' open':''} id="dRot"><summary><b>Changer un Ordonnanceur de la rotation</b></summary>
+    <p class="dx-gris">Pour un remplacement durable (et non un seul quart) : le nouveau venu prend la place, les jours et la couleur de celui qui sort, à partir de la date choisie.</p>
+    <form class="dx-form" id="fRot">
+      <label for="rtDu">À partir du</label><input id="rtDu" type="date" value="${esc(du)}" min="${esc(ajoute(c.debut||du,1))}">
+      <label for="rtSort">Qui quitte la rotation</label><select id="rtSort">${o.map(id=>`<option value="${esc(id)}">${esc(nomAg(id))}</option>`).join('')}</select>
+      <label for="rtEntre">Qui prend sa place</label><select id="rtEntre">${optionsEquipe(null,o)}</select>
+      <button class="dx-btn plein" type="submit">Enregistrer le changement</button></form>
+    ${ch.length?`<h3>Changements enregistrés</h3>${ch.map(x=>`<div class="dx-li"><span>À partir du ${esc(libJour(x.du))} : <b>${esc(nomAg(x.entre))}</b> remplace ${esc(nomAg(x.sort))}</span><button class="dx-btn petit" type="button" data-a="rot-retirer" data-du="${esc(x.du)}" data-sort="${esc(x.sort)}">Retirer</button></div>`).join('')}`:''}</details>`;
+}
 function formCycle(ouvert){
   const c=P().cycle||{},q=agents().filter(a=>a.fonction==='quart'),ordre=(c.ordre||[]).slice();
   // Premier réglage : les Ordonnanceurs de quart sont proposés d'office, dans l'ordre de l'Équipe
   if(!ordre.filter(Boolean).length)q.forEach(a=>ordre.push(a.id));
   while(ordre.length<Math.max(4,q.length))ordre.push('');
   const h=c.horaires||{J:['07:30','19:30'],N:['19:30','07:30']},debut=c.debut||(ui.moisQ||moisDe(isoJ(new Date())))+'-01';
-  const choix=(id,i)=>`<select id="cyOrd${i}" data-ordre="1" aria-label="${i?'Puis':'De jour en premier'}"><option value="">—</option>${agents().filter(a=>a.fonction==='quart'||a.fonction==='remplacant'||a.id===id).map(a=>`<option value="${esc(a.id)}"${a.id===id?' selected':''}>${esc(a.nom)}</option>`).join('')}</select>`;
+  const choix=(id,i)=>`<select id="cyOrd${i}" data-ordre="1" aria-label="${i?'Puis':'De jour en premier'}"><option value="">—</option>${optionsEquipe(id)}</select>`;
   return `<details class="dx-carte dx-details"${ouvert||ui.cycleOuvert?' open':''}><summary><b>Régler le cycle des quarts</b></summary><form class="dx-form" id="fCycle">
     <p class="dx-gris">Comme sur le programme du service : chaque Ordonnanceur fait 2 jours de jour, 2 jours de repos, 2 nuits, 2 jours de repos, puis recommence. Indiquez seulement qui est de jour, dans l’ordre de passage.</p>
     <label for="cyDebut">À partir du</label><input id="cyDebut" type="date" value="${esc(debut)}">
@@ -1703,7 +1770,7 @@ function rendreEquipe(){
   if(!L.length)h+=`<div class="dx-carte"><p>${admin?'Ajoutez les membres du service : le Directeur, le Sous-directeur, le Chef de service, les Ordonnanceurs de quart, les Ordonnanceurs suppléants et les Ordonnanceurs hors quart (DEXA, DEXI, SDMR).':'L’équipe n’a pas encore été saisie.'}</p></div>`;
   ORDRE_F.forEach(f=>{
     let G=L.filter(a=>a.fonction===f);if(!G.length)return;
-    if(f==='quart'){const o=(P().cycle&&P().cycle.ordre)||[];G=G.sort((a,b)=>(o.indexOf(a.id)<0?99:o.indexOf(a.id))-(o.indexOf(b.id)<0?99:o.indexOf(b.id)));}
+    if(f==='quart'){const o=ordreAu(isoJ(now));G=G.sort((a,b)=>(o.indexOf(a.id)<0?99:o.indexOf(a.id))-(o.indexOf(b.id)<0?99:o.indexOf(b.id)));}
     h+=`<div class="dx-carte"><h3>${esc(F[f]||f)}</h3>${G.map(a=>{const ab=absence(a.id,isoJ(now));
       return ui.agentEdit===a.id?formAgent(a):`<div class="dx-membre">${avatar(a)}<div class="dx-qn-t"><b>${esc(a.nom)}</b><span>${[a.id===cur?'<em class="dx-badge">De quart maintenant</em>':'',ab?'<em class="dx-badge gris">Absent · '+esc(ab.motif)+'</em>':'',a.anniv?'🎂 '+esc(a.anniv.split('-').reverse().join('/')):'',a.compte?'Compte '+esc(a.compte):''].filter(Boolean).join(' · ')}</span></div><div class="dx-contacts">${contacts(a)}${admin?`<button class="dx-btn petit" type="button" data-a="ag-modifier" data-id="${esc(a.id)}">Modifier</button>`:''}</div></div>`;}).join('')}</div>`;
   });
@@ -1713,7 +1780,7 @@ function rendreEquipe(){
 }
 /** Organigramme déduit des fonctions : directeur › sous-directeur › chef de service › ordonnanceurs (quart, suppléants, hors quart). */
 function organigramme(L,cur,admin){
-  const de=f=>L.filter(a=>a.fonction===f),o=(P().cycle&&P().cycle.ordre)||[];
+  const de=f=>L.filter(a=>a.fonction===f),o=ordreAu(isoJ(new Date()));
   const tete=(f,coul)=>{const G=de(f);
     if(!G.length)return admin?`<button type="button" class="dx-org-n vide" data-a="ag-nouveau" data-f="${f}"><span class="dx-av vide">+</span><span class="dx-qn-t"><b>${esc(libF(f))}</b><span>À renseigner</span></span></button>`:'';
     return G.map(a=>`<div class="dx-org-n" style="border-top-color:${coul}">${avatar(a)}<div class="dx-qn-t"><b>${esc(a.nom)}</b><span>${esc(libF(f))}</span></div><div class="dx-contacts">${contacts(a)}</div></div>`).join('');};
@@ -1957,10 +2024,13 @@ document.addEventListener('click',ev=>{
   else if(a==='anniv-bascule'){const z=$('anZone').querySelector('.dx-roues');z.hidden=!z.hidden;
     if(z.hidden){$('agAnniv').value='';$('anLib').textContent='Aucune date';b.textContent='Choisir la date';}else{b.textContent='Retirer';placerRoues();}}
   else if(a==='roue'){const r=b.parentNode;r.scrollTo({top:+b.dataset.i*RH,behavior:'smooth'});}
+  else if(a==='rot-retirer'){if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Confirmer';return;}ecrirePlat('rotation-retirer',{du:b.dataset.du,sort:b.dataset.sort});}
   else if(a==='ag-retirer'){if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Confirmer le retrait';return;}ui.agentEdit=null;ecrirePlat('agent-retirer',{id:b.dataset.id});}
 });
 document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='docCherche'){ui.docCherche=ev.target.value;const p=ev.target.selectionStart;rendreDocuments();const i=$('docCherche');if(i){i.focus();try{i.setSelectionRange(p,p);}catch(x){}}}});
 document.addEventListener('toggle',ev=>{if(ev.target&&ev.target.querySelector&&ev.target.querySelector('#fCycle'))ui.cycleOuvert=ev.target.open;},true);
+document.addEventListener('toggle',ev=>{if(ev.target&&ev.target.id==='dRot')ui.rotOuvert=ev.target.open;},true);
+document.addEventListener('change',ev=>{if(ev.target&&ev.target.id==='rtDu'&&ev.target.value){ui.rotDu=ev.target.value;ui.rotOuvert=true;rendreQuarts();}});
 document.addEventListener('submit',ev=>{
   const f=ev.target;
   if(f.id==='fSlot'){ev.preventDefault();ui.qEdit=null;ecrirePlat('modif',{date:f.dataset.j,quart:f.dataset.q,agent:$('slAgent').value,motif:$('slMotif').value});}
@@ -1970,6 +2040,8 @@ document.addEventListener('submit',ev=>{
     if(ordre.some(v=>!v)){toast('Une case est vide entre deux Ordonnanceurs : complétez-la.');return;}
     if(new Set(ordre).size<ordre.length){toast('Un Ordonnanceur est choisi deux fois.');return;}
     ecrirePlat('cycle',{motif:$('cyMotif').value.trim(),pas:$('cyPas').value,debut:$('cyDebut').value,ordre,horaires:{J:[$('cyJ0').value,$('cyJ1').value],N:[$('cyN0').value,$('cyN1').value]}});}
+  else if(f.id==='fRot'){ev.preventDefault();if(!$('rtSort').value||!$('rtEntre').value){toast('Choisissez qui sort et qui prend sa place.');return;}
+    ui.rotDu=null;ecrirePlat('rotation',{du:$('rtDu').value,sort:$('rtSort').value,entre:$('rtEntre').value});}
   else if(f.id==='fDoc'){ev.preventDefault();envoyerDoc(f);}
   else if(f.id==='fAgent'){ev.preventDefault();const anniv=/^\d{2}-\d{2}$/.test($('agAnniv').value)?$('agAnniv').value:'';
     const id=f.dataset.id;ui.agentEdit=null;
@@ -2223,14 +2295,18 @@ ui.pqVoir=lsGet('pqVoir',true);
 function nomCourt(a){return a?String(a.court||String(a.nom||'').trim().split(/\s+/)[0]||'').toUpperCase():'';}
 const hModele=s=>{const [h,m]=String(s||'0:00').split(':');return Number(h)+'H'+m;};
 function programmeMois(mois){
-  const ordre=(P().cycle&&P().cycle.ordre)||[],jours=joursDuMois(mois),H=horaires(),[y,m]=mois.split('-').map(Number);
-  const cellule=(j,q)=>{const x=quart(j,q);return x.agent?{nom:nomCourt(agent(x.agent)),rang:Math.max(0,ordre.indexOf(x.base))}:{nom:'À POURVOIR',rang:-1};};
+  const jours=joursDuMois(mois),H=horaires(),[y,m]=mois.split('-').map(Number);
+  const cellule=(j,q)=>{const x=quart(j,q);return x.agent?{nom:nomCourt(agent(x.agent)),rang:Math.max(0,ordreAu(j).indexOf(x.base))}:{nom:'À POURVOIR',rang:-1};};
   const debut=jours[0],fin=jours[jours.length-1];
   const date=iso=>moisDe(iso)===mois?String(+iso.slice(8)):(+iso.slice(8))+'/'+iso.slice(5,7);
   const absM=id=>(P().absences||[]).filter(x=>x.agent===id&&x.au>=debut&&x.du<=fin).sort((a,b)=>a.du.localeCompare(b.du))
     .map(x=>'('+((x.motif||'absent').toUpperCase())+(x.du<=debut&&x.au>=fin?'':x.du===x.au?' LE '+date(x.du):' DU '+date(x.du)+' AU '+date(x.au))+')').join(' ');
-  const hq=agents().filter(a=>HORS_QUART.includes(a.fonction)).sort((a,b)=>HORS_QUART.indexOf(a.fonction)-HORS_QUART.indexOf(b.fonction)||a.nom.localeCompare(b.nom,'fr'));
-  const absents=agents().filter(a=>!HORS_QUART.includes(a.fonction)&&absM(a.id)).sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
+  // HORS QUART, comme sur le modèle : les Ordonnanceurs hors quart et ceux de quart qui ne tiennent aucun quart ce mois-ci
+  // (un agent DEXA, DEXI ou SDMR entré dans la rotation n'y figure pas), puis les autres absents du mois
+  const enQuart=new Set();jours.forEach(j=>['J','N'].forEach(q=>{const x=quart(j,q);if(x.agent)enQuart.add(x.agent);}));
+  const rangF=a=>a.fonction==='quart'?-1:HORS_QUART.indexOf(a.fonction);
+  const hq=agents().filter(a=>(HORS_QUART.includes(a.fonction)||a.fonction==='quart')&&!enQuart.has(a.id)).sort((a,b)=>rangF(a)-rangF(b)||a.nom.localeCompare(b.nom,'fr'));
+  const absents=agents().filter(a=>!hq.includes(a)&&absM(a.id)).sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
   return {mois,titre:'QUART '+MOIS_L[m-1].toUpperCase()+' '+y,onglet:MOIS_L[m-1].toUpperCase(),
     jours:jours.map(j=>({iso:j,nom:JOURS_M[versDate(j).getDay()],num:+j.slice(8)})),
     lignes:[{lib:hModele(H.J[0])+' - '+hModele(H.J[1]),q:'J'},{lib:hModele(H.N[0])+' - '+hModele(H.N[1]),q:'N'}].map(l=>Object.assign(l,{c:jours.map(j=>cellule(j,l.q))})),
