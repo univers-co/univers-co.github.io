@@ -1187,7 +1187,7 @@ function appliquerEtat(e,deCache){
 const TABLEAU_VIERGE=$('dx-tableau').innerHTML;
 /** Services du Centre (02/11/2026) : DEXA (état général), DEXI et SDMR (chargés à la demande, gardés sur le téléphone). */
 /** Numéro affiché dans le menu : il permet de vérifier que le téléphone a bien pris la dernière version. */
-const VERSION_APP='24';
+const VERSION_APP='25';
 const SERVICES_D=['DEXA','DEXI','SDMR'];
 ui.svc=lsGet('svc','DEXA');
 const SVCD={};
@@ -1322,7 +1322,7 @@ function fermerMenu(){$('dx-menu').hidden=true;document.body.classList.remove('d
 const ROLES_LIB={admin:'Administrateur',hierarchie:'Hiérarchie (tout)',direction:'Directeur (sa direction)',agence:'Chef d\'agence (son agence)'};
 function renderMenu(){
   const m=ETAT&&ETAT.moi;if(!m){$('dxMenuCorps').innerHTML='';return;}
-  let h=`<section class="dx-carte"><h3>Aller à</h3><div class="dx-raccourcis">${[['orga','organigramme','Organigramme','#0f7a8a'],['vue','documents','Documents du service','#8a6d3b']].concat(ETAT&&ETAT.mc?[['vue','journal','Main courante','#5a6b7d'],['vue','annuaire','Annuaire','#3d6fd8'],['vue','reunion','Réunions','#14a3a3'],['vue','agenda','Agenda','#eb6834'],['vue','projets','Projets','#d4532a'],['vue','social','Vie du service','#e0457b'],['vue','rapport','Rapport mensuel','#0f7a8a'],['vue','assistant','Allô C.O','#7a5af0']]:[],m.role==='admin'?[['vue','stats','Statistiques d’utilisation','#c2410c']]:[]).map(([act,k,l,co])=>`<button type="button" class="dx-btn" data-a="${act}" data-v="${k}"><span class="dx-ic p" style="background:${co}">${svgI(k)}</span>${l}</button>`).join('')}</div></section>`;
+  let h=`<section class="dx-carte"><h3>Aller à</h3><div class="dx-raccourcis">${[['orga','organigramme','Organigramme','#0f7a8a'],['vue','documents','Documents du service','#8a6d3b']].concat(ETAT&&ETAT.mc?[['vue','journal','Journal de quart','#5a6b7d'],['vue','annuaire','Annuaire','#3d6fd8'],['vue','reunion','Réunions','#14a3a3'],['vue','agenda','Agenda','#eb6834'],['vue','projets','Projets','#d4532a'],['vue','social','Vie du service','#e0457b'],['vue','rapport','Rapport mensuel','#0f7a8a'],['vue','assistant','Allô C.O','#7a5af0']]:[],m.role==='admin'?[['vue','stats','Statistiques d’utilisation','#c2410c']]:[]).map(([act,k,l,co])=>`<button type="button" class="dx-btn" data-a="${act}" data-v="${k}"><span class="dx-ic p" style="background:${co}">${svgI(k)}</span>${l}</button>`).join('')}</div></section>`;
   h+=`<section class="dx-carte"><h3>Mon compte</h3><p><b>${esc(m.nom)}</b> · ${esc(m.roleLib)}${m.perimetre?' · '+esc(libPerimetre(m)):''}<br><span class="dx-gris">Identifiant : ${esc(m.id)}</span></p>
     <div id="fidZone">${zoneFaceID()}</div>
     <div class="dx-ligne"><button class="dx-btn" type="button" data-a="changer-code">Changer mon code</button><button class="dx-btn" type="button" data-a="deconnexion">Se déconnecter</button></div></section>`;
@@ -1576,7 +1576,7 @@ const ICONES={
 };
 const svgI=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONES[k]||''}</svg>`;
 const MODULES=[['quarts','Quarts','#f2b01e',1],['equipe','Équipe','#2a78d6',1],['organigramme','Organigramme','#0f7a8a',1],['documents','Documents','#8a6d3b',1],
-  ['donnees','Données','#0f2b46',1],['journal','Main courante','#5a6b7d',1],['annuaire','Annuaire','#3d6fd8',1],['reunion','Réunions','#14a3a3',1],['agenda','Agenda','#eb6834',1],['assistant','Allô C.O','#7a5af0',1],
+  ['donnees','Données','#0f2b46',1],['journal','Journal de quart','#5a6b7d',1],['annuaire','Annuaire','#3d6fd8',1],['reunion','Réunions','#14a3a3',1],['agenda','Agenda','#eb6834',1],['assistant','Allô C.O','#7a5af0',1],
   ['projets','Projets','#d4532a',1],['social','Vie du service','#e0457b',1],['rapport','Rapport mensuel','#0f7a8a',1],['tablette','Tablettes','#1a9b5c',0]];
 ICONES.documents=ICONES.docs;
 const couleurMod=k=>k==='stats'?'#c2410c':(MODULES.find(m=>m[0]===k)||[0,0,'#0f2b46'])[2];
@@ -2335,18 +2335,18 @@ function formReleve(ouverts){
 const rendreJournalGarde=()=>garderSaisie($('v-journal'),rendreJournal);
 function rendreJournal(){
   const zone=$('v-journal');if(!zone||!ETAT)return;
-  if(!accesMC()){zone.innerHTML='<div class="dx-carte"><p>La Main courante est réservée au Centre d’ordonnancement.</p></div>';return;}
+  if(!accesMC()){zone.innerHTML='<div class="dx-carte"><p>Le Journal de quart est réservé au Centre d’ordonnancement.</p></div>';return;}
   const N=notesMC(),q=ui.mcCherche.trim().toLowerCase(),cur=quartEnCours(new Date());
   const ouverts=N.filter(x=>x.statut==='ouvert').sort((a,b)=>a.le<b.le?-1:1);
   const derniere=N.find(x=>x.type==='Relève');
-  let h=`<div class="dx-titre-vue">${tuileIc('journal','p')}<div><h2>Main courante</h2><p>${esc(libQuartMC(cur))}${ui.mcCharge?' · mise à jour…':''}</p></div></div>`;
-  if(!MC&&ui.mcCharge){$('v-journal').innerHTML=h+'<div class="dx-carte"><p class="dx-gris">Chargement de la Main courante…</p></div>';return;}
+  let h=`<div class="dx-titre-vue">${tuileIc('journal','p')}<div><h2>Journal de quart</h2><p>${esc(libQuartMC(cur))}${ui.mcCharge?' · mise à jour…':''}</p></div></div>`;
+  if(!MC&&ui.mcCharge){$('v-journal').innerHTML=h+'<div class="dx-carte"><p class="dx-gris">Chargement du Journal de quart…</p></div>';return;}
   if(derniere)h+=`<p class="dx-gris dx-mc-der">Dernière relève : ${esc(derniere.nom)}, ${esc(quandMC(derniere.le).replace(/^./,c=>c.toLowerCase()))}</p>`;
   if(ui.mcEdit==='nouveau')h+=formMC();
   else if(ui.mcEdit==='releve')h+=formReleve(ouverts);
   else h+=`<div class="dx-ligne dx-mc-actions"><button class="dx-btn plein" type="button" data-a="mc-nouveau">Nouvelle note</button><button class="dx-btn" type="button" data-a="mc-releve">🔄 Prendre la relève</button></div>`;
   if(ouverts.length)h+=`<div class="dx-carte"><h3>📌 Points à suivre</h3>${ouverts.map(x=>noteMC(x,'o')).join('')}</div>`;
-  h+=`<div class="dx-cherche">${svgI('loupe')}<input id="mcCherche" type="search" placeholder="Rechercher : lieu, nom, mot…" value="${esc(ui.mcCherche)}" aria-label="Rechercher dans la Main courante"></div>`;
+  h+=`<div class="dx-cherche">${svgI('loupe')}<input id="mcCherche" type="search" placeholder="Rechercher : lieu, nom, mot…" value="${esc(ui.mcCherche)}" aria-label="Rechercher dans le Journal de quart"></div>`;
   const types=Object.keys(COUL_MC).filter(k=>N.some(x=>x.type===k));
   h+=`<div class="dx-puces">${PERIODES_MC.map(([j,l])=>`<button type="button" class="${ui.mcJours===j?'on':''}" data-a="mc-periode" data-j="${j}">${l}</button>`).join('')}</div>`;
   if(types.length>1)h+=`<div class="dx-puces"><button type="button" class="${ui.mcType?'':'on'}" data-a="mc-filtre" data-t="">Tout <span>${N.length}</span></button>${types.map(k=>`<button type="button" class="${ui.mcType===k?'on':''}" data-a="mc-filtre" data-t="${esc(k)}">${EMO_MC[k]} ${esc(k)} <span>${N.filter(x=>x.type===k).length}</span></button>`).join('')}</div>`;
@@ -2363,7 +2363,7 @@ function rendreJournal(){
 function carteMC(){
   if(!accesMC())return '';
   const N=notesMC(),ouverts=N.filter(x=>x.statut==='ouvert'),der=N.find(x=>x.type!=='Relève');
-  let h=`<div class="dx-carte cliquable" data-a="vue" data-v="journal"><h3>${tuileIc('journal','p')}Main courante</h3>`;
+  let h=`<div class="dx-carte cliquable" data-a="vue" data-v="journal"><h3>${tuileIc('journal','p')}Journal de quart</h3>`;
   if(!MC)return h+'<p class="dx-gris">Chargement…</p></div>';
   h+=`<div class="dx-li"><span class="dx-emoji">📌</span><span>${ouverts.length?`<b>${ouverts.length} point${ouverts.length>1?'s':''} à suivre</b>`:'Aucun point à suivre'}</span><span class="d">Ouvrir</span></div>`;
   if(der)h+=`<div class="dx-li"><span class="dx-emoji">${EMO_MC[der.type]||'📝'}</span><span>${esc(titreMC(der))}${der.lieu?' · '+esc(der.lieu):''}</span><span class="d">${esc(quandMC(der.le))}</span></div>`;
@@ -2974,13 +2974,15 @@ ui.rapMois=null;ui.alloHist=[];
 const modA=()=>MOD&&ETAT&&ETAT.moi&&MOD.compte===ETAT.moi.id?MOD:null;
 const projetsA=()=>(modA()&&modA().projets)||[];
 const vieA=()=>(modA()&&modA().vie)||[];
-const formModOuvert=()=>!!document.querySelector('#v-projets form,#v-social form,#v-rapport form.dx-rap-com');
+// Le rapport est lui-même un formulaire (commentaires) : il se redessine en gardant la saisie, il ne bloque pas les mises à jour
+const formModOuvert=()=>!!document.querySelector('#v-projets form,#v-social form');
 
 async function chargerMod(){
   if(!accesMC()||!SESSION.jeton||ui.modCharge)return;
   ui.modCharge=true;
+  ui.modErreur='';
   try{appliquerMod(await appelFiable('apiModules',SESSION.jeton));}
-  catch(err){if(estSession(err))finSession();else if(['projets','social','rapport'].includes(ui.vue))toast(messageErreur(err));}
+  catch(err){if(estSession(err))finSession();else{ui.modErreur=messageErreur(err);ui.modDemande=false;}}
   ui.modCharge=false;rendreModGarde();
 }
 function appliquerMod(r){MOD=Object.assign({},r,{compte:ETAT&&ETAT.moi?ETAT.moi.id:'',recu:Date.now()});delete MOD.message;lsSet('mod',MOD);rendreModGarde();}
@@ -2998,7 +3000,9 @@ async function ecrireMod(op,d,f,attente,methode){
     appliquerMod(r);toast(r.message||'Enregistré.');return true;}
   catch(err){if(estSession(err))finSession();toast(messageErreur(err));if(btn){btn.disabled=false;btn.textContent=btn.dataset.lib;}return false;}
 }
-const attenteMod=()=>!modA()?`<div class="dx-carte"><p class="dx-gris">${ui.modCharge?'Chargement…':'Ouverture…'}</p></div>`:'';
+const attenteMod=()=>{if(modA())return '';if(!ui.modCharge&&!ui.modDemande&&accesMC()){ui.modDemande=true;setTimeout(chargerMod,0);}
+  return ui.modErreur&&!ui.modCharge?`<div class="dx-carte"><p class="neg">Impossible de charger les données : ${esc(ui.modErreur)}</p><button class="dx-btn plein" type="button" data-a="mod-reessayer">Réessayer</button></div>`
+    :`<div class="dx-carte"><p class="dx-gris">Chargement des données…</p></div>`;};
 
 // ================= PROJETS =================
 const avancementPrj=x=>{const E=x.etapes||[];return E.length?Math.round(100*E.filter(e=>e.fait).length/E.length):Number(x.avancement)||0;};
@@ -3096,6 +3100,16 @@ function kpiService(sv,mois){
 }
 const hhR=h=>Math.floor(h)+' h '+String(Math.round((h%1)*60)).padStart(2,'0');
 const pctR=x=>x.toFixed(1).replace('.',',')+' %';
+/** Notes de la Main courante pour le rapport : lues sur 90 ou 365 jours selon le mois choisi (sans toucher au filtre de la Main courante). */
+ui.rapMC=null;ui.rapMCCharge=false;
+function notesRapport(mois){
+  const age=ecart(mois+'-01',isoJ(new Date())),besoin=age<=85?90:365;
+  if(MC&&MC.jours>=besoin)return {notes:notesMC(),ok:true};
+  if(ui.rapMC&&ui.rapMC.jours>=besoin)return {notes:ui.rapMC.notes,ok:true};
+  if(!ui.rapMCCharge&&SESSION.jeton&&accesMC()){ui.rapMCCharge=true;
+    appelFiable('apiCourante',SESSION.jeton,besoin).then(r=>{ui.rapMC={jours:besoin,notes:r.notes||[]};}).catch(()=>{}).finally(()=>{ui.rapMCCharge=false;if(ui.vue==='rapport')rendreModGarde();});}
+  return {notes:[],ok:false};
+}
 /** Contenu du rapport : sections calculées. Rien n'est estimé : ce qui manque est dit. */
 function sectionsRapport(mois){
   const S=[],debut=mois+'-01',fin=joursDuMois(mois).slice(-1)[0];
@@ -3104,22 +3118,29 @@ function sectionsRapport(mois){
   if(cycleRegle()&&dc&&fin<dc)S.push({k:'quarts',t:'Quarts',h:`<p class="dx-gris">Le cycle des quarts n’était pas encore réglé dans l’application ce mois-là (départ le ${esc(jourLong(dc))}).</p>`});
   else if(cycleRegle()){
     const cpt={},rempl=[];let vac=0;
-    joursDuMois(mois).filter(j=>!dc||j>=dc).forEach(j=>['J','N'].forEach(q=>{const x=quart(j,q);if(x.vacant)vac++;else if(x.agent){cpt[x.agent]=cpt[x.agent]||{J:0,N:0};cpt[x.agent][q]++;}if(x.modifie&&x.agent)rempl.push({j,q,x});}));
+    const aujR=isoJ(new Date());
+    joursDuMois(mois).filter(j=>(!dc||j>=dc)&&j<=aujR).forEach(j=>['J','N'].forEach(q=>{const x=quart(j,q);if(x.vacant)vac++;else if(x.agent){cpt[x.agent]=cpt[x.agent]||{J:0,N:0};cpt[x.agent][q]++;}if(x.modifie&&x.agent)rempl.push({j,q,x});}));
     const abs=(P().absences||[]).filter(x=>x.au>=debut&&x.du<=fin);
-    S.push({k:'quarts',t:'Quarts',h:`<table class="dx-rap-t"><tr><th>Ordonnanceur</th><th>Jours</th><th>Nuits</th></tr>${Object.keys(cpt).sort((a,b)=>nomAg(a).localeCompare(nomAg(b))).map(id=>`<tr><td>${esc(nomAg(id))}</td><td>${cpt[id].J}</td><td>${cpt[id].N}</td></tr>`).join('')}</table>
+    const d0=dc&&dc>debut?dc:debut,f0=fin>aujR?aujR:fin;
+    const periode=d0===f0?'Le '+jourCourt(d0)+(fin>aujR?' (à ce jour)':''):'Du '+(d0===debut?'1er':jourCourt(d0))+(fin>aujR?' au '+jourCourt(aujR)+' (à ce jour)':' à la fin du mois');
+    S.push({k:'quarts',t:'Quarts',h:`<p class="dx-gris">${esc(periode)}</p><table class="dx-rap-t"><tr><th>Ordonnanceur</th><th>Jours</th><th>Nuits</th></tr>${Object.keys(cpt).sort((a,b)=>nomAg(a).localeCompare(nomAg(b))).map(id=>`<tr><td>${esc(nomAg(id))}</td><td>${cpt[id].J}</td><td>${cpt[id].N}</td></tr>`).join('')}</table>
       <p>${rempl.length} remplacement${rempl.length>1?'s':''} ou échange${rempl.length>1?'s':''}${vac?` · <b class="neg">${vac} quart${vac>1?'s':''} non pourvu${vac>1?'s':''}</b>`:' · tous les quarts pourvus'}.</p>
       <p>${abs.length?'Absences : '+abs.map(a=>esc(nomAg(a.agent))+' ('+esc(a.motif||'absent')+', '+esc(jourCourt(a.du))+(a.au!==a.du?' → '+esc(jourCourt(a.au)):'')+')').join(' ; ')+'.':'Aucune absence enregistrée.'}</p>`});
   } else S.push({k:'quarts',t:'Quarts',h:'<p class="dx-gris">Le cycle des quarts n’est pas réglé.</p>'});
   // 2. Main courante
-  const N=notesMC().filter(x=>moisDe(String(x.le).slice(0,10))===mois);
+  const NR=notesRapport(mois),N=NR.notes.filter(x=>moisDe(String(x.le).slice(0,10))===mois);
   if(N.length){const parT={};N.forEach(x=>{const t=x.tablette?'Tablette':x.type;parT[t]=(parT[t]||0)+1;});
     const ouv=N.filter(x=>x.statut==='ouvert');
-    S.push({k:'mc',t:'Main courante',h:`<p><b>${N.length} note${N.length>1?'s':''}</b> : ${Object.keys(parT).sort((a,b)=>parT[b]-parT[a]).map(t=>esc(t)+' '+parT[t]).join(' · ')}.</p>
+    S.push({k:'mc',t:'Journal de quart',h:`<p><b>${N.length} note${N.length>1?'s':''}</b> : ${Object.keys(parT).sort((a,b)=>parT[b]-parT[a]).map(t=>esc(t)+' '+parT[t]).join(' · ')}.</p>
       ${ouv.length?`<p>${ouv.length} point${ouv.length>1?'s':''} encore à suivre :</p><ul>${ouv.slice(0,8).map(x=>`<li>n° ${x.num} · ${esc(String(x.texte||'').slice(0,140))}</li>`).join('')}</ul>`:'<p>Aucun point resté ouvert.</p>'}`});
-  } else S.push({k:'mc',t:'Main courante',h:`<p class="dx-gris">${MC?'Aucune note pour ce mois (sur la période chargée).':'Main courante pas encore chargée.'}</p>`});
+  } else S.push({k:'mc',t:'Journal de quart',h:`<p class="dx-gris">${NR.ok?'Aucune note ce mois-ci.':'Chargement des notes du Journal de quart…'}</p>`});
   // 3. Réclamations
-  const lignesK=SERVICES_D.map(sv=>{const k=kpiService(sv,mois);return k?`<tr><td>${sv}</td><td>${k.n.toLocaleString('fr-FR')}</td><td>${pctR(k.tx)}${k.dp===null?'':` (${k.dp>=0?'+':'−'}${Math.abs(k.dp).toFixed(1).replace('.',',')} pt)`}</td><td>${hhR(k.tmt)}</td></tr>`:`<tr><td>${sv}</td><td colspan="3" class="dx-gris">pas de données pour ce mois</td></tr>`;});
-  S.push({k:'recl',t:'Réclamations',h:`<table class="dx-rap-t"><tr><th>Service</th><th>Traitées</th><th>Dans les délais</th><th>Temps moyen</th></tr>${lignesK.join('')}</table><p class="dx-gris">Écart en points avec le même mois de l’année précédente.</p>`});
+  let derniers=false;
+  const lignesK=SERVICES_D.map(sv=>{
+    let m=mois,k=kpiService(sv,mois);
+    if(!k){const d=sv==='DEXA'?ETAT:(SVCD[sv]||lsGet('svc:'+sv,null));if(d&&d.annee){m=d.annee+'-'+String(d.numMois).padStart(2,'0');if(m<mois){k=kpiService(sv,m);derniers=derniers||!!k;}}}
+    return k?`<tr><td>${sv}${m!==mois?`<br><span class="dx-gris">${esc(libMois(m))}</span>`:''}</td><td>${k.n.toLocaleString('fr-FR')}</td><td>${pctR(k.tx)}${k.dp===null?'':` (${k.dp>=0?'+':'−'}${Math.abs(k.dp).toFixed(1).replace('.',',')} pt)`}</td><td>${hhR(k.tmt)}</td></tr>`:`<tr><td>${sv}</td><td colspan="3" class="dx-gris">pas encore de chiffres</td></tr>`;});
+  S.push({k:'recl',t:'Réclamations',h:`<table class="dx-rap-t"><tr><th>Service</th><th>Traitées</th><th>Dans les délais</th><th>Temps moyen</th></tr>${lignesK.join('')}</table><p class="dx-gris">Écart en points avec le même mois de l’année précédente.${derniers?' Les chiffres de ce mois ne sont pas encore importés : ce sont les derniers disponibles (mois indiqué sous le service).':''}</p>`});
   // 4. Réunions
   const R=reunionsA().filter(x=>moisDe(x.date)===mois&&x.statut!=='annulee'),T=R.filter(x=>x.statut==='tenue');
   const ouvA=actionsOuvertes(),retA=ouvA.filter(o=>o.a.echeance&&o.a.echeance<isoJ(new Date()));
@@ -3136,10 +3157,10 @@ function sectionsRapport(mois){
 }
 function rendreRapport(){
   const z=$('v-rapport');if(!z)return;
-  const auj=isoJ(new Date());if(!ui.rapMois)ui.rapMois=moisPlus(moisDe(auj),-1);
+  const auj=isoJ(new Date());if(!ui.rapMois)ui.rapMois=moisDe(auj);
   const mois=ui.rapMois,admin=estAdmin();
   let h=`<div class="dx-titre-vue">${tuileIc('rapport','p')}<div><h2>Rapport mensuel</h2><p>Le bilan du mois, préparé à partir de l’application</p></div></div>`;
-  h+=`<div class="dx-mois"><button class="dx-btn petit" type="button" data-a="rap-mois" data-n="-1" aria-label="Mois précédent">‹</button><b>${esc(libMois(mois))}</b><button class="dx-btn petit" type="button" data-a="rap-mois" data-n="1" aria-label="Mois suivant">›</button></div>`;
+  h+=`<div class="dx-mois"><button class="dx-btn petit" type="button" data-a="rap-mois" data-n="-1" aria-label="Mois précédent">‹</button><b>${esc(libMois(mois))}</b><button class="dx-btn petit" type="button" data-a="rap-mois" data-n="1" aria-label="Mois suivant">›</button></div>${mois===moisDe(auj)?'<p class="dx-gris">Mois en cours : bilan à la date d’aujourd’hui.</p>':''}`;
   if(!modA()){z.innerHTML=h+attenteMod();return;}
   const S=sectionsRapport(mois),com=((modA().rapports||[]).find(r=>r.mois===mois)||{}).com||{};
   h+=`<div class="dx-ligne"><button class="dx-btn plein" type="button" data-a="rap-imprimer">Imprimer ou PDF</button><button class="dx-btn" type="button" data-a="rap-fichier">Partager le rapport</button></div>`;
@@ -3164,82 +3185,135 @@ function fichierRapport(){
 }
 
 // ================= ALLÔ C.O (sans IA) =================
-const SUGG_ALLO=['Qui est de quart maintenant ?','Qui est de quart cette nuit ?','Qui est de quart demain ?','Qui est absent cette semaine ?','Prochaines réunions','Actions en retard','Anniversaires','Réclamations DEXA du dernier mois','Projets en retard'];
+const SUGG_ALLO=['Qui est de quart maintenant ?','Qui est de quart demain ?','Qui est de quart ce week-end ?','Qui est au repos aujourd’hui ?','Qui est absent cette semaine ?','Qui est le chef de service ?','Chiffres des réclamations','Prochaines réunions','Actions en retard','Anniversaires'];
 const normQ=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[’']/g,' ');
-/** Jour visé par la question (aujourd'hui par défaut). */
-function jourDeQ(q){
-  const auj=isoJ(new Date());
-  if(/apres[- ]demain/.test(q))return ajoute(auj,2);
-  if(/demain/.test(q))return ajoute(auj,1);
-  if(/hier/.test(q))return ajoute(auj,-1);
-  const m=q.match(/\b(\d{1,2})[\/.-](\d{1,2})(?:[\/.-](\d{2,4}))?\b/);
-  if(m){const y=m[3]?(m[3].length===2?'20'+m[3]:m[3]):auj.slice(0,4);return y+'-'+String(m[2]).padStart(2,'0')+'-'+String(m[1]).padStart(2,'0');}
-  const J=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'],k=J.findIndex(j=>q.includes(j));
-  if(k>=0){let d=auj;for(let i=0;i<7;i++){if(versDate(d).getDay()===k)return d;d=ajoute(d,1);}}
-  return auj;
+/** Jours visés par la question : un jour précis, ou une période (week-end, semaine). Aujourd'hui par défaut. */
+function joursDeQ(q){
+  const auj=isoJ(new Date()),serie=(d,n)=>Array.from({length:n},(_,i)=>ajoute(d,i));
+  const lundiProchain=()=>{let d=ajoute(auj,1);while(versDate(d).getDay()!==1)d=ajoute(d,1);return d;};
+  if(/week-?end|weekend|samedi et dimanche/.test(q)){let d=auj;while(versDate(d).getDay()!==6)d=ajoute(d,1);if(versDate(auj).getDay()===0)d=auj;return versDate(auj).getDay()===0?[auj]:serie(d,2);}
+  if(/semaine prochaine/.test(q))return serie(lundiProchain(),7);
+  if(/cette semaine|la semaine|7 (prochains )?jours/.test(q))return serie(auj,7);
+  if(/apres[- ]demain/.test(q))return [ajoute(auj,2)];
+  if(/demain/.test(q))return [ajoute(auj,1)];
+  if(/hier/.test(q))return [ajoute(auj,-1)];
+  const m=q.match(/\b(\d{1,2})[\/.-](\d{1,2})(?:[\/.-](\d{2,4}))?\b/)||q.match(/\b(\d{1,2})\s+(janvier|fevrier|mars|avril|mai|juin|juillet|aout|septembre|octobre|novembre|decembre)\b/);
+  if(m){const mm=isNaN(m[2])?MOIS_L.findIndex(x=>normQ(x)===m[2])+1:+m[2],y=m[3]?(m[3].length===2?'20'+m[3]:m[3]):auj.slice(0,4);
+    return [y+'-'+String(mm).padStart(2,'0')+'-'+String(m[1]).padStart(2,'0')];}
+  const J=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'],k=J.findIndex(x=>new RegExp('\\b'+x+'\\b').test(q));
+  if(k>=0){let d=auj;while(versDate(d).getDay()!==k)d=ajoute(d,1);return [d];}
+  return null;   // pas de jour dit
 }
 const lienTel=a=>a&&a.tel?` · <a href="tel:${esc(String(a.tel).replace(/\s/g,''))}">${esc(a.tel)}</a>`:'';
+const nomQuart=(j,s)=>{const x=quart(j,s);return x.agent?esc(nomAg(x.agent))+(x.modifie?' <span class="dx-gris">(remplacement)</span>':''):'<span class="neg">à pourvoir</span>';};
+const jourTitre=j=>esc(libLong(j).replace(/^./,c=>c.toUpperCase()));
+/** Situation d'un agent un jour donné : de quart (jour / nuit), absent, de repos, ou hors rotation. */
+function situationJour(a,j){
+  const ab=absence(a.id,j);if(ab)return 'absent ('+esc(ab.motif||'absence')+')';
+  const s=['J','N'].filter(q=>quart(j,q).agent===a.id);
+  if(s.length)return s.map(q=>q==='J'?'de quart de jour':'de quart de nuit').join(' et ');
+  return ['quart','remplacant'].includes(a.fonction)?'de repos':'hors quart';
+}
+/** Agents nommés dans la question (nom, prénom ou nom court ; au moins 3 lettres). */
+function agentsNommes(q){
+  const mots=q.split(/[^a-z0-9]+/).filter(x=>x.length>2);
+  return agents().filter(a=>{const n=normQ(a.nom+' '+(a.court||'')).split(/[^a-z0-9]+/).filter(x=>x.length>2);return n.some(x=>mots.includes(x));});
+}
+const FONCTIONS_Q=[[/sous[- ]?directeur|sous[- ]?direct/,'sousdirecteur'],[/\bdirecteur|\bdirectrice/,'directeur'],[/chef de service|chef du service/,'chefservice'],
+  [/suppleant/,'remplacant'],[/ordonnanceurs? de quart|equipe de quart|agents? de quart/,'quart'],[/\bdexa\b/,'dexa'],[/\bdexi\b/,'dexi'],[/\bsdmr\b/,'sdmr']];
 /** Une question → une réponse (HTML), uniquement à partir des données de l'application. */
 function repondreAllo(brut){
-  const q=normQ(brut),auj=isoJ(new Date());
-  const ag=nomQ=>{const w=normQ(nomQ).split(/\s+/).filter(x=>x.length>2);return agents().filter(a=>w.some(x=>normQ(a.nom).split(/\s+/).includes(x)||normQ(a.court||'')===x));};
-  // Quarts
-  if(/quart|de garde|garde|de jour|de nuit|cette nuit|ce soir|releve|qui travaille|qui est la/.test(q)&&!/planning de|quand/.test(q)){
+  const q=' '+normQ(brut).replace(/[?!.,;:]/g,' ').replace(/\s+/g,' ')+' ',auj=isoJ(new Date());
+  // Politesse
+  if(/^ (bonjour|bonsoir|salut|hello|coucou|allo)( [a-z]+)? $/.test(q))return `Bonjour ${esc(String(ETAT.moi.nom||'').split(/\s+/)[0])} ! Posez-moi une question sur les quarts, l’équipe, l’annuaire, les réunions ou les chiffres.`;
+  if(/^ (merci|ok|d accord|super|parfait)( beaucoup| bien)? $/.test(q))return 'Avec plaisir.';
+  if(/quel jour|quelle date|on est le|sommes[- ]nous/.test(q))return `Nous sommes le ${jourTitre(auj)} ${auj.slice(0,4)}.`;
+  const jours=joursDeQ(q);
+  // 1. Une personne nommée
+  const A=agentsNommes(q).filter(a=>!/\b(dexa|dexi|sdmr)\b/.test(normQ(a.nom)));
+  const veutChiffres=/reclamation|taux|delai|traite|chiffre/.test(q);
+  if(A.length&&!veutChiffres){
+    if(A.length>3)return 'Plusieurs personnes correspondent : '+A.map(a=>esc(a.nom)).join(', ')+'. Précisez le nom.';
+    return A.map(a=>{
+      if(/numero|telephone|contact|appeler|joindre| tel /.test(q))return `<b>${esc(a.nom)}</b> · ${esc(libF(a.fonction))}${a.tel?lienTel(a):' · <span class="dx-gris">aucun numéro dans sa fiche (Équipe › Modifier)</span>'}`;
+      if(/quart|travaille|planning|quand|repos|prochain|garde|absent|conge|de jour|de nuit/.test(q)&&cycleRegle()){
+        if(jours)return `<b>${esc(a.nom)}</b> · `+jours.map(j=>esc(libJour(j))+' : '+situationJour(a,j)).join(' · ');
+        // À partir du quart en cours : un quart déjà terminé n'est plus « prochain »
+        const L=[];let c=quartEnCours(new Date());for(let i=0;i<80&&L.length<8;i++){if(quart(c.iso,c.q).agent===a.id)L.push(esc(libJour(c.iso))+' '+(c.q==='J'?'jour':'nuit')+(i===0?' (en cours)':''));c=quartSuivant(c);}
+        return `<b>${esc(a.nom)}</b> (aujourd’hui : ${situationJour(a,auj)}) · prochains quarts : ${L.length?L.join(' · '):'aucun dans les 40 prochains jours'}`;
+      }
+      return `<b>${esc(a.nom)}</b> · ${esc(libF(a.fonction))}${lienTel(a)} · aujourd’hui : ${cycleRegle()?situationJour(a,auj):'—'}`;
+    }).join('<br>');
+  }
+  // 2. Une fonction (« qui est le chef de service ? », « qui sont les suppléants ? »)
+  if(/\bqui\b|liste|quels? sont/.test(q)&&!/quart (maintenant|aujourd|demain|ce |cette |la |le )|de (jour|nuit|garde)|travaille|repos|absent|anniv/.test(q)){
+    const f=FONCTIONS_Q.find(([re])=>re.test(q));
+    if(f){const L=agents().filter(a=>a.fonction===f[1]);return L.length?`<b>${esc(L.length>1?libF(f[1]).replace(/^Ordonnanceur /,'Ordonnanceurs ').replace(/ suppléant$/,' suppléants'):libF(f[1]))}</b> : `+L.map(a=>esc(a.nom)+lienTel(a)).join(' · '):'Personne n’est enregistré comme '+esc(libF(f[1]))+'.';}
+  }
+  // 3. Effectif
+  if(/combien.*(agent|personne|membre|ordonnanceur)|effectif/.test(q)){
+    const L=agents(),par=f=>L.filter(a=>a.fonction===f).length;
+    const pl=(f,n)=>n>1?libF(f).replace(/^Ordonnanceur /,'Ordonnanceurs ').replace(/ suppléant$/,' suppléants').replace(/^(Directeur|Sous-directeur|Chef de service|Autre)$/,m=>m==='Chef de service'?'Chefs de service':m+'s'):libF(f);
+    return `<b>${L.length} personnes</b> dans l’équipe : `+['directeur','sousdirecteur','chefservice','quart','remplacant','dexa','dexi','sdmr','autre'].filter(f=>par(f)).map(f=>par(f)+' '+esc(pl(f,par(f)))).join(' · ');
+  }
+  // 4. Repos
+  if(/repos|ne travaille pas|libre/.test(q)){
     if(!cycleRegle())return 'Le cycle des quarts n’est pas encore réglé.';
-    if(/maintenant|en ce moment|actuel/.test(q)||(!/demain|hier|nuit|soir|jour |lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche|\d/.test(q))){
-      const c=quartEnCours(new Date()),x=quart(c.iso,c.q),n=quartSuivant(c),y=quart(n.iso,n.q);
-      return `<b>Maintenant (${c.q==='J'?'jour':'nuit'})</b> : ${x.agent?esc(nomAg(x.agent))+lienTel(agent(x.agent)):'<span class="neg">à pourvoir</span>'}<br>Relève (${n.q==='J'?'jour':'nuit'}, ${esc(libJour(n.iso))}) : ${y.agent?esc(nomAg(y.agent)):'à pourvoir'}`;}
-    const j=jourDeQ(q),J=quart(j,'J'),N=quart(j,'N');
-    const seul=/nuit|soir/.test(q)?'N':/ de jour|journee/.test(' '+q)?'J':'';
-    return `<b>${esc(libLong(j).replace(/^./,c=>c.toUpperCase()))}</b><br>${seul!=='N'?`☀️ Jour : ${J.agent?esc(nomAg(J.agent))+lienTel(agent(J.agent)):'<span class="neg">à pourvoir</span>'}<br>`:''}${seul!=='J'?`🌙 Nuit : ${N.agent?esc(nomAg(N.agent))+lienTel(agent(N.agent)):'<span class="neg">à pourvoir</span>'}`:''}`;
+    return (jours||[auj]).map(j=>{const L=agents().filter(a=>a.fonction==='quart'&&situationJour(a,j)==='de repos');return `<b>${jourTitre(j)}</b> : ${L.length?L.map(a=>esc(a.nom)).join(', '):'personne'} au repos`;}).join('<br>');
   }
-  // Planning d'une personne
-  if(/planning|quand (est|travaille|passe)|prochain quart/.test(q)){
-    const A=ag(brut);if(!A.length)return 'Dites le nom de la personne, par exemple « planning de Traore ».';
-    const a=A[0],L=[];for(let i=0;i<30&&L.length<6;i++){const j=ajoute(auj,i);['J','N'].forEach(s=>{if(quart(j,s).agent===a.id)L.push(libJour(j)+' '+(s==='J'?'jour':'nuit'));});}
-    return `<b>${esc(a.nom)}</b> : ${L.length?L.map(esc).join(' · '):'aucun quart dans les 30 prochains jours.'}`;
+  // 5. Absences
+  if(/absent|absence|conge|maladie|permission/.test(q)){
+    const J=jours||(/semaine/.test(q)?null:[auj]),deb=J?J[0]:auj,fin=J?J[J.length-1]:ajoute(auj,6);
+    const L=(P().absences||[]).filter(x=>x.au>=deb&&x.du<=fin);
+    return L.length?L.map(x=>`${esc(nomAg(x.agent))} · ${esc(x.motif||'absent')} · ${esc(jourCourt(x.du))}${x.au!==x.du?' → '+esc(jourCourt(x.au)):''}`).join('<br>'):`Personne n’est absent ${deb===fin?'ce jour-là':'sur cette période'}.`;
   }
-  // Absences
-  if(/absent|absence|conge|maladie/.test(q)){
-    const fin=/semaine/.test(q)?ajoute(auj,6):/mois/.test(q)?joursDuMois(moisDe(auj)).slice(-1)[0]:auj;
-    const L=(P().absences||[]).filter(x=>x.au>=auj&&x.du<=fin);
-    return L.length?L.map(x=>`${esc(nomAg(x.agent))} · ${esc(x.motif||'absent')} · ${esc(jourCourt(x.du))}${x.au!==x.du?' → '+esc(jourCourt(x.au)):''}`).join('<br>'):'Personne n’est absent sur cette période.';
+  // 6. Quarts
+  if(/quart|de garde|garde|de jour|de nuit|cette nuit|ce soir|releve|qui travaille|en poste|programme/.test(q)){
+    if(!cycleRegle())return 'Le cycle des quarts n’est pas encore réglé.';
+    const seul=/nuit|soir/.test(q)&&!/jour et|et nuit/.test(q)?'N':/ de jour |journee/.test(q)?'J':'';
+    if(!jours&&(/maintenant|en ce moment|actuel|en poste/.test(q)||(!seul&&!/aujourd|programme/.test(q)))){
+      const c=quartEnCours(new Date()),n=quartSuivant(c);
+      return `<b>En ce moment (${c.q==='J'?'jour':'nuit'})</b> : ${nomQuart(c.iso,c.q)}${lienTel(agent(quart(c.iso,c.q).agent))}<br>Relève à ${esc(hFr(horaires()[n.q][0]))} (${n.q==='J'?'jour':'nuit'}) : ${nomQuart(n.iso,n.q)}`;}
+    let J=jours||[auj];
+    // « cette nuit » après minuit : la nuit commencée la veille
+    if(!jours&&seul==='N'){const c=quartEnCours(new Date());if(c.q==='N')J=[c.iso];}
+    return J.map(j=>`<b>${jourTitre(j)}</b> · ${seul!=='N'?'☀️ '+nomQuart(j,'J'):''}${!seul?' · ':''}${seul!=='J'?'🌙 '+nomQuart(j,'N'):''}`).join('<br>');
   }
-  // Anniversaires
-  if(/anniv/.test(q)){const L=anniversaires(31);return L.length?L.slice(0,8).map(x=>`🎂 ${esc(x.a.nom)} · ${x.dans===0?'aujourd’hui':x.dans===1?'demain':esc(libJour(x.j))}`).join('<br>'):'Aucun anniversaire dans les 30 prochains jours.';}
-  // Réunions et actions
-  if(/action/.test(q)){const L=actionsOuvertes(),R=/retard/.test(q)?L.filter(o=>o.a.echeance&&o.a.echeance<auj):L;
+  // 7. Anniversaires, actions, réunions, projets
+  if(/anniv/.test(q)){const L=anniversaires(31);return L.length?L.slice(0,8).map(x=>`🎂 ${esc(x.a.nom)} · ${x.dans===0?'aujourd’hui':x.dans===1?'demain':esc(libJour(x.j))}`).join('<br>'):'Aucun anniversaire dans les 30 prochains jours (dates à saisir dans les fiches de l’Équipe).';}
+  if(/\baction/.test(q)){const L=actionsOuvertes(),R=/retard/.test(q)?L.filter(o=>o.a.echeance&&o.a.echeance<auj):L;
     return R.length?R.slice(0,8).map(o=>`${esc(o.a.texte)} · ${esc(o.a.respNom||'sans responsable')}${o.a.echeance?' · '+esc(jourCourt(o.a.echeance)):''}`).join('<br>'):(/retard/.test(q)?'Aucune action en retard.':'Aucune action ouverte.');}
-  if(/reunion/.test(q)){const L=reunionsA().filter(x=>x.statut==='prevue'&&x.date>=auj).sort((a,b)=>(a.date+a.debut).localeCompare(b.date+b.debut));
+  if(/reunion/.test(q)){const L=reunionsA().filter(x=>x.statut==='prevue'&&x.date>=auj).sort((a,b)=>(a.date+(a.debut||'')).localeCompare(b.date+(b.debut||'')));
     return L.length?L.slice(0,5).map(x=>`💬 ${esc(x.titre)} · ${esc(jourCourt(x.date))}${x.debut?' à '+esc(hFr(x.debut)):''}${x.lieu?' · '+esc(x.lieu):''}`).join('<br>'):'Aucune réunion prévue.';}
-  // Projets
-  if(/projet/.test(q)){const L=projetsA().filter(x=>/retard/.test(q)?retardPrj(x):x.statut==='encours');
+  if(/projet/.test(q)){const L=projetsA().filter(x=>/retard/.test(q)?retardPrj(x):/termine/.test(q)?x.statut==='termine':x.statut!=='termine');
     return L.length?L.slice(0,8).map(x=>`🚀 ${esc(x.titre)} · ${avancementPrj(x)} %${x.respNom?' · '+esc(x.respNom):''}${retardPrj(x)?' · <span class="neg">en retard</span>':''}`).join('<br>'):(/retard/.test(q)?'Aucun projet en retard.':'Aucun projet en cours.');}
-  // Réclamations
-  if(/reclamation|taux|delai|traite|dexa|dexi|sdmr|chiffre/.test(q)){
-    const sv=/dexi/.test(q)?'DEXI':/sdmr/.test(q)?'SDMR':'DEXA';
-    const d=sv==='DEXA'?ETAT:(SVCD[sv]||lsGet('svc:'+sv,null));if(!d||!d.annee)return 'Les chiffres '+sv+' ne sont pas encore chargés : ouvrez une fois « Données » › '+sv+'.';
-    const k=MOIS_L.findIndex(m=>q.includes(normQ(m)));const mois=d.annee+'-'+String(k>=0?k+1:d.numMois).padStart(2,'0');
-    const r=kpiService(sv,mois);
-    return r?`<b>${sv} · ${esc(libMois(mois))}</b><br>${r.n.toLocaleString('fr-FR')} traitées · ${pctR(r.tx)} dans les délais${r.dp===null?'':` (${r.dp>=0?'+':'−'}${Math.abs(r.dp).toFixed(1).replace('.',',')} pt sur un an)`} · temps moyen ${hhR(r.tmt)}`:`Pas de chiffres ${sv} pour ${esc(libMois(mois))}.`;
+  // 8. Réclamations : un service ou les trois ; le mois dit, sinon le dernier disponible (signalé)
+  if(veutChiffres||/\b(dexa|dexi|sdmr)\b/.test(q)){
+    const S=SERVICES_D.filter(sv=>q.includes(' '+sv.toLowerCase()+' ')),L=S.length?S:SERVICES_D;
+    const k=MOIS_L.findIndex(m=>q.includes(' '+normQ(m)+' '));
+    return L.map(sv=>{
+      const d=sv==='DEXA'?ETAT:(SVCD[sv]||lsGet('svc:'+sv,null));
+      if(!d||!d.annee)return `${sv} : chiffres pas encore chargés (ouvrez une fois « Données » › ${sv}).`;
+      const dernier=d.annee+'-'+String(d.numMois).padStart(2,'0'),mois=k>=0?d.annee+'-'+String(k+1).padStart(2,'0'):dernier;
+      const r=kpiService(sv,mois);
+      if(!r)return `${sv} : pas de chiffres pour ${esc(libMois(mois))} (derniers disponibles : ${esc(libMois(dernier))}).`;
+      return `<b>${sv} · ${esc(libMois(mois))}</b>${k<0?' <span class="dx-gris">(derniers chiffres disponibles)</span>':''} : ${r.n.toLocaleString('fr-FR')} traitées · ${pctR(r.tx)} dans les délais${r.dp===null?'':` (${r.dp>=0?'+':'−'}${Math.abs(r.dp).toFixed(1).replace('.',',')} pt sur un an)`} · temps moyen ${hhR(r.tmt)}`;
+    }).join('<br>');
   }
-  // Recherche générale : équipe, annuaire, documents, main courante, projets
-  // Mots génériques ignorés ; on garde d'abord les fiches qui contiennent tous les mots, sinon celles qui en contiennent le plus
-  const VIDES=['numero','numeros','telephone','contact','contacts','appeler','joindre','tel','cherche','chercher','trouve','trouver','ou','est','procedure','document','qui','quel','quelle','agence','secteur','service','equipe','chef','les','des','une','pour','avec'];
-  const mots=q.replace(/[?!.,;:]/g,' ').split(/\s+/).filter(x=>x.length>2&&!VIDES.includes(x));
+  // 9. Recherche générale : équipe, annuaire, documents, main courante, projets
+  const VIDES=['numero','numeros','telephone','contact','contacts','appeler','joindre','tel','cherche','chercher','trouve','trouver','est','procedure','document','qui','quel','quelle','quels','quelles','agence','secteur','service','equipe','chef','les','des','une','pour','avec','sur','dans','donne','moi','est-ce','que','comment','svp'];
+  const mots=q.split(/[^a-z0-9-]+/).filter(x=>x.length>2&&!VIDES.includes(x));
   if(!mots.length)return 'Je n’ai pas compris. Essayez une des questions proposées, ou un nom, une agence, un mot-clé.';
-  const score=t=>{const n=normQ(t);return mots.filter(m=>n.includes(m)).length;};
-  const tous=[agents().map(a=>a.nom+' '+libF(a.fonction)+' '+(a.court||'')),contactsA().map(c=>[c.nom,c.agence,c.fonction,c.service,c.direction].join(' ')),docs().map(x=>x.titre+' '+(x.desc||'')),notesMC().map(x=>(x.texte||'')+' '+(x.lieu||'')+' '+(x.type||'')),projetsA().map(x=>x.titre+' '+(x.objectif||''))];
-  const best=Math.max(0,...[].concat(...tous).map(score));
-  if(!best)return `Rien trouvé pour « ${esc(brut)} »${ANN?'':' (l’Annuaire n’est pas encore chargé)'}.`;
-  const ok=t=>score(t)===best;
-  const R=[];
-  agents().filter(a=>ok(a.nom+' '+libF(a.fonction)+' '+(a.court||''))).slice(0,5).forEach(a=>R.push(`👤 ${esc(a.nom)} · ${esc(libF(a.fonction))}${lienTel(a)}`));
-  contactsA().filter(c=>ok([c.nom,c.agence,c.fonction,c.service,c.direction].join(' '))).slice(0,6).forEach(c=>R.push(`📇 ${esc(c.nom||c.agence)} · ${esc([c.fonction,c.agence,c.service].filter(Boolean).join(' · '))}${c.tel?` · <a href="tel:+225${esc(String(c.tel).replace(/\D/g,'').slice(-10))}">${esc(c.tel)}</a>`:''}`));
-  docs().filter(x=>ok(x.titre+' '+(x.desc||''))).slice(0,4).forEach(x=>R.push(`📄 ${esc(x.titre)} · <a href="#documents">Documents</a>`));
-  notesMC().filter(x=>ok((x.texte||'')+' '+(x.lieu||'')+' '+(x.type||''))).slice(0,4).forEach(x=>R.push(`📓 Note n° ${x.num} · ${esc(String(x.texte||'').slice(0,90))}`));
-  projetsA().filter(x=>ok(x.titre+' '+(x.objectif||''))).slice(0,3).forEach(x=>R.push(`🚀 ${esc(x.titre)} · ${avancementPrj(x)} %`));
-  return (best<mots.length?'<span class="dx-gris">Résultats les plus proches :</span><br>':'')+R.join('<br>');
+  const score=t=>{const n=' '+normQ(t)+' ';return mots.filter(m=>n.includes(m)).length;};
+  const sources=[[agents(),a=>a.nom+' '+libF(a.fonction)+' '+(a.court||''),a=>`👤 ${esc(a.nom)} · ${esc(libF(a.fonction))}${lienTel(a)}`],
+    [contactsA(),c=>[c.nom,c.agence,c.fonction,c.service,c.direction].join(' '),c=>`📇 ${esc(c.nom||c.agence)} · ${esc([c.fonction,c.agence,c.service].filter(Boolean).join(' · '))}${c.tel?` · <a href="tel:+225${esc(String(c.tel).replace(/\D/g,'').slice(-10))}">${esc(c.tel)}</a>`:''}`],
+    [docs(),x=>x.titre+' '+(x.desc||''),x=>`📄 ${esc(x.titre)} · <a href="#documents">Documents</a>`],
+    [notesMC(),x=>(x.texte||'')+' '+(x.lieu||'')+' '+(x.type||''),x=>`📓 Note n° ${x.num} · ${esc(String(x.texte||'').slice(0,90))}`],
+    [projetsA(),x=>x.titre+' '+(x.objectif||''),x=>`🚀 ${esc(x.titre)} · ${avancementPrj(x)} %`]];
+  const best=Math.max(0,...[].concat(...sources.map(([L,t])=>L.map(t).map(score))));
+  if(!best)return `Rien trouvé pour « ${esc(brut)} »${ANN?'':' (l’Annuaire n’est pas encore chargé)'}. Essayez un nom, une agence ou un mot-clé.`;
+  const R=[];sources.forEach(([L,t,f])=>L.filter(x=>score(t(x))===best).slice(0,6).forEach(x=>R.push(f(x))));
+  return (best<mots.length?'<span class="dx-gris">Résultats les plus proches :</span><br>':'')+R.slice(0,12).join('<br>');
 }
 function rendreAllo(){
   const z=$('v-assistant');if(!z)return;
@@ -3247,7 +3321,7 @@ function rendreAllo(){
   h+=`<form class="dx-form dx-carte" id="fAllo"><label for="alloQ">Votre question</label><input id="alloQ" autocomplete="off" placeholder="Ex. : qui est de quart demain ?" maxlength="200"><button class="dx-btn plein" type="submit">Demander</button></form>`;
   h+=`<div class="dx-puces dx-allo-s">${SUGG_ALLO.map(s=>`<button type="button" class="dx-puce" data-a="allo-q" data-q="${esc(s)}">${esc(s)}</button>`).join('')}</div>`;
   h+=ui.alloHist.slice().reverse().map(x=>`<div class="dx-carte dx-allo"><p class="dx-allo-q">${esc(x.q)}</p><div class="dx-allo-r">${x.r}</div></div>`).join('');
-  if(!ui.alloHist.length)h+=`<div class="dx-carte"><p class="dx-gris">Allô C.O ne devine rien : il cherche dans les quarts, les absences, l’équipe, l’annuaire, les documents, la Main courante, les réunions, les projets et les chiffres. Une question tournée autrement que les exemples peut ne pas être comprise : essayez alors un nom ou un mot-clé.</p></div>`;
+  if(!ui.alloHist.length)h+=`<div class="dx-carte"><p class="dx-gris">Allô C.O ne devine rien : il cherche dans les quarts, les absences, l’équipe, l’annuaire, les documents, le Journal de quart, les réunions, les projets et les chiffres. Une question tournée autrement que les exemples peut ne pas être comprise : essayez alors un nom ou un mot-clé.</p></div>`;
   z.innerHTML=h;
   if(!ANN&&!ui.annDemande&&accesMC()){ui.annDemande=true;chargerAnn();}
   if(!MC&&!ui.mcDemande&&accesMC()){ui.mcDemande=true;chargerMC();}
@@ -3278,6 +3352,7 @@ document.addEventListener('click',ev=>{
   else if(a==='rap-mois'){ui.rapMois=moisPlus(ui.rapMois,+b.dataset.n);rendreRapport();}
   else if(a==='rap-imprimer'){document.body.classList.add('dx-imprime-rapport');setTimeout(()=>{try{window.print();}finally{setTimeout(()=>document.body.classList.remove('dx-imprime-rapport'),500);}},50);}
   else if(a==='rap-fichier')fichierRapport();
+  else if(a==='mod-reessayer'){ui.modErreur='';ui.modDemande=true;chargerMod();rendreModGarde();}
   else if(a==='allo-q')demanderAllo(b.dataset.q);
 });
 document.addEventListener('submit',async ev=>{
