@@ -1149,7 +1149,7 @@ function appliquerEtat(e,deCache){
 const TABLEAU_VIERGE=$('dx-tableau').innerHTML;
 /** Services du Centre (02/11/2026) : DEXA (état général), DEXI et SDMR (chargés à la demande, gardés sur le téléphone). */
 /** Numéro affiché dans le menu : il permet de vérifier que le téléphone a bien pris la dernière version. */
-const VERSION_APP='19';
+const VERSION_APP='20';
 const SERVICES_D=['DEXA','DEXI','SDMR'];
 ui.svc=lsGet('svc','DEXA');
 const SVCD={};
@@ -1523,13 +1523,17 @@ const libQuart=q=>{const h=horaires()[q];return (q==='J'?'Jour':'Nuit')+' · '+h
 function absence(id,iso){return (P().absences||[]).find(x=>x.agent===id&&x.du<=iso&&iso<=x.au)||null;}
 /** Rotation en vigueur le jour iso : l'ordre de départ, puis chaque changement daté (« X prend la place de Y à partir du … »). */
 function ordreAu(iso){const c=P().cycle||{},o=(c.ordre||[]).slice();(c.changements||[]).filter(x=>x.du<=iso).sort((a,b)=>a.du.localeCompare(b.du)).forEach(x=>{const i=o.indexOf(x.sort);if(i>=0)o[i]=x.entre;});return o;}
-function codeCycle(k,iso){const c=P().cycle||{};if(!c.debut||!c.motif)return null;const L=c.motif.length,d=ecart(c.debut,iso)-(Number(c.pas)||0)*k;return c.motif[((d%L)+L)%L];}
+/** Décalage entre deux places de la rotation : toujours calculé (8 jours ÷ 4 Ordonnanceurs = 2). Le réglage enregistré n'est plus lu :
+ *  un « 0 » enregistré par erreur donnait le même rythme aux quatre (Félix partout, les autres nulle part ; constaté le 02/11/2026). */
+const pasCycle=(motif,ordre)=>{const L=String(motif||'').length,n=(ordre||[]).length;return n&&L%n===0?L/n:2;};
+function codeCycle(k,iso){const c=P().cycle||{};if(!c.debut||!c.motif)return null;const L=c.motif.length,d=ecart(c.debut,iso)-pasCycle(c.motif,c.ordre)*k;return c.motif[((d%L)+L)%L];}
 /** Qui tient le quart q (J ou N) du jour iso. extra : modifications supplémentaires (propositions pas encore enregistrées). */
 function quart(iso,q,extra){
   let base=null;
   ordreAu(iso).forEach((id,k)=>{if(!base&&codeCycle(k,iso)===q)base=id;});
   const m=(extra&&extra[iso+'|'+q])||(P().modifs||{})[iso+'|'+q];
-  if(m)return {agent:m.agent==='vacant'?null:m.agent,base,modifie:true,motif:m.motif||'',vacant:m.agent==='vacant'};
+  // Une modification qui redonne la personne prévue par le cycle n'est pas un remplacement
+  if(m&&!(m.agent===base&&!absence(base,iso)))return {agent:m.agent==='vacant'?null:m.agent,base,modifie:true,motif:m.motif||'',vacant:m.agent==='vacant'};
   if(base&&absence(base,iso))return {agent:null,base,vacant:true,motif:'absence de '+nomAg(base)};
   return {agent:base,base,vacant:!base,motif:''};
 }
@@ -1562,7 +1566,10 @@ const contacts=a=>a&&a.tel?`<a class="dx-mini" style="background:#1a9b5c" href="
 function ecrirePlat(op,data,msgAttente){
   if(!SESSION.jeton)return Promise.resolve(false);
   toast(msgAttente||'Enregistrement…');
-  return appel('apiPlateforme',SESSION.jeton,newId(),op,data).then(e=>{appliquerEtat(e);toast(e.message||'Enregistré.');return true;})
+  return appel('apiPlateforme',SESSION.jeton,newId(),op,data).then(e=>{
+    // Enregistré : les formulaires de l'écran repartent des valeurs du serveur
+    const z=$('v-'+ui.vue);if(z)z.querySelectorAll('[data-saisi]').forEach(x=>{delete x.dataset.saisi;});
+    appliquerEtat(e);toast(e.message||'Enregistré.');return true;})
     .catch(err=>{if(estSession(err))finSession();toast(messageErreur(err));return false;});
 }
 
@@ -1583,14 +1590,18 @@ function allerVue(v){
   renderNav();rendrePlateforme();afficherTableau();
   try{window.scrollTo(0,0);}catch(x){}
 }
-/** Une mise à jour arrivée en arrière-plan ne doit jamais effacer une saisie en cours (texte tapé ou dicté). */
+/** Une mise à jour arrivée en arrière-plan ne doit jamais effacer une saisie en cours (texte tapé ou dicté).
+ *  Seules les cases réellement modifiées sont gardées (data-saisi) : une case non touchée reprend la valeur enregistrée.
+ *  Avant le 02/11/2026, toutes l'étaient : le réglage du cycle pouvait réafficher, puis réenregistrer, d'anciennes valeurs. */
+document.addEventListener('input',ev=>{const e=ev.target;if(e&&e.closest&&e.closest('form'))e.dataset.saisi='1';},true);
+document.addEventListener('change',ev=>{const e=ev.target;if(e&&e.closest&&e.closest('form'))e.dataset.saisi='1';},true);
 function garderSaisie(zone,rendre){
   if(!zone){rendre();return;}
   const g={},a=document.activeElement;
-  zone.querySelectorAll('form input[id],form textarea[id],form select[id]').forEach(e=>{if(e.type!=='file')g[e.id]=e.type==='checkbox'?e.checked:e.value;});
+  zone.querySelectorAll('form input[id],form textarea[id],form select[id]').forEach(e=>{if(e.type!=='file'&&e.dataset.saisi==='1')g[e.id]=e.type==='checkbox'?e.checked:e.value;});
   const f=a&&a.id&&zone.contains(a)?{id:a.id,s:a.selectionStart,e:a.selectionEnd}:null;
   rendre();
-  Object.keys(g).forEach(id=>{const e=$(id);if(!e||!zone.contains(e))return;if(e.type==='checkbox')e.checked=g[id];else e.value=g[id];});
+  Object.keys(g).forEach(id=>{const e=$(id);if(!e||!zone.contains(e))return;if(e.type==='checkbox')e.checked=g[id];else e.value=g[id];e.dataset.saisi='1';});
   if(f){const e=$(f.id);if(e){try{e.focus({preventScroll:true});if(f.s!=null)e.setSelectionRange(f.s,f.e);}catch(x){}}}
 }
 const formMCOuvert=()=>!!(ui.mcEdit&&$('v-journal')&&$('v-journal').querySelector('form'));
@@ -1692,6 +1703,10 @@ function rendreQuarts(){
   // Récapitulatif par agent
   const ids=Object.keys(cpt);
   if(ids.length)h+=`<div class="dx-carte"><h3>Récapitulatif du mois</h3>${ids.sort((a,b)=>nomAg(a).localeCompare(nomAg(b))).map(id=>`<div class="dx-li">${avatar(agent(id),1)}<span>${esc(nomAg(id))}</span><span class="d">${cpt[id].J} jour${cpt[id].J>1?'s':''} · ${cpt[id].N} nuit${cpt[id].N>1?'s':''}</span></div>`).join('')}</div>`;
+  // Ordonnanceurs suppléants : toujours visibles, avec leurs quarts du mois (remplacements) et de quoi les joindre
+  const sup=agents().filter(a=>a.fonction==='remplacant').sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
+  if(sup.length)h+=`<div class="dx-carte"><h3>Ordonnanceurs suppléants</h3>${sup.map(a=>{const c=cpt[a.id],ab=absence(a.id,auj);
+    return `<div class="dx-membre">${avatar(a)}<div class="dx-qn-t"><b>${esc(a.nom)}</b><span>${c?c.J+' jour'+(c.J>1?'s':'')+' · '+c.N+' nuit'+(c.N>1?'s':'')+' ce mois-ci':'Aucun quart ce mois-ci'}${ab?' · absent':''}</span></div><div class="dx-contacts">${contacts(a)}</div></div>`;}).join('')}</div>`;
   // Absences
   const debut=jours[0],fin=jours[jours.length-1];
   const abs=(P().absences||[]).filter(x=>x.au>=debut&&x.du<=fin).sort((a,b)=>a.du.localeCompare(b.du));
@@ -1752,10 +1767,8 @@ function formCycle(ouvert){
     <label for="cyDebut">À partir du</label><input id="cyDebut" type="date" value="${esc(debut)}">
     <fieldset class="dx-binome"><legend>Ce jour-là et le lendemain</legend>${choix(o[0],0,'De jour')}${choix(o[2],2,'De nuit')}</fieldset>
     <fieldset class="dx-binome"><legend>Les 2 jours suivants</legend>${choix(o[1],1,'De jour')}${choix(o[3],3,'De nuit')}</fieldset>
-    <div id="cyApercu">${apercuCycle(lireFormCycle(c,o,debut))}</div>
-    <details class="dx-details dx-avance"><summary>Réglages avancés</summary>
-      <label for="cyMotif">Cycle de chaque Ordonnanceur (J = jour, N = nuit, R = repos)</label><input id="cyMotif" value="${esc(c.motif||'JJRRNNRR')}" autocapitalize="characters">
-      <label for="cyPas">Décalage entre deux Ordonnanceurs (jours)</label><input id="cyPas" type="number" min="0" max="30" value="${esc(c.pas!=null?c.pas:2)}">
+    <div id="cyApercu">${apercuCycle({motif:'JJRRNNRR',debut,ordre:o.slice()})}</div>
+    <details class="dx-details dx-avance"><summary>Horaires des quarts</summary>
       <div class="dx-ligne"><label>Jour <input id="cyJ0" type="time" value="${esc(h.J[0])}"> à <input id="cyJ1" type="time" value="${esc(h.J[1])}"></label><label>Nuit <input id="cyN0" type="time" value="${esc(h.N[0])}"> à <input id="cyN1" type="time" value="${esc(h.N[1])}"></label></div>
     </details>
     <button class="dx-btn plein" type="submit">Enregistrer le cycle</button></form></details>`;
@@ -2045,7 +2058,7 @@ document.addEventListener('submit',ev=>{
   else if(f.id==='fCycle'){ev.preventDefault();const ordre=lireFormCycle().ordre;
     if(ordre.some(v=>!v)){toast('Choisissez les 4 Ordonnanceurs : jour et nuit, pour les deux binômes.');return;}
     if(new Set(ordre).size<ordre.length){toast('Un Ordonnanceur est choisi deux fois.');return;}
-    ecrirePlat('cycle',{motif:$('cyMotif').value.trim(),pas:$('cyPas').value,debut:$('cyDebut').value,ordre,horaires:{J:[$('cyJ0').value,$('cyJ1').value],N:[$('cyN0').value,$('cyN1').value]}});}
+    ecrirePlat('cycle',{motif:'JJRRNNRR',debut:$('cyDebut').value,ordre,horaires:{J:[$('cyJ0').value,$('cyJ1').value],N:[$('cyN0').value,$('cyN1').value]}});}
   else if(f.id==='fRot'){ev.preventDefault();if(!$('rtSort').value||!$('rtEntre').value){toast('Choisissez qui sort et qui prend sa place.');return;}
     ui.rotDu=null;ecrirePlat('rotation',{du:$('rtDu').value,sort:$('rtSort').value,entre:$('rtEntre').value});}
   else if(f.id==='fDoc'){ev.preventDefault();envoyerDoc(f);}
@@ -2310,8 +2323,9 @@ function programmeMois(mois){
   // HORS QUART, comme sur le modèle : les Ordonnanceurs hors quart et ceux de quart qui ne tiennent aucun quart ce mois-ci
   // (un agent DEXA, DEXI ou SDMR entré dans la rotation n'y figure pas), puis les autres absents du mois
   const enQuart=new Set();jours.forEach(j=>['J','N'].forEach(q=>{const x=quart(j,q);if(x.agent)enQuart.add(x.agent);}));
-  const rangF=a=>a.fonction==='quart'?-1:HORS_QUART.indexOf(a.fonction);
-  const hq=agents().filter(a=>(HORS_QUART.includes(a.fonction)||a.fonction==='quart')&&!enQuart.has(a.id)).sort((a,b)=>rangF(a)-rangF(b)||a.nom.localeCompare(b.nom,'fr'));
+  // (les Ordonnanceurs suppléants sans quart du mois y figurent aussi, comme KRA et SAHLY sur le programme de juin)
+  const rangF=a=>a.fonction==='quart'?-1:a.fonction==='remplacant'?9:HORS_QUART.indexOf(a.fonction);
+  const hq=agents().filter(a=>(HORS_QUART.includes(a.fonction)||a.fonction==='quart'||a.fonction==='remplacant')&&!enQuart.has(a.id)).sort((a,b)=>rangF(a)-rangF(b)||a.nom.localeCompare(b.nom,'fr'));
   const absents=agents().filter(a=>!hq.includes(a)&&absM(a.id)).sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
   return {mois,titre:'QUART '+MOIS_L[m-1].toUpperCase()+' '+y,onglet:MOIS_L[m-1].toUpperCase(),
     jours:jours.map(j=>({iso:j,nom:JOURS_M[versDate(j).getDay()],num:+j.slice(8)})),
@@ -2424,12 +2438,12 @@ document.addEventListener('click',ev=>{
 /** Valeurs du formulaire « Régler le cycle » (ou, avant qu'il soit affiché, celles proposées). */
 function lireFormCycle(c,ordre,debut){
   const f=$('fCycle');
-  if(f&&$('cyMotif')){const o=[];f.querySelectorAll('[data-ordre]').forEach(s=>{o[+s.dataset.ordre]=s.value;});return {motif:String($('cyMotif').value||'JJRRNNRR').trim().toUpperCase(),pas:Number($('cyPas').value)||0,debut:$('cyDebut').value,ordre:o};}
-  return {motif:(c&&c.motif)||'JJRRNNRR',pas:c&&c.pas!=null?Number(c.pas):2,debut,ordre:(ordre||[]).slice()};
+  if(f&&$('cyDebut')){const o=[];f.querySelectorAll('[data-ordre]').forEach(s=>{o[+s.dataset.ordre]=s.value;});return {motif:'JJRRNNRR',debut:$('cyDebut').value,ordre:o};}
+  return {motif:'JJRRNNRR',debut,ordre:(ordre||[]).slice()};
 }
 function apercuCycle(cyc){
   if(!cyc.debut||!/^[JNR]{2,30}$/.test(cyc.motif))return '<p class="dx-gris">Choisissez la date pour voir l’aperçu.</p>';
-  const L=cyc.motif.length,code=(k,iso)=>{const d=ecart(cyc.debut,iso)-cyc.pas*k;return cyc.motif[((d%L)+L)%L];};
+  const L=cyc.motif.length,pas=pasCycle(cyc.motif,cyc.ordre),code=(k,iso)=>{const d=ecart(cyc.debut,iso)-pas*k;return cyc.motif[((d%L)+L)%L];};
   const jours=Array.from({length:Math.max(8,L)},(_,i)=>ajoute(cyc.debut,i));
   const cell=(j,q)=>{let r=-1;cyc.ordre.forEach((id,k)=>{if(r<0&&id&&code(k,j)===q)r=k;});return r<0?{nom:'À POURVOIR',rang:-1}:{nom:nomCourt(agent(cyc.ordre[r])),rang:r};};
   const H=horaires(),p={jours:jours.map(j=>({iso:j,nom:JOURS_M[versDate(j).getDay()],num:+j.slice(8)})),
