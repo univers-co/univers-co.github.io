@@ -477,6 +477,11 @@ table.pq{border-collapse:collapse;font-size:10px;font-weight:700}
 
 /* Volet « Changer un Ordonnanceur de la rotation » : la liste des changements se détache du bouton */
 #dRot h3{margin:16px 0 4px}
+/* Accueil : choix du service sous les chiffres DEXA (ouvre « Données » sur ce service) */
+.dx-svc-acc{margin:12px 0 0}
+/* Réglage du cycle : un cadre par binôme (jour + nuit) */
+.dx-binome{border:1px solid var(--line);border-radius:12px;padding:8px 12px 12px;margin:10px 0;min-width:0}
+.dx-binome legend{font-weight:700;font-size:14px;padding:0 4px}
 </style>
 <script>
 // Témoin de démarrage : prévient la page d'accueil dès que la page s'exécute (elle relance l'ouverture sinon).
@@ -937,7 +942,7 @@ function renderHeat(){
 
 // ---------- tableau de détail ----------
 let sortKey='late26', sortDir=-1;
-const COLS=[['a','Agence',0],['dr','Direction',0],['n25',`Traitées ${YEAR_PREV}`,2],['n26',`Traitées ${YEAR_CUR}`,1],['vol','Évol.',1],['r25',`Taux ${YEAR_PREV}`,2],['r26',`Taux ${YEAR_CUR}`,1],['dp','Δ taux (pt)',1],['t25',`TMT ${YEAR_PREV}`,2],['t26',`TMT ${YEAR_CUR}`,1],['late25',`Hors délai ${YEAR_PREV}`,2],['late26',`Hors délai ${YEAR_CUR}`,1],['share','Part des retards',1]];
+const COLS=[['a','Agence',0],['dr','Direction',0],['n25',`Traitées ${YEAR_PREV}`,2],['n26',`Traitées ${YEAR_CUR}`,1],['vol','Évol.',1],['r25',`Taux ${YEAR_PREV}`,2],['r26',`Taux ${YEAR_CUR}`,1],['dp','Δ taux (pt)',1],['t25',`TMT ${YEAR_PREV}`,2],['t26',`TMT ${YEAR_CUR}`,1],['late25',`Hors délai ${YEAR_PREV}`,2],['late26',`Hors délai ${YEAR_CUR}`,1],['share','Part des hors délai',1]];
 function renderDetail(){
   const rows=AG.filter(x=>(!$('fDr').value||x.d===$('fDr').value)&&(!$('fAg').value||x.a===$('fAg').value)).map(x=>{
     const a=agg(sel(YEAR_CUR,{ag:x.a})), b=agg(sel(YEAR_PREV,{ag:x.a}));
@@ -971,16 +976,16 @@ function insights(){
   let s=`<b>${fmt(a.n)} dossiers traités</b>`; if(b.n) s+=` (${sg((a.n/b.n-1)*100)} % vs ${YEAR_PREV})`;
   s+=`, <b>${pct(r)}</b> dans les délais`; if(b.n) s+=` (${sg((r-rate(b))*100,2)} pt)`; s+=`, temps moyen de traitement ${hh(a.t/a.n)}`; if(b.n) s+=` (${YEAR_PREV} : ${hh(tmtOf(b))})`; out.push(s+'.');
   const ag=[...by(rows,1)].map(([k,o])=>({k,n:o.n,late:o.n-o.d,r:o.d/o.n,o}));
-  if(late===0) out.push('<b>Aucun retard</b> sur cette sélection : tous les dossiers sont traités dans les délais.');
+  if(late===0) out.push('<b>Aucun dossier hors délai</b> sur cette sélection : tous les dossiers sont traités dans les délais.');
   else if(ag.length>1){
     const top=[...ag].sort((x,y)=>y.late-x.late)[0], sh=top.late/late, vs=top.n/a.n;
     out.push((sh>=1.5*vs&&sh>=0.25)
-      ? `<b>${top.k} concentre ${pc0(sh)} % des retards</b> (${fmt(top.late)} sur ${fmt(late)}) pour ${pc0(vs)} % du volume.`
-      : `Les retards sont répartis entre les agences : la plus touchée est <b>${top.k}</b> (${pc0(sh)} % des retards, soit ${fmt(top.late)} sur ${fmt(late)}, pour ${pc0(vs)} % du volume).`);
+      ? `<b>${top.k} concentre ${pc0(sh)} % des dossiers hors délai</b> (${fmt(top.late)} sur ${fmt(late)}) pour ${pc0(vs)} % du volume.`
+      : `Les dossiers hors délai sont répartis entre les agences : la plus touchée est <b>${top.k}</b> (${pc0(sh)} % des dossiers hors délai, soit ${fmt(top.late)} sur ${fmt(late)}, pour ${pc0(vs)} % du volume).`);
   }
   if(!f.cat && late>0){
     const ty=[...by(rows,4)].map(([k,o])=>({k,n:o.n,late:o.n-o.d,r:o.d/o.n})).sort((x,y)=>y.late-x.late)[0];
-    let s3=`<b>${ty.k}</b> pèse ${pc0(ty.late/late)} % des retards (${fmt(ty.late)} sur ${fmt(late)} ; taux ${pct(ty.r)} sur ${fmt(ty.n)} dossiers)`;
+    let s3=`<b>${ty.k}</b> pèse ${pc0(ty.late/late)} % des dossiers hors délai (${fmt(ty.late)} sur ${fmt(late)} ; taux ${pct(ty.r)} sur ${fmt(ty.n)} dossiers)`;
     if(ag.length>1 && ty.late>0){
       const tg=[...by(rows.filter(x=>x[4]===ty.k),1)].map(([k,o])=>({k,late:o.n-o.d})).sort((x,y)=>y.late-x.late)[0];
       if(tg.late/ty.late>=0.5) s3+=`, dont ${pc0(tg.late/ty.late)} % à <b>${tg.k}</b>`;
@@ -994,7 +999,7 @@ function insights(){
       const mr=rows.filter(x=>x[3]===lo.k); let drv='';
       if(ag.length>1){ const d=[...by(mr,1)].map(([k,o])=>({k,late:o.n-o.d})).sort((x,y)=>y.late-x.late)[0]; if(d.late>0) drv=`, dont ${fmt(d.late)} à <b>${d.k}</b>`; }
       else if(!f.cat){ const d=[...by(mr,4)].map(([k,o])=>({k,late:o.n-o.d})).sort((x,y)=>y.late-x.late)[0]; if(d.late>0) drv=`, dont ${fmt(d.late)} sur « ${d.k} »`; }
-      out.push(`<b>Creux en ${ml(lo.k)} (${pct(lo.r)})</b> : ${fmt(lo.late)} retards${drv}.`);
+      out.push(`<b>Creux en ${ml(lo.k)} (${pct(lo.r)})</b> : ${fmt(lo.late)} hors délai${drv}.`);
     } else if(late>0){
       out.push(`Pas de creux marqué : le taux mensuel va de ${pct(lo.r)} en ${ml(lo.k)} à ${pct(hi.r)} en ${ml(hi.k)}.`);
     }
@@ -1143,6 +1148,8 @@ function appliquerEtat(e,deCache){
 }
 const TABLEAU_VIERGE=$('dx-tableau').innerHTML;
 /** Services du Centre (02/11/2026) : DEXA (état général), DEXI et SDMR (chargés à la demande, gardés sur le téléphone). */
+/** Numéro affiché dans le menu : il permet de vérifier que le téléphone a bien pris la dernière version. */
+const VERSION_APP='19';
 const SERVICES_D=['DEXA','DEXI','SDMR'];
 ui.svc=lsGet('svc','DEXA');
 const SVCD={};
@@ -1291,7 +1298,7 @@ function renderMenu(){
     h+=`<section class="dx-carte"><h3>Comptes</h3>${zoneComptes()}</section>`;
     h+=`<section class="dx-carte"><h3>Journal</h3>${ui.journal?ui.journal.length?'<ul class="dx-liste">'+ui.journal.map(j=>`<li><span class="dx-gris">${esc(new Date(j.le).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}</span> · ${esc(j.action)} — ${esc(j.detail)}</li>`).join('')+'</ul>':'<p class="dx-gris">Rien pour l\'instant.</p>':'<button class="dx-btn" type="button" data-a="journal">Voir les imports et les comptes récents</button>'}</section>`;
   }
-  h+='<p class="dx-gris dx-pied">Les données restent dans le compte Google de l\'application. Chaque compte ne reçoit que les chiffres de son périmètre.</p>';
+  h+='<p class="dx-gris dx-pied">Les données restent dans le compte Google de l\'application. Chaque compte ne reçoit que les chiffres de son périmètre.<br>UNIVERS C.O · version '+VERSION_APP+'</p>';
   $('dxMenuCorps').innerHTML=h;
   if(m.role==='admin'&&ui.comptes)majPerimetre();
 }
@@ -1617,7 +1624,7 @@ function chiffreDexa(){
   const tx=a.d/a.n*100,dp=b.n?tx-b.d/b.n*100:null,tmt=a.t/a.n,hh=h=>Math.floor(h)+' h '+String(Math.round((h%1)*60)).padStart(2,'0');
   const per=ETAT.moi.role==='direction'?' · Direction '+ETAT.moi.perimetre:ETAT.moi.role==='agence'?' · '+ETAT.moi.perimetre:'';
   return `<div class="dx-carte cliquable" data-a="vue" data-v="donnees"><h3>${tuileIc('donnees','p')}Réclamations DEXA · ${MOIS_L[m-1]} ${an}${esc(per)}</h3>
-    <div class="dx-kpis"><div><b>${a.n.toLocaleString('fr-FR')}</b><span>traitées</span></div><div><b>${tx.toFixed(1).replace('.',',')} %</b><span>dans les délais${dp===null?'':` <em class="${dp>=0?'pos':'neg'}">${dp>=0?'▲':'▼'} ${Math.abs(dp).toFixed(1).replace('.',',')}</em>`}</span></div><div><b>${hh(tmt)}</b><span>temps moyen</span></div></div></div>`;
+    <div class="dx-kpis"><div><b>${a.n.toLocaleString('fr-FR')}</b><span>traitées</span></div><div><b>${tx.toFixed(1).replace('.',',')} %</b><span>dans les délais${dp===null?'':` <em class="${dp>=0?'pos':'neg'}">${dp>=0?'▲':'▼'} ${Math.abs(dp).toFixed(1).replace('.',',')}</em>`}</span></div><div><b>${hh(tmt)}</b><span>temps moyen</span></div></div>${ETAT.mc?`<div class="dx-seg dx-svc dx-svc-acc">${SERVICES_D.map(x=>`<button type="button" data-svc="${x}">${x}</button>`).join('')}</div>`:''}</div>`;
 }
 function rendreAccueil(){
   const now=new Date(),iso=isoJ(now),prenom=String(ETAT.moi.nom||'').split(/\s+/)[0];
@@ -1690,7 +1697,7 @@ function rendreQuarts(){
   const abs=(P().absences||[]).filter(x=>x.au>=debut&&x.du<=fin).sort((a,b)=>a.du.localeCompare(b.du));
   h+=`<div class="dx-carte"><h3>Absences et congés</h3>${abs.length?abs.map(x=>`<div class="dx-li"><span class="dx-emoji">🏖️</span><span>${esc(nomAg(x.agent))} · ${esc(x.motif)}</span><span class="d">${esc(libJour(x.du))}${x.au!==x.du?' → '+esc(libJour(x.au)):''}</span>${admin?`<button class="dx-btn petit" type="button" data-a="abs-retirer" data-id="${esc(x.id)}">Retirer</button>`:''}</div>`).join(''):'<p class="dx-gris">Aucune absence ce mois-ci.</p>'}
     ${admin?formAbsence(debut):''}</div>`;
-  if(admin)h+=formRotation(mois)+formCycle(false);
+  if(admin)h+=formCycle(false)+formRotation(mois);
   $('v-quarts').innerHTML=h;
 }
 function editeurSlot(j,q){
@@ -1733,19 +1740,19 @@ function formRotation(mois){
       <button class="dx-btn plein" type="submit">Enregistrer le changement</button></form>
     ${ch.length?`<h3>Changements enregistrés</h3>${ch.map(x=>`<div class="dx-li"><span>À partir du ${esc(libJour(x.du))} : <b>${esc(nomAg(x.entre))}</b> remplace ${esc(nomAg(x.sort))}</span><button class="dx-btn petit" type="button" data-a="rot-retirer" data-du="${esc(x.du)}" data-sort="${esc(x.sort)}">Retirer</button></div>`).join('')}`:''}</details>`;
 }
+/** Réglage du cycle en binômes, comme le service le dit : « le 2, Félix de jour et Coulibaly de nuit (2 jours) ; le 4, Traoré de jour et Seri de nuit ».
+ *  Les 4 personnes donnent l'ordre de rotation [jour 1, jour 2, nuit 1, nuit 2] : avec JJRRNNRR et un décalage de 2,
+ *  celui de nuit passe de jour 4 jours plus tard, et inversement. */
 function formCycle(ouvert){
-  const c=P().cycle||{},q=agents().filter(a=>a.fonction==='quart'),ordre=(c.ordre||[]).slice();
-  // Premier réglage : les Ordonnanceurs de quart sont proposés d'office, dans l'ordre de l'Équipe
-  if(!ordre.filter(Boolean).length)q.forEach(a=>ordre.push(a.id));
-  while(ordre.length<Math.max(4,q.length))ordre.push('');
-  const h=c.horaires||{J:['07:30','19:30'],N:['19:30','07:30']},debut=c.debut||(ui.moisQ||moisDe(isoJ(new Date())))+'-01';
-  const choix=(id,i)=>`<select id="cyOrd${i}" data-ordre="1" aria-label="${i?'Puis':'De jour en premier'}"><option value="">—</option>${optionsEquipe(id)}</select>`;
+  const c=P().cycle||{},o=(c.ordre||[]).length===4?c.ordre:['','','',''];
+  const h=c.horaires||{J:['07:30','19:30'],N:['19:30','07:30']},debut=c.debut||isoJ(new Date());
+  const choix=(id,k,lib)=>`<label for="cyOrd${k}">${lib}</label><select id="cyOrd${k}" data-ordre="${k}"><option value="">— Choisir —</option>${optionsEquipe(id)}</select>`;
   return `<details class="dx-carte dx-details"${ouvert||ui.cycleOuvert?' open':''}><summary><b>Régler le cycle des quarts</b></summary><form class="dx-form" id="fCycle">
-    <p class="dx-gris">Comme sur le programme du service : chaque Ordonnanceur fait 2 jours de jour, 2 jours de repos, 2 nuits, 2 jours de repos, puis recommence. Indiquez seulement qui est de jour, dans l’ordre de passage.</p>
+    <p class="dx-gris">Indiquez les deux binômes de départ. Ensuite, l’application les fait alterner tous les 2 jours, et chacun passe du jour à la nuit avec 2 jours de repos entre les deux, comme sur le programme du service.</p>
     <label for="cyDebut">À partir du</label><input id="cyDebut" type="date" value="${esc(debut)}">
-    <label for="cyOrd0">De jour ce jour-là et le lendemain</label>${choix(ordre[0],0)}
-    ${ordre.slice(1).map((id,k)=>`<label for="cyOrd${k+1}">Puis, les 2 jours suivants</label>${choix(id,k+1)}`).join('')}
-    <div id="cyApercu">${apercuCycle(lireFormCycle(c,ordre,debut))}</div>
+    <fieldset class="dx-binome"><legend>Ce jour-là et le lendemain</legend>${choix(o[0],0,'De jour')}${choix(o[2],2,'De nuit')}</fieldset>
+    <fieldset class="dx-binome"><legend>Les 2 jours suivants</legend>${choix(o[1],1,'De jour')}${choix(o[3],3,'De nuit')}</fieldset>
+    <div id="cyApercu">${apercuCycle(lireFormCycle(c,o,debut))}</div>
     <details class="dx-details dx-avance"><summary>Réglages avancés</summary>
       <label for="cyMotif">Cycle de chaque Ordonnanceur (J = jour, N = nuit, R = repos)</label><input id="cyMotif" value="${esc(c.motif||'JJRRNNRR')}" autocapitalize="characters">
       <label for="cyPas">Décalage entre deux Ordonnanceurs (jours)</label><input id="cyPas" type="number" min="0" max="30" value="${esc(c.pas!=null?c.pas:2)}">
@@ -2035,9 +2042,8 @@ document.addEventListener('submit',ev=>{
   const f=ev.target;
   if(f.id==='fSlot'){ev.preventDefault();ui.qEdit=null;ecrirePlat('modif',{date:f.dataset.j,quart:f.dataset.q,agent:$('slAgent').value,motif:$('slMotif').value});}
   else if(f.id==='fAbs'){ev.preventDefault();ecrirePlat('absence',{agent:$('abAgent').value,du:$('abDu').value,au:$('abAu').value,motif:$('abMotif').value});}
-  else if(f.id==='fCycle'){ev.preventDefault();const tous=[...f.querySelectorAll('[data-ordre]')].map(s=>s.value),n=tous.reduce((m,v,i)=>v?i+1:m,0),ordre=tous.slice(0,n);
-    if(!n){toast('Choisissez au moins l’Ordonnanceur de jour en premier.');return;}
-    if(ordre.some(v=>!v)){toast('Une case est vide entre deux Ordonnanceurs : complétez-la.');return;}
+  else if(f.id==='fCycle'){ev.preventDefault();const ordre=lireFormCycle().ordre;
+    if(ordre.some(v=>!v)){toast('Choisissez les 4 Ordonnanceurs : jour et nuit, pour les deux binômes.');return;}
     if(new Set(ordre).size<ordre.length){toast('Un Ordonnanceur est choisi deux fois.');return;}
     ecrirePlat('cycle',{motif:$('cyMotif').value.trim(),pas:$('cyPas').value,debut:$('cyDebut').value,ordre,horaires:{J:[$('cyJ0').value,$('cyJ1').value],N:[$('cyN0').value,$('cyN1').value]}});}
   else if(f.id==='fRot'){ev.preventDefault();if(!$('rtSort').value||!$('rtEntre').value){toast('Choisissez qui sort et qui prend sa place.');return;}
@@ -2418,7 +2424,7 @@ document.addEventListener('click',ev=>{
 /** Valeurs du formulaire « Régler le cycle » (ou, avant qu'il soit affiché, celles proposées). */
 function lireFormCycle(c,ordre,debut){
   const f=$('fCycle');
-  if(f&&$('cyMotif'))return {motif:String($('cyMotif').value||'JJRRNNRR').trim().toUpperCase(),pas:Number($('cyPas').value)||0,debut:$('cyDebut').value,ordre:[...f.querySelectorAll('[data-ordre]')].map(s=>s.value)};
+  if(f&&$('cyMotif')){const o=[];f.querySelectorAll('[data-ordre]').forEach(s=>{o[+s.dataset.ordre]=s.value;});return {motif:String($('cyMotif').value||'JJRRNNRR').trim().toUpperCase(),pas:Number($('cyPas').value)||0,debut:$('cyDebut').value,ordre:o};}
   return {motif:(c&&c.motif)||'JJRRNNRR',pas:c&&c.pas!=null?Number(c.pas):2,debut,ordre:(ordre||[]).slice()};
 }
 function apercuCycle(cyc){
@@ -2430,7 +2436,7 @@ function apercuCycle(cyc){
     lignes:[['J',H.J],['N',H.N]].map(([q,h])=>({lib:hModele(h[0])+' - '+hModele(h[1]),q,c:jours.map(j=>cell(j,q))})),hors:[]};
   const ids=cyc.ordre.filter(Boolean),deux=[...new Set(ids.filter((x,i)=>ids.indexOf(x)!==i))],vides=p.lignes.reduce((n,l)=>n+l.c.filter(c=>c.rang<0).length,0);
   const msg=deux.length?`<p class="dx-ap-msg neg">⚠️ ${deux.map(id=>esc(nomAg(id))).join(', ')} ${deux.length>1?'sont choisis':'est choisi'} deux fois.</p>`
-    :vides?`<p class="dx-ap-msg neg">⚠️ ${vides} quart${vides>1?'s':''} sans personne (« À POURVOIR ») : choisissez un Ordonnanceur dans chaque case.</p>`
+    :vides?`<p class="dx-ap-msg neg">Choisissez les 4 Ordonnanceurs pour voir le programme complet.</p>`
     :`<p class="dx-ap-msg pos">✓ Chaque jour a un Ordonnanceur de jour et un de nuit ; le cycle se répète tous les ${L} jours.</p>`;
   return `<p class="dx-ap-t">Aperçu des ${jours.length} premiers jours</p>${apercuProgramme(p,true)}${msg}`;
 }
