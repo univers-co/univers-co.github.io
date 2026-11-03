@@ -516,6 +516,13 @@ table.pq{border-collapse:collapse;font-size:10px;font-weight:700}
 /* Rapport : tableaux toujours dans la largeur du téléphone */
 .dx-rapport{padding:12px 10px}.dx-rap-t{table-layout:fixed}.dx-rap-t th,.dx-rap-t td{overflow-wrap:anywhere;word-break:normal;font-size:12.5px;padding:4px}
 .dx-rap-t th{font-size:11.5px}
+/* Accueil, Journal de quart : dernières notes lisibles (texte d'abord, le reste en petit) */
+.dx-mc-der{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line)}
+.dx-mc-der-c{min-width:0;flex:1}
+.dx-mc-der-x{font-size:15px;font-weight:600;color:var(--ink);line-height:1.35;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+.dx-mc-der-m{font-size:12.5px;color:var(--ink2);margin-top:2px;overflow-wrap:anywhere}
+/* SDMR : demandes hors processus, sous le tableau de bord */
+.dx-hors{margin-top:12px}.dx-hors-tot td{border-top:2px solid var(--line)}
 </style>
 <script>
 // Témoin de démarrage : prévient la page d'accueil dès que la page s'exécute (elle relance l'ouverture sinon).
@@ -646,6 +653,7 @@ table.pq{border-collapse:collapse;font-size:10px;font-weight:700}
 </footer>
 </div>
     </div>
+    <div id="dx-hors"></div>
   </section>
   <nav class="dx-nav" id="dx-nav" aria-label="Navigation"></nav>
 </div>
@@ -1125,7 +1133,7 @@ let ETAT=null,AFFICHE_V=null,CHARGE=false;
 const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 /** Délai maximal par fonction : sur le réseau mobile, un appel à Google peut rester sans réponse. */
-const DELAIS={apiEtat:15000,apiConnexion:15000,apiChangerCode:20000,apiCodeOublie:30000,apiDefiFaceID:12000,apiConnexionFaceID:20000,apiEnregistrerFaceID:30000,apiRetirerFaceID:30000,apiImporterDrive:240000,apiComptes:20000,apiCompte:30000,apiJournal:20000,apiDeconnexion:10000,apiPlateforme:30000,apiDocEnvoyer:180000,apiDocOuvrir:120000,apiTrace:20000,apiStats:40000,apiCourante:30000,apiCouranteEcrire:40000,apiCourantePhoto:180000,apiCouranteVoirPhoto:120000,apiCouranteVoirAudio:120000,apiAnnuaire:30000,apiAnnuaireEcrire:40000,apiAnnuaireImporter:180000,apiAgenda:30000,apiAgendaEcrire:40000,apiService:40000,apiComptesEquipe:120000,apiModules:30000,apiModulesEcrire:180000,apiVieVoirPhoto:120000};
+const DELAIS={apiEtat:15000,apiConnexion:15000,apiChangerCode:20000,apiCodeOublie:30000,apiDefiFaceID:12000,apiConnexionFaceID:20000,apiEnregistrerFaceID:30000,apiRetirerFaceID:30000,apiImporterDrive:240000,apiComptes:20000,apiCompte:30000,apiJournal:20000,apiDeconnexion:10000,apiPlateforme:30000,apiDocEnvoyer:180000,apiDocOuvrir:120000,apiTrace:20000,apiStats:40000,apiCourante:30000,apiCouranteEcrire:40000,apiCourantePhoto:180000,apiCouranteVoirPhoto:120000,apiCouranteVoirAudio:120000,apiAnnuaire:30000,apiAnnuaireEcrire:40000,apiAnnuaireImporter:180000,apiAgenda:30000,apiAgendaEcrire:40000,apiService:40000,apiComptesEquipe:120000,apiComptesNouveauxCodes:120000,apiModules:30000,apiModulesEcrire:180000,apiVieVoirPhoto:120000};
 /** Page d'accueil (DX.api) : appel direct du service de données par fetch, une seule connexion Google.
  *  Corps en text/plain : pas de requête préalable (CORS). Les refus gardent la forme « REFUS: … » de google.script.run. */
 function appelDirect(fn,args){
@@ -1187,7 +1195,7 @@ function appliquerEtat(e,deCache){
 const TABLEAU_VIERGE=$('dx-tableau').innerHTML;
 /** Services du Centre (02/11/2026) : DEXA (état général), DEXI et SDMR (chargés à la demande, gardés sur le téléphone). */
 /** Numéro affiché dans le menu : il permet de vérifier que le téléphone a bien pris la dernière version. */
-const VERSION_APP='25';
+const VERSION_APP='27';
 const SERVICES_D=['DEXA','DEXI','SDMR'];
 ui.svc=lsGet('svc','DEXA');
 const SVCD={};
@@ -1225,7 +1233,7 @@ function afficherTableau(){
   if(s!=='DEXA'&&!ui['svcVu'+s]){ui['svcVu'+s]=true;chargerService(s);}   // une relecture par ouverture (version comparée côté serveur)
   if(cleTableau()===AFFICHE_V)return;
   const vide=!d||!d.data||!d.data.length;
-  $('dx-vide').hidden=!vide;$('dx-tableau').hidden=vide;
+  $('dx-vide').hidden=!vide;$('dx-tableau').hidden=vide;if(vide&&$('dx-hors'))$('dx-hors').innerHTML='';
   if(vide){
     $('dx-vide').innerHTML=s!=='DEXA'
       ?(!d?'<h2>Chargement des données '+s+'…</h2><p>Un instant : elles seront ensuite gardées sur le téléphone.</p>'
@@ -1240,8 +1248,30 @@ function afficherTableau(){
   window.lancerTableau({svc:s,data:d.data,annee:d.annee,anneePrec:d.anneePrec,numMois:d.numMois,cats:d.cats,drs:d.drs,unite:s==='SDMR'?'DM':'agences'});
   const so=$('sourceLine');if(so)so.textContent=d.source||'';
   if(s==='DEXA')ajusterSousTitre();
+  rendreHors(d);
   AFFICHE_V=cleTableau();
 }
+// ---------- SDMR : demandes hors processus (03/11/2026) ----------
+// Par mois de l'année en cours (jusqu'au dernier mois importé), tous les DM ou un seul ; comparaison avec la même période de l'année précédente.
+ui.horsDM=lsGet('horsDM',-1);
+function rendreHors(d){
+  const z=$('dx-hors');if(!z)return;
+  const H=svcCourant()==='SDMR'&&d&&d.hors&&d.hors.lignes&&d.hors.lignes.length?d.hors:null;
+  if(!H){z.innerHTML='';return;}
+  const an=d.annee,nm=d.numMois,dm=ui.horsDM,L=H.lignes.filter(r=>dm<0||r[1]===dm);
+  const som=(y,m1,m2)=>L.filter(r=>r[0]===y&&r[2]>=m1&&r[2]<=m2).reduce((o,r)=>{o.rec+=r[3];o.tr+=r[4];o.nt+=r[5];o.h+=r[6]*r[4];return o;},{rec:0,tr:0,nt:0,h:0});
+  const j=o=>o.tr?(o.h/o.tr/24).toFixed(1).replace('.',',')+' j':'–',tx=o=>o.tr+o.nt?Math.round(o.tr/(o.tr+o.nt)*100)+' %':'–';
+  const lignes=[];for(let m=1;m<=nm;m++)lignes.push([m,som(an,m,m)]);
+  const T=som(an,1,nm),P=som(an-1,1,nm);
+  z.innerHTML=`<div class="dx-carte dx-hors"><h3>Demandes hors processus · SDMR</h3>
+    <p class="dx-gris">Demandes sorties du processus normal (transférées), suivies à part par chaque DM. ${esc(MOIS_L[0].replace(/^./,c=>c.toUpperCase()))}–${esc(MOIS_L[nm-1])} ${an}.</p>
+    <div class="dx-puces"><button type="button" class="${dm<0?'on':''}" data-a="hors-dm" data-k="-1">Tous les DM</button>${(H.dm||[]).map((n,k)=>`<button type="button" class="${dm===k?'on':''}" data-a="hors-dm" data-k="${k}">${esc(n)}</button>`).join('')}</div>
+    <table class="dx-rap-t"><tr><th>Mois</th><th>Reçues</th><th>Traitées</th><th>Non traitées</th><th>Délai moyen</th></tr>
+    ${lignes.map(([m,o])=>`<tr><td>${esc(MOIS_L[m-1].replace(/^./,c=>c.toUpperCase()))}</td><td>${o.rec}</td><td>${o.tr}</td><td>${o.nt?`<b class="neg">${o.nt}</b>`:0}</td><td>${j(o)}</td></tr>`).join('')}
+    <tr class="dx-hors-tot"><td><b>Total</b></td><td><b>${T.rec}</b></td><td><b>${T.tr}</b></td><td><b>${T.nt}</b></td><td><b>${j(T)}</b></td></tr></table>
+    <p>Taux de traitement : <b>${tx(T)}</b> · délai moyen de traitement <b>${j(T)}</b>.${P.rec||P.tr?` <span class="dx-gris">Même période ${an-1} : ${P.rec} reçues, ${P.tr} traitées, délai moyen ${j(P)}.</span>`:''}</p></div>`;
+}
+document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-a="hors-dm"]');if(!b)return;ui.horsDM=+b.dataset.k;lsSet('horsDM',ui.horsDM);rendreHors(donneesTableau());});
 /** Pour un directeur ou un chef d'agence, le sous-titre nomme son périmètre (et non 16 agences, 4 directions). */
 function ajusterSousTitre(){
   const m=ETAT.moi||{},e=$('pageSub');if(!e||(m.role!=='direction'&&m.role!=='agence'))return;
@@ -1251,7 +1281,7 @@ function ajusterSousTitre(){
 function finSession(msg){
   ui.planif=null;
   SESSION.jeton=null;lsSet('jeton',null);lsSet('etat',null);lsSet('mc',null);MC=null;ui.mcDemande=false;lsSet('ann',null);ANN=null;ui.annDemande=false;lsSet('ag',null);AG=null;ui.agDemande=false;lsSet('mod',null);MOD=null;ui.modDemande=false;ui.alloHist=[];SERVICES_D.forEach(x=>{lsSet('svc:'+x,null);delete SVCD[x];ui['svcVu'+x]=false;});versPorte({dx:'session',jeton:null});
-  ETAT=null;AFFICHE_V=null;CHARGE=false;ui.depuisCache=null;ui.comptes=null;ui.journal=null;ui.import=null;ui.codeMontre=null;ui.codesEquipe=null;ui.ceqOuvert=false;
+  ETAT=null;AFFICHE_V=null;CHARGE=false;ui.depuisCache=null;ui.comptes=null;ui.journal=null;ui.import=null;ui.codeMontre=null;ui.codesEquipe=null;ui.ceqOuvert=false;lsSet('codesEquipe',null);
   try{Object.values(Chart.instances||{}).forEach(c=>c.destroy());}catch(x){}
   $('dx-tableau').innerHTML=TABLEAU_VIERGE;fermerMenu();majEcran();if(msg)toast(msg);
 }
@@ -1376,14 +1406,20 @@ function lignesComptesEquipe(){
   });
   return L;
 }
+/** Codes provisoires gardés sur CE téléphone (celui de l'administrateur) jusqu'à « J'ai noté les codes » : une mise à jour
+ *  de l'application ou une fermeture ne les fait plus disparaître. Jamais envoyés ailleurs ; effacés à la déconnexion. */
+function poserCodesEquipe(L){ui.codesEquipe=L&&L.length?L:null;lsSet('codesEquipe',ui.codesEquipe?{compte:ETAT.moi.id,codes:ui.codesEquipe}:null);}
 function zoneComptesEquipe(){
+  if(!ui.codesEquipe){const g=lsGet('codesEquipe',null);if(g&&ETAT&&ETAT.moi&&g.compte===ETAT.moi.id&&g.codes&&g.codes.length)ui.codesEquipe=g.codes;}
   if(ui.codesEquipe)return `<div class="dx-code"><p><b>Codes provisoires de l'équipe</b> : notez-les ou copiez-les maintenant, ils ne seront plus affichés.</p>
     <ul class="dx-liste">${ui.codesEquipe.map(c=>`<li><b>${esc(c.nom)}</b><br>Identifiant : <b>${esc(c.id)}</b> · Code : <b class="dx-gros-i">${esc(c.code)}</b></li>`).join('')}</ul>
-    <p class="dx-gris">Chacun se connecte sur https://univers-co.github.io et choisit son propre code à la première connexion.</p>
+    <p class="dx-gris">Chacun se connecte sur https://univers-co.github.io et choisit son propre code à la première connexion. Cette liste reste sur ce téléphone jusqu'à ce que vous touchiez « J'ai noté les codes ».</p>
     <div class="dx-ligne"><button class="dx-btn plein" type="button" data-a="ceq-copier">Copier la liste</button><button class="dx-btn" type="button" data-a="ceq-vu">J'ai noté les codes</button></div></div>`;
   const deja=agents().filter(a=>a.compte&&(ui.comptes.comptes||[]).some(c=>c.id===a.compte));
+  const jamais=(ui.comptes.comptes||[]).filter(c=>c.actif&&c.codeDepart&&c.id!==ETAT.moi.id).length;
+  const zoneNouv=jamais?`<div class="dx-carte dx-ceq"><p><b>${jamais} compte${jamais>1?'s':''} jamais connecté${jamais>1?'s':''}.</b> Code perdu ou pas encore transmis ? Générez-leur de nouveaux codes provisoires en une fois (les anciens ne marcheront plus).</p><button class="dx-btn" type="button" data-a="ceq-nouveaux">Nouveaux codes pour ceux qui ne se sont pas encore connectés</button></div>`:'';
   if(!ui.ceqOuvert){const n=lignesComptesEquipe().length;
-    return n?`<div class="dx-carte dx-ceq"><p><b>${n} membre${n>1?'s':''} de l'équipe sans compte relié.</b> Créez-les en une fois : chacun reçoit un identifiant et un code provisoire, relié à sa fiche.</p><button class="dx-btn plein" type="button" data-a="ceq-ouvrir">Créer les comptes de l'équipe</button></div>`:'';}
+    return zoneNouv+(n?`<div class="dx-carte dx-ceq"><p><b>${n} membre${n>1?'s':''} de l'équipe sans compte relié.</b> Créez-les en une fois : chacun reçoit un identifiant et un code provisoire, relié à sa fiche.</p><button class="dx-btn plein" type="button" data-a="ceq-ouvrir">Créer les comptes de l'équipe</button></div>`:'');}
   const L=lignesComptesEquipe();
   return `<form class="dx-form dx-carte dx-ceq" id="fComptesEq"><p><b>Comptes de l'équipe</b> : rôle Hiérarchie (tout voir, sans les réglages). Décochez ceux qui n'en ont pas besoin ; l'identifiant se modifie.</p>
     ${L.map((x,i)=>`<div class="dx-ceq-l"><label class="dx-ceq-c"><input type="checkbox" data-ceq="${i}" checked> <b>${esc(x.a.nom)}</b> <span class="dx-gris">${esc(libF(x.a.fonction))}</span></label>
@@ -1397,7 +1433,7 @@ async function creerComptesEquipe(f){
   if(!liste.length){toast('Cochez au moins une personne.');return;}
   const b=f.querySelector('[type=submit]');b.disabled=true;toast('Création des comptes…');
   try{const r=await appel('apiComptesEquipe',SESSION.jeton,newId(),liste);
-    ui.comptes=r.comptes;ui.ceqOuvert=false;ui.codesEquipe=r.codes.length?r.codes:null;appliquerEtat(r.etat);renderMenu();
+    ui.comptes=r.comptes;ui.ceqOuvert=false;poserCodesEquipe(r.codes);appliquerEtat(r.etat);renderMenu();
     toast(r.codes.length+' compte'+(r.codes.length>1?'s':'')+' créé'+(r.codes.length>1?'s':'')+(r.erreurs.length?' ; '+r.erreurs.length+' refusé'+(r.erreurs.length>1?'s':''):'')+'.');
     if(r.erreurs.length){const m=$('cptMsg');if(m){m.hidden=false;m.textContent=r.erreurs.join(' ');}}}
   catch(e){b.disabled=false;if(estSession(e))return finSession();toast(messageErreur(e));}
@@ -1406,7 +1442,11 @@ document.addEventListener('submit',ev=>{if(ev.target&&ev.target.id==='fComptesEq
 document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-a^="ceq-"]');if(!b)return;const a=b.dataset.a;
   if(a==='ceq-ouvrir'){ui.ceqOuvert=true;renderMenu();}
   else if(a==='ceq-fermer'){ui.ceqOuvert=false;renderMenu();}
-  else if(a==='ceq-vu'){if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Confirmer : les codes disparaîtront';return;}ui.codesEquipe=null;renderMenu();}
+  else if(a==='ceq-vu'){if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Confirmer : les codes disparaîtront';return;}poserCodesEquipe(null);renderMenu();}
+  else if(a==='ceq-nouveaux'){if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Confirmer : nouveaux codes (les anciens ne marcheront plus)';return;}
+    b.disabled=true;toast('Nouveaux codes…');
+    appel('apiComptesNouveauxCodes',SESSION.jeton,newId()).then(r=>{ui.comptes=r.comptes;poserCodesEquipe(r.codes);renderMenu();toast(r.codes.length+' nouveau'+(r.codes.length>1?'x':'')+' code'+(r.codes.length>1?'s':'')+' provisoire'+(r.codes.length>1?'s':'')+'.');})
+      .catch(e=>{b.disabled=false;if(estSession(e))return finSession();toast(messageErreur(e));});}
   else if(a==='ceq-copier'){const t='UNIVERS C.O : https://univers-co.github.io\n'+ui.codesEquipe.map(c=>c.nom+' : identifiant '+c.id+', code provisoire '+c.code).join('\n');
     (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Liste copiée.'),()=>toast('Copie impossible : notez les codes.'));}
 });
@@ -2196,6 +2236,8 @@ const accesMC=()=>!!(ETAT&&ETAT.mc);
 const notesMC=()=>MC&&ETAT&&ETAT.moi&&MC.compte===ETAT.moi.id?MC.notes||[]:[];
 const heureMC=s=>{const d=new Date(s);return d.getHours()+' h '+String(d.getMinutes()).padStart(2,'0');};
 const quandMC=s=>{const d=new Date(s),j=isoJ(d),a=isoJ(new Date());return (j===a?'Aujourd’hui':j===ajoute(a,-1)?'Hier':libJour(j))+' à '+heureMC(s);};
+/** Lieu affiché : petits mots en minuscules (« Bureau du CO »), y compris pour les notes déjà saisies. */
+const lieuFr=l=>String(l||'').replace(/(\s)(Du|De|Des|La|Le|Les|Et|Au|Aux|À)(?=\s|$)/g,(m,e,w)=>e+w.toLowerCase());
 const titreMC=x=>x.tablette?'Tablette'+(x.tablette.numero?' n° '+x.tablette.numero:'')+' · '+x.tablette.etat:x.type;
 const libQuartMC=x=>(x.q==='J'?'Jour':'Nuit')+' du '+libLong(x.iso);
 /** Après l'actualisation des données principales : la Main courante arrive ensuite, sans les retarder. */
@@ -2294,7 +2336,7 @@ function noteMC(x,ou){
   const releve=x.type==='Relève',edit=ui.mcEdit&&ui.mcEdit.id===x.id&&ui.mcEdit.ou===ou;
   const etat=x.statut==='ouvert'?'<span class="dx-pill">À suivre</span>':x.statut==='clos'?'<span class="dx-badge">Clos</span>':'';
   let h=`<div class="dx-mc${x.statut?' '+x.statut:''}${releve?' releve':''}"><span class="dx-mc-ic" style="background:${COUL_MC[x.type]||'#5a6b7d'}">${EMO_MC[x.type]||'📝'}</span><div class="dx-mc-c">
-    <div class="dx-mc-t">${x.tablette?`<b>Tablette${x.tablette.numero?' n° '+esc(x.tablette.numero):''}</b><span class="dx-mc-etat" style="background:${ETATS_TAB[x.tablette.etat]||'#5a6b7d'}">${esc(x.tablette.etat)}</span>`:`<b>${esc(x.type)}</b>`}${x.lieu?' · '+esc(x.lieu):''}${etat}</div>
+    <div class="dx-mc-t">${x.tablette?`<b>Tablette${x.tablette.numero?' n° '+esc(x.tablette.numero):''}</b><span class="dx-mc-etat" style="background:${ETATS_TAB[x.tablette.etat]||'#5a6b7d'}">${esc(x.tablette.etat)}</span>`:`<b>${esc(x.type)}</b>`}${x.lieu?' · '+esc(lieuFr(x.lieu)):''}${etat}</div>
     <div class="dx-mc-m">N° ${x.num} · ${esc(quandMC(x.le))} · ${esc(x.nom)}</div>${x.tablette&&x.tablette.agent?`<div class="dx-mc-m">Détenteur : ${esc(x.tablette.agent)}</div>`:''}
     <div class="dx-mc-x">${esc(x.texte)}</div>`;
   (x.suites||[]).forEach(s=>{h+=`<div class="dx-mc-s"><span>${esc(quandMC(s.le))} · ${esc(s.nom)}${s.action?' · <b>'+(s.action==='clos'?'clos':'rouvert')+'</b>':''}</span>${esc(s.texte)}</div>`;});
@@ -2327,7 +2369,7 @@ function formMC(){
 function formReleve(ouverts){
   return `<div class="dx-carte"><form class="dx-form dx-edit" id="fReleve"><b>🔄 Prendre la relève</b><span class="dx-gris">${esc(libQuartMC(quartEnCours(new Date())))}</span>
     <p>${ouverts.length?`<b>${ouverts.length} point${ouverts.length>1?'s':''} à suivre</b> vous ${ouverts.length>1?'sont transmis':'est transmis'} :`:'Aucun point à suivre : le quart précédent n’a rien laissé en cours.'}</p>
-    ${ouverts.map(x=>`<div class="dx-li"><span class="dx-emoji">${EMO_MC[x.type]||'📝'}</span><span><b>N° ${x.num}</b> · ${esc(titreMC(x))}${x.lieu?' · '+esc(x.lieu):''}<br><span class="dx-gris">${esc(x.texte.slice(0,90))}${x.texte.length>90?'…':''}</span></span></div>`).join('')}
+    ${ouverts.map(x=>`<div class="dx-li"><span class="dx-emoji">${EMO_MC[x.type]||'📝'}</span><span><b>N° ${x.num}</b> · ${esc(titreMC(x))}${x.lieu?' · '+esc(lieuFr(x.lieu)):''}<br><span class="dx-gris">${esc(x.texte.slice(0,90))}${x.texte.length>90?'…':''}</span></span></div>`).join('')}
     <div class="dx-lab"><label for="rlTexte">Consignes reçues ou remarques (facultatif)</label>${boutonDicter('rlTexte')}</div><textarea id="rlTexte" rows="3" maxlength="2000"></textarea>
     <div class="dx-ligne"><button class="dx-btn plein" type="submit">Je prends la relève</button><button class="dx-btn" type="button" data-a="mc-annuler">Annuler</button></div></form></div>`;
 }
@@ -2362,11 +2404,13 @@ function rendreJournal(){
 /** Carte de l'accueil : points à suivre et dernière note. */
 function carteMC(){
   if(!accesMC())return '';
-  const N=notesMC(),ouverts=N.filter(x=>x.statut==='ouvert'),der=N.find(x=>x.type!=='Relève');
+  const N=notesMC(),ouverts=N.filter(x=>x.statut==='ouvert'),der=N.filter(x=>x.type!=='Relève').slice(0,2);
   let h=`<div class="dx-carte cliquable" data-a="vue" data-v="journal"><h3>${tuileIc('journal','p')}Journal de quart</h3>`;
   if(!MC)return h+'<p class="dx-gris">Chargement…</p></div>';
   h+=`<div class="dx-li"><span class="dx-emoji">📌</span><span>${ouverts.length?`<b>${ouverts.length} point${ouverts.length>1?'s':''} à suivre</b>`:'Aucun point à suivre'}</span><span class="d">Ouvrir</span></div>`;
-  if(der)h+=`<div class="dx-li"><span class="dx-emoji">${EMO_MC[der.type]||'📝'}</span><span>${esc(titreMC(der))}${der.lieu?' · '+esc(der.lieu):''}</span><span class="d">${esc(quandMC(der.le))}</span></div>`;
+  // Dernières notes : ce que dit la note d'abord (2 lignes au plus), puis type, lieu, heure et auteur en petit
+  der.forEach(x=>{h+=`<div class="dx-mc-der"><span class="dx-emoji">${EMO_MC[x.type]||'📝'}</span><div class="dx-mc-der-c"><p class="dx-mc-der-x">${esc(String(x.texte||'').replace(/\s+/g,' '))}</p>
+    <p class="dx-mc-der-m">${esc([titreMC(x),lieuFr(x.lieu),quandMC(x.le),x.nom].filter(Boolean).join(' · '))}</p></div></div>`;});
   return h+'</div>';
 }
 document.addEventListener('click',ev=>{
@@ -2611,7 +2655,9 @@ async function ecrireAnn(fn,args,attente,f){
 }
 const rendreAnnuaireGarde=()=>garderSaisie($('v-annuaire'),rendreAnnuaire);
 
+const estAgence=x=>x.type==='agence';
 function ficheA(x){
+  if(estAgence(x))return ui.annEdit===x.id?formAgenceA(x):`<div class="dx-ann-p"><div class="dx-ann-t"><b>📍 ${esc(x.agence)}</b><span class="dx-ann-f">Agence</span><button class="dx-btn petit dx-ann-mod" type="button" data-a="ann-modifier" data-id="${esc(x.id)}">Modifier</button></div>${[x.tel,x.flotte].filter(Boolean).map(t=>`<div class="dx-ann-nums">${boutonsTel(t,x.agence)||`<span class="dx-gris">${esc(t)}</span>`}</div>`).join('')}</div>`;
   if(ui.annEdit===x.id)return formContactA(x);
   return `<div class="dx-ann-p"><div class="dx-ann-t"><b class="dx-ann-nom">${esc(nomPropre(x.nom))}</b>${x.fonction?`<span class="dx-ann-f">${esc(x.fonction)}</span>`:''}${x.matricule?`<span class="dx-gris">Mle ${esc(x.matricule)}</span>`:''}
     <button class="dx-btn petit dx-ann-mod" type="button" data-a="ann-modifier" data-id="${esc(x.id)}">Modifier</button></div>
@@ -2619,10 +2665,23 @@ function ficheA(x){
 }
 /** Une agence : son nom, la flotte ou les WhatsApp de l'agence (communs à ses agents), puis ses agents. */
 function agenceA(nom,L){
-  const fl=[...new Set(L.map(x=>x.flotte).filter(Boolean))],co=COUL_SERV[(L[0]||{}).service]||'#5a6b7d';
-  return `<div class="dx-ann-ag" style="--co:${co}"><div class="dx-ann-agt"><b>📍 ${esc(nom||'Sans agence')}</b><span class="dx-gris">${L.length} agent${L.length>1?'s':''}</span></div>
-    ${fl.map(f=>`<div class="dx-ann-fl"><span class="dx-gris">${esc(f.replace(/\b0\d(?:[\s.-]?\d){8}\b/g,'').replace(/[·\s]+$/,'').trim()||'Tablette ou flotte')}</span>${boutonsTel(f,nom)}</div>`).join('')}
-    ${L.map(ficheA).join('')}</div>`;
+  const fa=L.find(estAgence),A=L.filter(x=>!estAgence(x)),co=COUL_SERV[(L[0]||{}).service]||'#5a6b7d';
+  if(fa&&ui.annEdit===fa.id)return `<div class="dx-ann-ag" style="--co:${co}">${formAgenceA(fa)}</div>`;
+  const fl=[...new Set([fa&&fa.tel].concat(L.map(x=>x.flotte)).filter(Boolean))];
+  const mod=fa?`data-id="${esc(fa.id)}"`:`data-nouv="1" data-ag="${esc(nom||'')}" data-s="${esc((L[0]||{}).service||'')}" data-d="${esc((L[0]||{}).direction||'')}"`;
+  return `<div class="dx-ann-ag" style="--co:${co}"><div class="dx-ann-agt"><b>📍 ${esc(nom||'Sans agence')}</b><span class="dx-gris">${A.length} agent${A.length>1?'s':''}</span>${nom?`<button class="dx-btn petit" type="button" data-a="ann-agence-mod" ${mod}>Modifier l’agence</button>`:''}</div>
+    ${fl.map(f=>`<div class="dx-ann-fl"><span class="dx-gris">${esc(f.replace(/\b0\d(?:[\s.-]?\d){8}\b/g,'').replace(/[·\s/]+$/,'').trim()||'Numéro de l’agence')}</span>${boutonsTel(f,nom)}</div>`).join('')}
+    ${A.length?A.map(ficheA).join(''):'<p class="dx-gris dx-ann-sans">Aucun agent enregistré pour cette agence.</p>'}</div>`;
+}
+/** Fiche d'agence : nom, service, direction, numéros de l'agence (fixe, flotte, WhatsApp). */
+function formAgenceA(x,pre){
+  const C=contactsA(),v=k=>x?x[k]||'':(pre&&pre[k])||'',dl=(id,k)=>`<datalist id="${id}">${[...new Set(C.map(c=>c[k]).filter(Boolean))].sort().map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`;
+  return `<form class="dx-form dx-edit" id="fAgence" data-id="${x?esc(x.id):''}"><b>${x?'Modifier l’agence '+esc(x.agence):pre&&pre.agence?'Agence '+esc(pre.agence):'Nouvelle agence'}</b>
+    <label for="agS">Service</label><select id="agS">${SERVICES_A.map(s=>`<option${(v('service')||ui.annService||'DEXA')===s?' selected':''}>${s}</option>`).join('')}</select>
+    <label for="agDir">Direction</label><input id="agDir" list="agDirs" maxlength="60" autocomplete="off" autocapitalize="characters" value="${esc(v('direction'))}" placeholder="DRANE, DR SUD-EST, DM DRABO…">${dl('agDirs','direction')}
+    <label for="agNomA">Nom de l’agence</label><input id="agNomA" maxlength="80" autocomplete="off" autocapitalize="characters" value="${esc(v('agence'))}" placeholder="PALMERAIE 137">
+    <label for="agTelA">Numéros de l’agence (fixe, flotte, WhatsApp)</label><input id="agTelA" inputmode="tel" maxlength="200" autocomplete="off" value="${esc(v('tel'))}" placeholder="27 00 00 00 00 / 07 00 00 00 00">
+    <div class="dx-ligne"><button class="dx-btn plein" type="submit">Enregistrer l’agence</button><button class="dx-btn" type="button" data-a="ann-annuler">Annuler</button>${x?`<button class="dx-btn danger" type="button" data-a="ann-retirer" data-id="${esc(x.id)}">Retirer</button>`:''}</div></form>`;
 }
 function formContactA(x){
   const C=contactsA(),dl=(id,k)=>`<datalist id="${id}">${[...new Set(C.map(c=>c[k]).filter(Boolean))].sort().map(v=>`<option value="${esc(v)}">`).join('')}</datalist>`;
@@ -2648,7 +2707,8 @@ function rendreAnnuaire(){
   const zone=$('v-annuaire');if(!zone||!ETAT)return;
   if(!accesMC()){zone.innerHTML='<div class="dx-carte"><p>L’Annuaire est réservé au Centre d’ordonnancement.</p></div>';return;}
   const C=contactsA(),U=usinesA(),q=sansAccents(ui.annCherche.trim()),qn=q.replace(/\D/g,'');
-  let h=`<div class="dx-titre-vue">${tuileIc('annuaire','p')}<div><h2>Annuaire</h2><p>${C.length} contact${C.length>1?'s':''} · ${U.length} usine${U.length>1?'s':''}${ui.annCharge?' · mise à jour…':''}</p></div></div>`;
+  const nAg=new Set(C.map(x=>x.service+'|'+x.agence).filter(k=>!/\|$/.test(k))).size,nCo=C.filter(x=>!estAgence(x)).length;
+  let h=`<div class="dx-titre-vue">${tuileIc('annuaire','p')}<div><h2>Annuaire</h2><p>${nCo} contact${nCo>1?'s':''} · ${nAg} agence${nAg>1?'s':''} · ${U.length} usine${U.length>1?'s':''}${ui.annCharge?' · mise à jour…':''}</p></div></div>`;
   if(!ANN&&ui.annCharge){zone.innerHTML=h+'<div class="dx-carte"><p class="dx-gris">Chargement de l’annuaire…</p></div>';return;}
   h+=`<div class="dx-puces"><button type="button" class="${ui.annOnglet==='contacts'?'on':''}" data-a="ann-onglet" data-o="contacts">📇 Agences et équipes</button><button type="button" class="${ui.annOnglet==='usines'?'on':''}" data-a="ann-onglet" data-o="usines">🏭 Usines et zones</button></div>`;
   h+=`<div class="dx-cherche">${svgI('loupe')}<input id="annCherche" type="search" placeholder="${ui.annOnglet==='usines'?'Rechercher : usine ou quartier…':'Rechercher : nom, agence, fonction, numéro…'}" value="${esc(ui.annCherche)}" aria-label="Rechercher dans l’annuaire"></div>`;
@@ -2662,7 +2722,8 @@ function rendreAnnuaire(){
   }else{
     const parS=s=>C.filter(x=>x.service===s).length;
     h+=`<div class="dx-puces"><button type="button" class="${ui.annService?'':'on'}" data-a="ann-service" data-s="">Tous <span>${C.length}</span></button>${SERVICES_A.filter(s=>parS(s)).map(s=>`<button type="button" class="${ui.annService===s?'on':''}" data-a="ann-service" data-s="${s}">${s} <span>${parS(s)}</span></button>`).join('')}</div>`;
-    h+=ui.annEdit==='nouveau'?`<div class="dx-carte">${formContactA(null)}</div>`:`<div class="dx-ligne dx-mc-actions"><button class="dx-btn" type="button" data-a="ann-nouveau">+ Ajouter un contact</button></div>`;
+    h+=ui.annEdit==='nouveau'?`<div class="dx-carte">${formContactA(null)}</div>`:ui.annEdit==='agence'?`<div class="dx-carte">${formAgenceA(null,ui.annPre)}</div>`
+      :`<div class="dx-ligne dx-mc-actions"><button class="dx-btn" type="button" data-a="ann-nouveau">+ Ajouter un contact</button><button class="dx-btn" type="button" data-a="ann-agence">+ Ajouter une agence</button></div>`;
     const L=C.filter(x=>(!ui.annService||x.service===ui.annService)&&(!q||sansAccents([x.nom,x.agence,x.direction,x.fonction,x.matricule,x.service].join(' ')).includes(q)||(qn.length>=4&&String(x.tel+' '+x.flotte).replace(/\D/g,'').includes(qn))));
     if(!C.length)h+=`<div class="dx-carte"><p>L’annuaire est vide.${estAdmin()?' Importez-le depuis « Fichiers Ordonnancement » (en bas de cette page).':' L’administrateur doit d’abord l’importer depuis « Fichiers Ordonnancement ».'}</p></div>`;
     else if(!L.length)h+='<div class="dx-carte"><p class="dx-gris">Aucun contact ne correspond à la recherche.</p></div>';
@@ -2689,6 +2750,9 @@ document.addEventListener('click',async ev=>{
   const b=ev.target.closest('[data-a^="ann-"],[data-a^="us-"]');if(!b)return;const a=b.dataset.a;
   if(a==='ann-onglet'){ui.annOnglet=b.dataset.o;ui.annEdit=null;ui.annCherche='';rendreAnnuaire();}
   else if(a==='ann-service'){ui.annService=b.dataset.s||'';lsSet('annService',ui.annService);rendreAnnuaireGarde();}
+  else if(a==='ann-agence'){ui.annEdit='agence';ui.annPre=null;rendreAnnuaire();setTimeout(()=>{try{$('agNomA').focus();}catch(x){}},50);}
+  else if(a==='ann-agence-mod'){if(b.dataset.id){ui.annEdit=b.dataset.id;rendreAnnuaireGarde();}
+    else{ui.annEdit='agence';ui.annPre={agence:b.dataset.ag,service:b.dataset.s,direction:b.dataset.d};rendreAnnuaire();try{window.scrollTo(0,0);}catch(x){}}}
   else if(a==='ann-nouveau'){ui.annEdit='nouveau';rendreAnnuaire();setTimeout(()=>{try{$('anNom').focus();}catch(x){}},50);}
   else if(a==='us-nouveau'){ui.annEdit='usine';rendreAnnuaire();setTimeout(()=>{try{$('usNom').focus();}catch(x){}},50);}
   else if(a==='ann-modifier'||a==='us-modifier'){ui.annEdit=b.dataset.id;rendreAnnuaireGarde();}
@@ -2705,6 +2769,9 @@ document.addEventListener('submit',ev=>{
   const f=ev.target;
   if(f.id==='fAnn'){ev.preventDefault();
     ecrireAnn('apiAnnuaireEcrire',[SESSION.jeton,f.dataset.op||(f.dataset.op=newId()),'fiche',{id:f.dataset.id||null,service:$('anService').value,direction:$('anDir').value,agence:$('anAg').value,fonction:$('anFn').value,nom:$('anNom').value,matricule:$('anMle').value,tel:$('anTel').value,flotte:$('anFl').value}],'Enregistrement…',f);}
+  else if(f.id==='fAgence'){ev.preventDefault();
+    if(!$('agNomA').value.trim()){toast('Indiquez le nom de l’agence.');return;}
+    ui.annPre=null;ecrireAnn('apiAnnuaireEcrire',[SESSION.jeton,f.dataset.op||(f.dataset.op=newId()),'agence',{id:f.dataset.id||null,service:$('agS').value,direction:$('agDir').value,agence:$('agNomA').value,tel:$('agTelA').value}],'Enregistrement de l’agence…',f);}
   else if(f.id==='fUsine'){ev.preventDefault();
     ecrireAnn('apiAnnuaireEcrire',[SESSION.jeton,f.dataset.op||(f.dataset.op=newId()),'usine',{id:f.dataset.id||null,nom:$('usNom').value,zones:$('usZones').value}],'Enregistrement…',f);}
 });
@@ -3287,6 +3354,13 @@ function repondreAllo(brut){
     return L.length?L.slice(0,5).map(x=>`💬 ${esc(x.titre)} · ${esc(jourCourt(x.date))}${x.debut?' à '+esc(hFr(x.debut)):''}${x.lieu?' · '+esc(x.lieu):''}`).join('<br>'):'Aucune réunion prévue.';}
   if(/projet/.test(q)){const L=projetsA().filter(x=>/retard/.test(q)?retardPrj(x):/termine/.test(q)?x.statut==='termine':x.statut!=='termine');
     return L.length?L.slice(0,8).map(x=>`🚀 ${esc(x.titre)} · ${avancementPrj(x)} %${x.respNom?' · '+esc(x.respNom):''}${retardPrj(x)?' · <span class="neg">en retard</span>':''}`).join('<br>'):(/retard/.test(q)?'Aucun projet en retard.':'Aucun projet en cours.');}
+  // 7 bis. Demandes SDMR hors processus
+  if(/hors processus|hors-processus/.test(q)){
+    const d=SVCD.SDMR||lsGet('svc:SDMR',null);if(!d||!d.hors)return 'Les demandes hors processus SDMR ne sont pas encore chargées : ouvrez une fois « Données » › SDMR.';
+    const k=MOIS_L.findIndex(m=>q.includes(' '+normQ(m)+' ')),m=k>=0?k+1:d.numMois,L=d.hors.lignes.filter(r=>r[0]===d.annee&&r[2]===m);
+    const o=L.reduce((s,r)=>{s.rec+=r[3];s.tr+=r[4];s.nt+=r[5];return s;},{rec:0,tr:0,nt:0});
+    return `<b>SDMR hors processus · ${esc(libMois(d.annee+'-'+String(m).padStart(2,'0')))}</b>${k<0?' <span class="dx-gris">(dernier mois disponible)</span>':''} : ${o.rec} reçues · ${o.tr} traitées · ${o.nt} non traitées`+(L.length?'<br>'+L.map(r=>esc(d.hors.dm[r[1]])+' : '+r[3]+' reçue'+(r[3]>1?'s':'')+(r[5]?', <span class="neg">'+r[5]+' non traitée'+(r[5]>1?'s':'')+'</span>':'')).join(' · '):'');
+  }
   // 8. Réclamations : un service ou les trois ; le mois dit, sinon le dernier disponible (signalé)
   if(veutChiffres||/\b(dexa|dexi|sdmr)\b/.test(q)){
     const S=SERVICES_D.filter(sv=>q.includes(' '+sv.toLowerCase()+' ')),L=S.length?S:SERVICES_D;
