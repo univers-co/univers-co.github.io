@@ -527,6 +527,13 @@ table.pq{border-collapse:collapse;font-size:10px;font-weight:700}
 .dx-crit{display:inline-block;color:#fff;font-size:11.5px;font-weight:700;border-radius:10px;padding:1px 8px;margin-left:6px;vertical-align:1px;white-space:nowrap}
 .dx-mc-der-x .dx-crit{margin:0 6px 0 0}
 .dx-mc.crit-majeure{box-shadow:inset 3px 0 0 #e8590c;padding-left:8px}.dx-mc.crit-critique{box-shadow:inset 3px 0 0 #c2371f;padding-left:8px;background:color-mix(in srgb,#c2371f 6%,transparent)}
+
+/* Bandeau de mise à jour (v29) */
+.dx-maj{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:70;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#0f2b46;color:#fff;padding:10px 12px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:15px;max-width:560px;margin:0 auto}
+.dx-maj span{flex:1;min-width:0}
+.dx-maj .dx-btn{flex:none;margin-top:0;background:#fff;border-color:#fff;color:#0f2b46;font-size:15px}
+.dx-notif-lab{display:block;margin:4px 0 6px;font-weight:600}
+.dx-notif-niv{display:block;width:100%;min-width:0;font:inherit;font-size:16px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);margin-bottom:4px}
 </style>
 <script>
 // Témoin de démarrage : prévient la page d'accueil dès que la page s'exécute (elle relance l'ouverture sinon).
@@ -815,7 +822,7 @@ table.pq{border-collapse:collapse;font-size:10px;font-weight:700}
 //# sourceMappingURL=chart.umd.min.js.map
 </script>
 <script>window.DX = {"porte": "https://univers-co.github.io", "lienPorte": "https://univers-co.github.io/", "api": "https://script.google.com/macros/s/AKfycbxFWDXVG2mbxCgWWTWI7zE0-2xtQT0jhzNkrw3YodUB79uaq_-CdXgIKZDx_Pmm-nMZrw/exec", "direct": true};</script>
-<script>if('serviceWorker' in navigator&&location.protocol==='https:')window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});</script>
+<script>if('serviceWorker' in navigator&&location.protocol==='https:')window.addEventListener('load',function(){var avait=!!navigator.serviceWorker.controller,vu=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(avait&&!vu){vu=true;if(window.dxNouvelleVersion)window.dxNouvelleVersion();}});navigator.serviceWorker.register('sw.js').then(function(reg){reg.update().catch(function(){});document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')reg.update().catch(function(){});});}).catch(function(){});});</script>
 
 <script>window.__dxTheme=[];
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){var f=window.__dxTheme[window.__dxTheme.length-1];if(f)f();});
@@ -1126,6 +1133,10 @@ const MOIS_L=['janvier','février','mars','avril','mai','juin','juillet','août'
 function lsGet(k,d){try{const v=localStorage.getItem('dx.'+k);return v==null?d:JSON.parse(v);}catch(e){return d;}}
 function lsSet(k,v){try{if(v==null)localStorage.removeItem('dx.'+k);else localStorage.setItem('dx.'+k,JSON.stringify(v));}catch(e){}}
 function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;clearTimeout(e._t);e._t=setTimeout(()=>e.style.opacity=0,3200);}
+// Nouvelle version prête (appelée par l'enregistrement du service de cache) : bandeau, rechargement au toucher
+window.dxNouvelleVersion=function(){if($('dxMaj'))return;const d=document.createElement('div');d.id='dxMaj';d.className='dx-maj';d.setAttribute('role','status');
+  d.innerHTML='<span>Nouvelle version d’UNIVERS C.O disponible</span><button type="button" class="dx-btn plein">Mettre à jour</button>';
+  d.querySelector('button').addEventListener('click',()=>location.reload());document.body.appendChild(d);};
 function showMsg(id,text,kind){const m=$(id);if(!m)return;m.hidden=false;m.className='dx-msg'+(kind?' '+kind:'');m.textContent=text;}
 function depuis(t){const mn=Math.round((Date.now()-t)/6e4);if(mn<1)return 'à l\'instant';if(mn<60)return 'il y a '+mn+' min';const h=Math.round(mn/60);if(h<24)return 'il y a '+h+' h';const j=Math.round(h/24);return 'il y a '+j+' jour'+(j>1?'s':'');}
 const dateFr=iso=>iso?new Date(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'';
@@ -1137,7 +1148,7 @@ let ETAT=null,AFFICHE_V=null,CHARGE=false;
 const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 /** Délai maximal par fonction : sur le réseau mobile, un appel à Google peut rester sans réponse. */
-const DELAIS={apiEtat:15000,apiConnexion:15000,apiChangerCode:20000,apiCodeOublie:30000,apiDefiFaceID:12000,apiConnexionFaceID:20000,apiEnregistrerFaceID:30000,apiRetirerFaceID:30000,apiImporterDrive:240000,apiComptes:20000,apiCompte:30000,apiJournal:20000,apiDeconnexion:10000,apiPlateforme:30000,apiDocEnvoyer:180000,apiDocOuvrir:120000,apiTrace:20000,apiStats:40000,apiCourante:30000,apiCouranteEcrire:40000,apiCourantePhoto:180000,apiCouranteVoirPhoto:120000,apiCouranteVoirAudio:120000,apiAnnuaire:30000,apiAnnuaireEcrire:40000,apiAnnuaireImporter:180000,apiAgenda:30000,apiAgendaEcrire:40000,apiService:40000,apiComptesEquipe:120000,apiComptesNouveauxCodes:120000,apiModules:30000,apiModulesEcrire:180000,apiVieVoirPhoto:120000,apiNotifAbonner:30000,apiNotifDesabonner:30000,apiNotifEssai:60000};
+const DELAIS={apiEtat:15000,apiConnexion:15000,apiChangerCode:20000,apiCodeOublie:30000,apiDefiFaceID:12000,apiConnexionFaceID:20000,apiEnregistrerFaceID:30000,apiRetirerFaceID:30000,apiImporterDrive:240000,apiComptes:20000,apiCompte:30000,apiJournal:20000,apiDeconnexion:10000,apiPlateforme:30000,apiDocEnvoyer:180000,apiDocOuvrir:120000,apiTrace:20000,apiStats:40000,apiCourante:30000,apiCouranteEcrire:40000,apiCourantePhoto:180000,apiCouranteVoirPhoto:120000,apiCouranteVoirAudio:120000,apiAnnuaire:30000,apiAnnuaireEcrire:40000,apiAnnuaireImporter:180000,apiAgenda:30000,apiAgendaEcrire:40000,apiService:40000,apiComptesEquipe:120000,apiComptesNouveauxCodes:120000,apiModules:30000,apiModulesEcrire:180000,apiVieVoirPhoto:120000,apiNotifCle:30000,apiNotifAbonner:30000,apiNotifDesabonner:30000,apiNotifEssai:60000};
 /** Page d'accueil (DX.api) : appel direct du service de données par fetch, une seule connexion Google.
  *  Corps en text/plain : pas de requête préalable (CORS). Les refus gardent la forme « REFUS: … » de google.script.run. */
 function appelDirect(fn,args){
@@ -1199,7 +1210,7 @@ function appliquerEtat(e,deCache){
 const TABLEAU_VIERGE=$('dx-tableau').innerHTML;
 /** Services du Centre (02/11/2026) : DEXA (état général), DEXI et SDMR (chargés à la demande, gardés sur le téléphone). */
 /** Numéro affiché dans le menu : il permet de vérifier que le téléphone a bien pris la dernière version. */
-const VERSION_APP='28';
+const VERSION_APP='29';
 const SERVICES_D=['DEXA','DEXI','SDMR'];
 ui.svc=lsGet('svc','DEXA');
 const SVCD={};
@@ -3495,7 +3506,9 @@ function memoSessionSW(){
   caches.open('dx-session').then(c=>c.put('./dx-session',new Response(v,{headers:{'Content-Type':'application/json'}}))).catch(()=>{});
 }
 setInterval(memoSessionSW,5000);
-if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',ev=>{const d=ev.data||{};if(d.dx==='aller'&&d.url){const h=String(d.url).split('#')[1];if(h)location.hash=h;}});
+if('serviceWorker' in navigator){navigator.serviceWorker.addEventListener('message',ev=>{const d=ev.data||{};if(d.dx==='aller'&&d.url){const h=String(d.url).split('#')[1];if(h)location.hash=h;}
+  if(d.dx==='version?'&&ev.ports&&ev.ports[0])ev.ports[0].postMessage({v:VERSION_APP});});   // page récente : pas de rechargement d'office
+  try{navigator.serviceWorker.startMessages();}catch(e){}}
 async function etatNotif(){
   if(!pushPossible()){ui.notif={possible:false};return;}
   try{const reg=await navigator.serviceWorker.getRegistration();const sub=reg?await reg.pushManager.getSubscription():null;ui.notif={possible:true,permission:Notification.permission,sub};}
@@ -3507,19 +3520,19 @@ function zoneNotif(){
   const N=ui.notif;let h='<section class="dx-carte"><h3>🔔 Notifications</h3><p class="dx-gris">Alertes des notes <b>Majeures</b> et <b>Critiques</b> du Journal de quart, même téléphone verrouillé.</p>';
   if(surIOS()&&!depuisIcone())h+='<p>Sur iPhone, les notifications ne marchent que depuis l’icône UNIVERS C.O : dans Safari, touchez <b>Partager</b> › <b>Sur l’écran d’accueil</b>, puis ouvrez UNIVERS C.O depuis cette icône et revenez ici.</p>';
   else if(!N.possible)h+='<p class="dx-gris">Ce navigateur ne permet pas les notifications. Sur iPhone, il faut iOS 16.4 ou plus récent et l’icône sur l’écran d’accueil.</p>';
-  else if(N.permission==='denied')h+='<p>Les notifications sont refusées pour UNIVERS C.O. Sur iPhone : <b>Réglages</b> › <b>Notifications</b> › <b>UNIVERS C.O</b> › <b>Autoriser les notifications</b>.</p>';
+  else if(N.permission==='denied')h+='<p>Les notifications sont refusées pour UNIVERS C.O. '+(surIOS()?'Sur iPhone : <b>Réglages</b> › <b>Notifications</b> › <b>UNIVERS C.O</b> › <b>Autoriser les notifications</b>.':'Sur Android, dans Chrome : touchez le cadenas à gauche de l’adresse › <b>Autorisations</b> › <b>Notifications</b> › <b>Autoriser</b>, puis rouvrez UNIVERS C.O.')+'</p>';
   else if(N.sub)h+=`<p><b>✓ Activées sur ce téléphone</b> (${ui.notifNiveau==='critique'?'Critiques seulement':'Majeures et Critiques'}).</p>
     <div class="dx-ligne"><button class="dx-btn" type="button" data-a="notif-essai">Envoyer une notification d’essai</button><button class="dx-btn" type="button" data-a="notif-off">Désactiver</button></div>`;
-  else h+=`<label for="notifNiv">Recevoir</label><select id="notifNiv"><option value="majeure"${ui.notifNiveau!=='critique'?' selected':''}>Les notes Majeures et Critiques</option><option value="critique"${ui.notifNiveau==='critique'?' selected':''}>Les notes Critiques seulement</option></select>
+  else h+=`<label for="notifNiv" class="dx-notif-lab">Recevoir</label><select id="notifNiv" class="dx-notif-niv"><option value="majeure"${ui.notifNiveau!=='critique'?' selected':''}>Les notes Majeures et Critiques</option><option value="critique"${ui.notifNiveau==='critique'?' selected':''}>Les notes Critiques seulement</option></select>
     <button class="dx-btn plein" type="button" data-a="notif-on">Activer les notifications</button>`;
   return h+'</section>';
 }
 async function activerNotif(b){
-  if(!ETAT.vapid){toast('Le service n’a pas encore sa clé de notification : réessayez dans un instant.');return;}
   b.disabled=true;const niveau=($('notifNiv')||{}).value||'majeure';
   try{
     const perm=await Notification.requestPermission();     // appelé tout de suite après le toucher (exigé par l'iPhone)
     if(perm!=='granted'){toast('Notifications non autorisées.');await etatNotif();renderMenu();return;}
+    if(!ETAT.vapid)ETAT.vapid=(await appel('apiNotifCle',SESSION.jeton)).vapid;   // état gardé d'une version sans la clé
     const reg=await navigator.serviceWorker.ready;
     const sub=(await reg.pushManager.getSubscription())||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:cleOctets(ETAT.vapid)});
     memoSessionSW();
