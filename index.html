@@ -659,7 +659,7 @@ table.pq{border-collapse:collapse;font-size:10px;font-weight:700}
 
 <footer>
   <span id="sourceLine"></span> Le taux dans les délais est calculé comme « traitées dans les délais ÷ traitées ».
-  Les temps sont des moyennes pondérées par le nombre de dossiers ; ils sont sensibles aux valeurs extrêmes. Le seuil de délai n'est pas documenté dans le fichier source.
+  Les temps sont des moyennes pondérées par le nombre de demandes ; ils sont sensibles aux valeurs extrêmes. Le seuil de délai n'est pas documenté dans le fichier source.
   <span id="footerNote"></span>
 </footer>
 </div>
@@ -830,7 +830,7 @@ window.lancerTableau=function(__D){
 'use strict';
 window.__dxTheme.length=0;
 const matchMedia=function(q){const m=window.matchMedia(q);return{get matches(){return m.matches;},addEventListener:function(t,f){window.__dxTheme.push(f);}};};
-const DATA = __D.data;  // [année, agence, direction, mois, type, traitées, dans délais, TMT (h × dossiers), prise en charge (h × dossiers), TME (h × dossiers)]
+const DATA = __D.data;  // [année, agence, direction, mois, type, traitées, dans délais, TMT (h × demandes), prise en charge (h × demandes), TME (h × demandes)]
 const YEAR_CUR = __D.annee, YEAR_PREV = __D.anneePrec, NUM_MOIS = __D.numMois;
 const MOIS = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sept','Oct','Nov','Déc'].slice(0,NUM_MOIS);  // un libellé par mois renseigné
 const MOIS_LONG = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -919,7 +919,7 @@ function renderCharts(){
     {label:String(YEAR_CUR),data:t26,borderColor:blue,backgroundColor:t26.map(v=>v!==null&&v<95?orange:blue),pointBackgroundColor:t26.map(v=>v!==null&&v<95?orange:blue),borderWidth:2.5,pointRadius:t26.map(v=>v!==null&&v<95?7:4),tension:.25,spanGaps:true}]},options:o});
   // 3 TMT par mois
   const T26=m26.map(a=>a.n?a.t/a.n:null), T25=m25.map(a=>a.n?a.t/a.n:null);
-  $('s3').textContent='Heures par dossier, du début de la prise en charge à la clôture.';
+  $('s3').textContent='Heures par demande, du début de la prise en charge à la clôture.';
   o=baseOpts(); o.interaction={mode:'index',intersect:false}; o.scales.y.beginAtZero=true; o.scales.y.ticks.callback=v=>v+' h';
   o.plugins.tooltip={callbacks:{label:c=>`${c.dataset.label} : ${hh(c.parsed.y)}`}};
   draw('c3',{type:'line',data:{labels:MOIS,datasets:[
@@ -927,7 +927,7 @@ function renderCharts(){
     {label:String(YEAR_CUR),data:T26,borderColor:blue,backgroundColor:blue,borderWidth:2.5,pointRadius:4,tension:.25,spanGaps:true}]},options:o});
   // 7 TME par mois
   const E26=m26.map(a=>a.n?a.e/a.n:null), E25=m25.map(a=>a.n?a.e/a.n:null);
-  $('s7').textContent='Heures par dossier, durée de l\'intervention terrain une fois l\'équipe sur place.';
+  $('s7').textContent='Heures par demande, durée de l\'intervention terrain une fois l\'équipe sur place.';
   o=baseOpts(); o.interaction={mode:'index',intersect:false}; o.scales.y.beginAtZero=true; o.scales.y.ticks.callback=v=>v+' h';
   o.plugins.tooltip={callbacks:{label:c=>`${c.dataset.label} : ${hh(c.parsed.y)}`}};
   draw('c7',{type:'line',data:{labels:MOIS,datasets:[
@@ -957,7 +957,7 @@ function renderAnomalies(){
   Object.keys(charts).filter(k=>k.startsWith('sm')).forEach(k=>{charts[k].destroy(); delete charts[k];});
   series.forEach((z,i)=>{
     const x=z.x; let sum;
-    if(metric==='vol') sum=`${fmt(x.a26.n)} dossiers (${x.a25.n?sg((x.a26.n/x.a25.n-1)*100,0)+' % vs '+YEAR_PREV:YEAR_PREV+' : –'})`;
+    if(metric==='vol') sum=`${fmt(x.a26.n)} demandes (${x.a25.n?sg((x.a26.n/x.a25.n-1)*100,0)+' % vs '+YEAR_PREV:YEAR_PREV+' : –'})`;
     else if(metric==='tx') sum=`${x.a26.n?pct(rate(x.a26)):'–'} (${(x.a25.n&&x.a26.n)?sg((rate(x.a26)-rate(x.a25))*100)+' pt vs '+YEAR_PREV:YEAR_PREV+' : –'})`;
     else sum=`${x.a26.n?hh(tmtOf(x.a26)):'–'} (${(x.a25.n&&x.a26.n)?(tmtOf(x.a26)>=tmtOf(x.a25)?'+':'−')+hh(Math.abs(tmtOf(x.a26)-tmtOf(x.a25)))+' vs '+YEAR_PREV:YEAR_PREV+' : –'})`;
     const cell=document.createElement('div'); cell.className='cell'; cell.innerHTML=`<h4>${x.c}</h4><div class="sum">${sum}</div><div class="ch"><canvas id="sm${i}"></canvas></div>`; box.appendChild(cell);
@@ -989,7 +989,7 @@ function renderHeat(){
     let v,txt,bg,col=css('--ink');
     if(mode==='d'){ if(!a26.n||!a25.n) return '<td class="h">–</td>'; v=(rate(a26)-rate(a25))*100; txt=sg(v); const al=Math.min(1,Math.abs(v)/6); bg=rgba(css(v<0?'--heat2':'--heat'),0.06+al*0.94); col=al>0.55?'#fff':css('--ink'); }
     else { const a=mode==='r25'?a25:a26; if(!a.n) return '<td class="h">–</td>'; v=a.d/a.n*100; txt=v.toFixed(1).replace('.',','); const al=Math.min(1,Math.max(0,(100-v)/12)); bg=rgba(css('--heat'),0.08+al*0.92); col=al>0.55?'#fff':css('--ink'); }
-    return `<td class="h" style="background:${bg};color:${col};${bold?'font-weight:700':''}" title="${YEAR_CUR} : ${a26.n} dossiers, ${a26.n-a26.d} hors délai · ${YEAR_PREV} : ${a25.n} dossiers, ${a25.n-a25.d} hors délai">${txt}</td>`; };
+    return `<td class="h" style="background:${bg};color:${col};${bold?'font-weight:700':''}" title="${YEAR_CUR} : ${a26.n} demandes, ${a26.n-a26.d} hors délai · ${YEAR_PREV} : ${a25.n} demandes, ${a25.n-a25.d} hors délai">${txt}</td>`; };
   let h='<thead><tr><th style="text-align:left">Agence</th>'+MOIS.map(m=>`<th>${m}</th>`).join('')+'<th>Cumul</th></tr></thead><tbody>';
   rank.forEach(({x})=>{ h+=`<tr><td>${x.a}</td>`;
     for(let m=1;m<=NUM_MOIS;m++) h+=cellOf(agg(sel(YEAR_CUR,{ag:x.a,m1:m,m2:m})),agg(sel(YEAR_PREV,{ag:x.a,m1:m,m2:m})));
@@ -1030,19 +1030,19 @@ function insights(){
   const by=(rs,i)=>{const m=new Map(); rs.forEach(x=>{const o=m.get(x[i])||{n:0,d:0,t:0,p:0}; o.n+=x[5];o.d+=x[6];o.t+=x[7];o.p+=x[8]; m.set(x[i],o);}); return m;};
   const pc0=x=>Math.round(x*100);
   const out=[]; const r=rate(a), late=a.n-a.d;
-  let s=`<b>${fmt(a.n)} dossiers traités</b>`; if(b.n) s+=` (${sg((a.n/b.n-1)*100)} % vs ${YEAR_PREV})`;
+  let s=`<b>${fmt(a.n)} demandes traitées</b>`; if(b.n) s+=` (${sg((a.n/b.n-1)*100)} % vs ${YEAR_PREV})`;
   s+=`, <b>${pct(r)}</b> dans les délais`; if(b.n) s+=` (${sg((r-rate(b))*100,2)} pt)`; s+=`, temps moyen de traitement ${hh(a.t/a.n)}`; if(b.n) s+=` (${YEAR_PREV} : ${hh(tmtOf(b))})`; out.push(s+'.');
   const ag=[...by(rows,1)].map(([k,o])=>({k,n:o.n,late:o.n-o.d,r:o.d/o.n,o}));
-  if(late===0) out.push('<b>Aucun dossier hors délai</b> sur cette sélection : tous les dossiers sont traités dans les délais.');
+  if(late===0) out.push('<b>Aucune demande hors délai</b> sur cette sélection : toutes les demandes sont traitées dans les délais.');
   else if(ag.length>1){
     const top=[...ag].sort((x,y)=>y.late-x.late)[0], sh=top.late/late, vs=top.n/a.n;
     out.push((sh>=1.5*vs&&sh>=0.25)
-      ? `<b>${top.k} concentre ${pc0(sh)} % des dossiers hors délai</b> (${fmt(top.late)} sur ${fmt(late)}) pour ${pc0(vs)} % du volume.`
-      : `Les dossiers hors délai sont répartis entre les agences : la plus touchée est <b>${top.k}</b> (${pc0(sh)} % des dossiers hors délai, soit ${fmt(top.late)} sur ${fmt(late)}, pour ${pc0(vs)} % du volume).`);
+      ? `<b>${top.k} concentre ${pc0(sh)} % des demandes hors délai</b> (${fmt(top.late)} sur ${fmt(late)}) pour ${pc0(vs)} % du volume.`
+      : `Les demandes hors délai sont réparties entre les agences : la plus touchée est <b>${top.k}</b> (${pc0(sh)} % des demandes hors délai, soit ${fmt(top.late)} sur ${fmt(late)}, pour ${pc0(vs)} % du volume).`);
   }
   if(!f.cat && late>0){
     const ty=[...by(rows,4)].map(([k,o])=>({k,n:o.n,late:o.n-o.d,r:o.d/o.n})).sort((x,y)=>y.late-x.late)[0];
-    let s3=`<b>${ty.k}</b> pèse ${pc0(ty.late/late)} % des dossiers hors délai (${fmt(ty.late)} sur ${fmt(late)} ; taux ${pct(ty.r)} sur ${fmt(ty.n)} dossiers)`;
+    let s3=`<b>${ty.k}</b> pèse ${pc0(ty.late/late)} % des demandes hors délai (${fmt(ty.late)} sur ${fmt(late)} ; taux ${pct(ty.r)} sur ${fmt(ty.n)} demandes)`;
     if(ag.length>1 && ty.late>0){
       const tg=[...by(rows.filter(x=>x[4]===ty.k),1)].map(([k,o])=>({k,late:o.n-o.d})).sort((x,y)=>y.late-x.late)[0];
       if(tg.late/ty.late>=0.5) s3+=`, dont ${pc0(tg.late/ty.late)} % à <b>${tg.k}</b>`;
@@ -1210,7 +1210,7 @@ function appliquerEtat(e,deCache){
 const TABLEAU_VIERGE=$('dx-tableau').innerHTML;
 /** Services du Centre (02/11/2026) : DEXA (état général), DEXI et SDMR (chargés à la demande, gardés sur le téléphone). */
 /** Numéro affiché dans le menu : il permet de vérifier que le téléphone a bien pris la dernière version. */
-const VERSION_APP='29';
+const VERSION_APP='30';
 const SERVICES_D=['DEXA','DEXI','SDMR'];
 ui.svc=lsGet('svc','DEXA');
 const SVCD={};
