@@ -1,7 +1,7 @@
 /* UNIVERS C.O — cache de l'interface seulement (page, icônes). Les données ne passent jamais par ici :
    les échanges avec le service Google sont des envois (POST) vers une autre adresse, non mis en cache.
    La page s'ouvre tout de suite depuis le cache ; la version en ligne est relue en arrière-plan pour l'ouverture suivante. */
-var VERSION = 'univers-co-265daa0827';
+var VERSION = 'univers-co-6a0eef182d';
 // Session gardée par la page pour les notifications (adresse du service + jeton) : jamais effacée par une mise à jour
 var SESSION_SW = 'dx-session';
 // cache: 'reload' : la nouvelle version est relue chez GitHub, jamais reprise du cache du navigateur (10 min)
@@ -61,7 +61,7 @@ self.addEventListener('push', function (e) {
     })
     .catch(function () { return null; })
     .then(function (a) {
-      return self.registration.showNotification((a && a.titre) || 'UNIVERS C.O', { body: (a && a.texte) || 'Nouvelle alerte dans le Journal de quart.',
+      return self.registration.showNotification((a && a.titre) || 'UNIVERS C.O', { body: (a && a.texte) || 'Nouvelle alerte dans le Journal d’activité.',
         icon: 'icone-192.png', badge: 'icone-192.png', tag: (a && a.tag) || 'alerte', data: { url: (a && a.url) || './#journal' } });
     }));
 });

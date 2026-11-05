@@ -67,13 +67,14 @@ header .sub{font-size:12.5px;opacity:.75;margin-top:2px}
 .was{color:var(--ink3)}
 .pos{color:var(--good)} .neg{color:var(--bad)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(560px,100%),1fr));gap:12px;margin-bottom:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.card{min-width:0;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
 .card h3{font-size:14px;font-weight:650;margin-bottom:2px}
 .card .s{font-size:12px;color:var(--ink2);margin-bottom:10px}
 .cardhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
 .ctl{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2)}
 .ctl select{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12.5px}
-.ch{position:relative;height:280px}
+.ch{position:relative;height:280px;min-width:0}
+.ch canvas{max-width:100%}
 .ch.tall{height:340px}
 .ch.xl{height:560px}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--ink2);margin-bottom:6px;flex-wrap:wrap}
@@ -88,8 +89,8 @@ tbody tr:hover{background:rgba(127,127,127,.08)}
 th.y25,td.y25{color:var(--ink3)}
 .heat td.h{text-align:center;padding:7px 4px;font-size:12px;border-bottom:1px solid var(--card);min-width:54px}
 .heat th{cursor:default;text-align:center}
-.sm{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;margin-top:14px}
-.sm .cell{border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.sm{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(270px,100%),1fr));gap:10px;margin-top:14px}
+.sm .cell{min-width:0;border:1px solid var(--line);border-radius:8px;padding:10px 12px}
 .sm h4{font-size:12.5px;font-weight:650}
 .sm .sum{font-size:11.5px;color:var(--ink2);margin-bottom:6px}
 .sm .ch{height:140px}
@@ -98,8 +99,8 @@ footer{font-size:12px;color:var(--ink3);padding:6px 2px 20px;line-height:1.6}
 @media(max-width:700px){
   .wrap{padding:16px}
   header{padding:14px 16px}
-  .grid{grid-template-columns:1fr}
-  .kpis{grid-template-columns:repeat(2,1fr);gap:8px}
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .kpi{padding:12px 14px}
   .kpi .v{font-size:21px}
   .kpi .l{font-size:10.5px}
@@ -115,7 +116,7 @@ footer{font-size:12px;color:var(--ink3);padding:6px 2px 20px;line-height:1.6}
   th,td{padding:6px 7px}
 }
 @media(max-width:420px){
-  .kpis{grid-template-columns:1fr}
+  .kpis{grid-template-columns:minmax(0,1fr)}
 }
 @media print{body{background:#fff}.filters,.theme,.ctl{display:none}.card,.kpi{break-inside:avoid}}
 </style>
@@ -516,14 +517,14 @@ table.pq{border-collapse:collapse;font-size:10px;font-weight:700}
 /* Rapport : tableaux toujours dans la largeur du téléphone */
 .dx-rapport{padding:12px 10px}.dx-rap-t{table-layout:fixed}.dx-rap-t th,.dx-rap-t td{overflow-wrap:anywhere;word-break:normal;font-size:12.5px;padding:4px}
 .dx-rap-t th{font-size:11.5px}
-/* Accueil, Journal de quart : dernières notes lisibles (texte d'abord, le reste en petit) */
+/* Accueil, Journal d’activité : dernières notes lisibles (texte d'abord, le reste en petit) */
 .dx-mc-der{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line)}
 .dx-mc-der-c{min-width:0;flex:1}
 .dx-mc-der-x{font-size:15px;font-weight:600;color:var(--ink);line-height:1.35;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
 .dx-mc-der-m{font-size:12.5px;color:var(--ink2);margin-top:2px;overflow-wrap:anywhere}
 /* SDMR : demandes hors processus, sous le tableau de bord */
 .dx-hors{margin-top:12px}.dx-hors-tot td{border-top:2px solid var(--line)}
-/* Journal de quart : criticité */
+/* Journal d’activité : criticité */
 .dx-crit{display:inline-block;color:#fff;font-size:11.5px;font-weight:700;border-radius:10px;padding:1px 8px;margin-left:6px;vertical-align:1px;white-space:nowrap}
 .dx-mc-der-x .dx-crit{margin:0 6px 0 0}
 .dx-mc.crit-majeure{box-shadow:inset 3px 0 0 #e8590c;padding-left:8px}.dx-mc.crit-critique{box-shadow:inset 3px 0 0 #c2371f;padding-left:8px;background:color-mix(in srgb,#c2371f 6%,transparent)}
@@ -534,6 +535,50 @@ table.pq{border-collapse:collapse;font-size:10px;font-weight:700}
 .dx-maj .dx-btn{flex:none;margin-top:0;background:#fff;border-color:#fff;color:#0f2b46;font-size:15px}
 .dx-notif-lab{display:block;margin:4px 0 6px;font-weight:600}
 .dx-notif-niv{display:block;width:100%;min-width:0;font:inherit;font-size:16px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);margin-bottom:4px}
+/* Intitulés des champs (Type, Criticité, Lieu, Note…) : nettement distincts des réponses */
+.dx-form label:not(.dx-coche):not(.dx-mc-ph):not(:has(input,select,textarea,.crPt)),.dx-login-box label,.dx-rap-lab,.dx-notif-lab{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--blue);margin-top:14px}
+.dx-form .dx-lab{margin-top:14px}
+.dx-form .dx-lab>label{margin-top:0!important}
+.dx-login-box label{margin-top:10px}.dx-rap-lab{margin-top:10px}.dx-notif-lab{margin:10px 0 6px}
+/* Champs posés dans le libellé (Début, Fin…) : le libellé prend le style des intitulés, la valeur reste normale */
+.dx-form .dx-ligne label:not(.dx-coche):has(input:not([type=checkbox]):not([type=radio]),select){font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--blue)}
+.dx-form .dx-ligne label:not(.dx-coche) :is(input,select){font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink)}
+/* Tablettes */
+.dx-tab-k{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;padding:10px 6px}
+.dx-tab-k .dx-prj-k b{font-size:20px}.dx-tab-k .dx-prj-k span{font-size:10.5px;text-align:center;line-height:1.2}
+.dx-tab-li{gap:8px}.dx-tab-n,.dx-tab-q{display:flex;flex-direction:column;min-width:0}.dx-tab-n{flex-shrink:0;width:76px}.dx-tab-q{flex:1;overflow:hidden}
+.dx-tab-n small,.dx-tab-q small{font-size:11.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dx-tab-q{white-space:nowrap;text-overflow:ellipsis}
+.dx-tab-li .d{display:flex;align-items:center;gap:4px;flex-shrink:0}.dx-tab-av{font-style:normal}
+.dx-tab-g{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--blue);margin:14px 0 2px}
+.dx-tab-g:first-of-type{margin-top:6px}
+.dx-lien{border:0;background:none;padding:0;font:inherit;color:var(--blue);text-decoration:underline;cursor:pointer}
+.dx-tab-tete{display:flex;align-items:center;justify-content:space-between;gap:8px}.dx-tab-tete h3{margin:0;font-size:20px}
+.dx-tab-loc{display:block;text-align:center;margin:12px 0 6px;text-decoration:none}
+.dx-tab-imei{word-break:break-all}
+.dx-tab-alerte{background:rgba(235,104,52,.12);border-radius:10px;padding:10px 12px;margin:10px 0}.dx-tab-alerte p{margin:4px 0 8px;font-size:13.5px}
+.dx-tab-dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 12px;margin:12px 0;font-size:14px}
+.dx-tab-dl dt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--blue);padding-top:2px}
+.dx-tab-dl dd{margin:0;overflow-wrap:anywhere}
+.dx-tab-notes{font-size:13.5px;background:var(--bg);border-radius:8px;padding:8px 10px}
+.dx-tab-act{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 8px}.dx-tab-act .dx-btn{width:100%;margin:0}
+.dx-tab-mois{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:8px 0}
+.dx-tab-mois button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:6px 2px;font:inherit;display:flex;flex-direction:column;align-items:center;cursor:pointer;color:var(--ink)}
+.dx-tab-mois button b{font-size:12px;text-transform:capitalize}.dx-tab-mois button span{font-size:11px;color:var(--ink3)}
+.dx-tab-mois button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}.dx-tab-mois button.on span{color:inherit}
+.dx-tab-mois button.fait:not(.on){border-color:#1a7f4b;background:rgba(26,127,75,.08)}
+.dx-tab-tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.dx-tab-t{border-collapse:collapse;width:100%;font-size:12.5px}.dx-tab-t th,.dx-tab-t td{padding:6px 5px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.dx-tab-t th:first-child{text-align:left;white-space:normal}.dx-tab-t thead th{font-size:11px;color:var(--ink2);font-weight:600}
+.dx-tab-t thead i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:3px}.dx-tab-t tr.tot td,.dx-tab-t tr.tot th{font-weight:700}
+#tabBon{display:none}
+@media print{body.dx-imprime-bon *{visibility:hidden}body.dx-imprime-bon #tabBon,body.dx-imprime-bon #tabBon *{visibility:visible}
+  body.dx-imprime-bon #tabBon{display:block;position:absolute;left:0;top:0;width:100%;background:#fff;color:#111;font-size:14px;padding:20px}
+  #tabBon h1{font-size:22px;margin:0 0 4px}#tabBon table{width:100%;border-collapse:collapse;margin:16px 0}#tabBon th,#tabBon td{border:1px solid #999;padding:8px;text-align:left}#tabBon th{width:35%;background:#f2f2f2}
+  #tabBon .sig{display:flex;gap:30px;margin-top:40px}#tabBon .sig div{flex:1;border-top:1px solid #111;padding-top:6px;height:90px}}
+.dx-tab-t th{text-transform:none;letter-spacing:0;color:var(--ink);font-weight:600;background:none}.dx-tab-t thead th{color:var(--ink2)}
+.dx-ann-tab{margin:4px 0 2px;font-size:13px;line-height:1.7}
+.dx-tab-t th,.dx-tab-t td{padding:6px 3px;font-size:12px}.dx-tab-t thead th{font-size:10.5px}
 </style>
 <script>
 // Témoin de démarrage : prévient la page d'accueil dès que la page s'exécute (elle relance l'ouverture sinon).
@@ -583,6 +628,7 @@ table.pq{border-collapse:collapse;font-size:10px;font-weight:700}
   <section class="dx-vue" id="v-reunion" data-vue="reunion" hidden></section>
   <section class="dx-vue" id="v-agenda" data-vue="agenda" hidden></section>
   <section class="dx-vue" id="v-projets" data-vue="projets" hidden></section>
+  <section class="dx-vue" id="v-tablette" data-vue="tablette" hidden></section>
   <section class="dx-vue" id="v-social" data-vue="social" hidden></section>
   <section class="dx-vue" id="v-rapport" data-vue="rapport" hidden></section>
   <section class="dx-vue" id="v-assistant" data-vue="assistant" hidden></section>
@@ -896,6 +942,9 @@ function renderKPIs(){
 const charts={};
 function baseOpts(){ const ink2=css('--ink2'), line=css('--line'); return {responsive:true,maintainAspectRatio:false,animation:false,
   plugins:{legend:{display:false}}, scales:{x:{grid:{display:false},ticks:{color:ink2},border:{color:line}},y:{grid:{color:line},ticks:{color:ink2},border:{display:false}}}}; }
+// Au changement d'orientation, Chart.js ne voit pas toujours le nouveau format : on recale tous les graphiques.
+let recalT=0; function recaler(){ clearTimeout(recalT); recalT=setTimeout(()=>Object.values(charts).forEach(c=>{ try{c.resize();}catch(e){} }),150); }
+addEventListener('resize',recaler); addEventListener('orientationchange',recaler);
 function draw(id,cfg){ if(charts[id]) charts[id].destroy(); charts[id]=new Chart($(id).getContext('2d'),cfg); }
 function monthly(year,extra={}){ return MOIS.map((_,i)=>agg(sel(year,{...extra,m1:i+1,m2:i+1}))); }
 function renderCharts(){
@@ -1210,7 +1259,7 @@ function appliquerEtat(e,deCache){
 const TABLEAU_VIERGE=$('dx-tableau').innerHTML;
 /** Services du Centre (02/11/2026) : DEXA (état général), DEXI et SDMR (chargés à la demande, gardés sur le téléphone). */
 /** Numéro affiché dans le menu : il permet de vérifier que le téléphone a bien pris la dernière version. */
-const VERSION_APP='30';
+const VERSION_APP='31';
 const SERVICES_D=['DEXA','DEXI','SDMR'];
 ui.svc=lsGet('svc','DEXA');
 const SVCD={};
@@ -1367,7 +1416,7 @@ function fermerMenu(){$('dx-menu').hidden=true;document.body.classList.remove('d
 const ROLES_LIB={admin:'Administrateur',hierarchie:'Hiérarchie (tout)',direction:'Directeur (sa direction)',agence:'Chef d\'agence (son agence)'};
 function renderMenu(){
   const m=ETAT&&ETAT.moi;if(!m){$('dxMenuCorps').innerHTML='';return;}
-  let h=`<section class="dx-carte"><h3>Aller à</h3><div class="dx-raccourcis">${[['orga','organigramme','Organigramme','#0f7a8a'],['vue','documents','Documents du service','#8a6d3b']].concat(ETAT&&ETAT.mc?[['vue','journal','Journal de quart','#5a6b7d'],['vue','annuaire','Annuaire','#3d6fd8'],['vue','reunion','Réunions','#14a3a3'],['vue','agenda','Agenda','#eb6834'],['vue','projets','Projets','#d4532a'],['vue','social','Vie du service','#e0457b'],['vue','rapport','Rapport mensuel','#0f7a8a'],['vue','assistant','Allô C.O','#7a5af0']]:[],m.role==='admin'?[['vue','stats','Statistiques d’utilisation','#c2410c']]:[]).map(([act,k,l,co])=>`<button type="button" class="dx-btn" data-a="${act}" data-v="${k}"><span class="dx-ic p" style="background:${co}">${svgI(k)}</span>${l}</button>`).join('')}</div></section>`;
+  let h=`<section class="dx-carte"><h3>Aller à</h3><div class="dx-raccourcis">${[['orga','organigramme','Organigramme','#0f7a8a'],['vue','documents','Documents du service','#8a6d3b']].concat(ETAT&&ETAT.mc?[['vue','journal','Journal d’activité','#5a6b7d'],['vue','annuaire','Annuaire','#3d6fd8'],['vue','reunion','Réunions','#14a3a3'],['vue','agenda','Agenda','#eb6834'],['vue','projets','Projets','#d4532a'],['vue','social','Vie du service','#e0457b'],['vue','rapport','Rapport mensuel','#0f7a8a'],['vue','assistant','Allô C.O','#7a5af0']]:[],m.role==='admin'?[['vue','stats','Statistiques d’utilisation','#c2410c']]:[]).map(([act,k,l,co])=>`<button type="button" class="dx-btn" data-a="${act}" data-v="${k}"><span class="dx-ic p" style="background:${co}">${svgI(k)}</span>${l}</button>`).join('')}</div></section>`;
   h+=`<section class="dx-carte"><h3>Mon compte</h3><p><b>${esc(m.nom)}</b> · ${esc(m.roleLib)}${m.perimetre?' · '+esc(libPerimetre(m)):''}<br><span class="dx-gris">Identifiant : ${esc(m.id)}</span></p>
     <div id="fidZone">${zoneFaceID()}</div>
     <div class="dx-ligne"><button class="dx-btn" type="button" data-a="changer-code">Changer mon code</button><button class="dx-btn" type="button" data-a="deconnexion">Se déconnecter</button></div></section>`;
@@ -1632,12 +1681,12 @@ const ICONES={
 };
 const svgI=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONES[k]||''}</svg>`;
 const MODULES=[['quarts','Quarts','#f2b01e',1],['equipe','Équipe','#2a78d6',1],['organigramme','Organigramme','#0f7a8a',1],['documents','Documents','#8a6d3b',1],
-  ['donnees','Données','#0f2b46',1],['journal','Journal de quart','#5a6b7d',1],['annuaire','Annuaire','#3d6fd8',1],['reunion','Réunions','#14a3a3',1],['agenda','Agenda','#eb6834',1],['assistant','Allô C.O','#7a5af0',1],
-  ['projets','Projets','#d4532a',1],['social','Vie du service','#e0457b',1],['rapport','Rapport mensuel','#0f7a8a',1],['tablette','Tablettes','#1a9b5c',0]];
+  ['donnees','Données','#0f2b46',1],['journal','Journal d’activité','#5a6b7d',1],['annuaire','Annuaire','#3d6fd8',1],['reunion','Réunions','#14a3a3',1],['agenda','Agenda','#eb6834',1],['assistant','Allô C.O','#7a5af0',1],
+  ['projets','Projets','#d4532a',1],['social','Vie du service','#e0457b',1],['rapport','Rapport mensuel','#0f7a8a',1],['tablette','Tablettes','#1a9b5c',1]];
 ICONES.documents=ICONES.docs;
 const couleurMod=k=>k==='stats'?'#c2410c':(MODULES.find(m=>m[0]===k)||[0,0,'#0f2b46'])[2];
 const tuileIc=(k,taille)=>`<span class="dx-ic${taille?' '+taille:''}" style="background:${couleurMod(k)}">${svgI(k)}</span>`;
-const VUES=['accueil','quarts','equipe','documents','journal','annuaire','reunion','agenda','projets','social','rapport','assistant','donnees','stats'];
+const VUES=['accueil','quarts','equipe','documents','journal','annuaire','reunion','agenda','projets','social','rapport','assistant','donnees','stats','tablette'];
 ui.vue=VUES.includes(location.hash.slice(1))?location.hash.slice(1):(VUES.includes(lsGet('vue','accueil'))?lsGet('vue','accueil'):'accueil');
 ui.moisQ=null;ui.qEdit=null;ui.agentEdit=null;ui.planif=null;ui.cycleOuvert=false;
 ui.stats=null;ui.statsJours=lsGet('statsJours',30);ui.statsCharge=false;ui.statsPoint=null;
@@ -1772,9 +1821,11 @@ function rendrePlateformeVue(){
   else if(ui.vue==='social'&&!formModOuvert())rendreVie();
   else if(ui.vue==='rapport'&&!formModOuvert())rendreRapport();
   else if(ui.vue==='assistant')rendreAllo();
+  else if(ui.vue==='tablette'&&!formTabOuvert())rendreTablettes();
   if(['projets','social','rapport','accueil'].includes(ui.vue)&&accesMC()&&!ui.modDemande){ui.modDemande=true;chargerMod();}
   if(ui.vue==='journal'&&accesMC()&&!ui.mcDemande){ui.mcDemande=true;chargerMC();}
   if(ui.vue==='annuaire'&&accesMC()&&!ui.annDemande){ui.annDemande=true;chargerAnn();}
+  if((ui.vue==='tablette'||(['journal','annuaire','rapport','assistant'].includes(ui.vue)&&accesMC()))&&(!ui.tabDemande||Date.now()-((TAB&&TAB.recu)||0)>60000)){ui.tabDemande=true;chargerTab();}
   if(!ui.ouvertureTracee){ui.ouvertureTracee=true;tracer('ouverture','');}
   if(ui.vue!=='equipe')tracer('vue',ui.vue);
 }
@@ -1827,6 +1878,11 @@ function rendreAccueil(){
   if(estAdmin()&&cycleRegle()){let n=0;for(let i=0;i<31;i++){const j=ajoute(iso,i);['J','N'].forEach(q=>{if(quart(j,q).vacant)n++;});}
     if(n)lignes.push(`<div class="dx-li cliquable" data-a="vue" data-v="quarts"><span class="dx-emoji">⚠️</span><span><b>${n} quart${n>1?'s':''} à pourvoir</b> dans les 31 prochains jours</span><span class="d">Voir</span></div>`);}
   lignes.push(...lignesAgendaAccueil(iso));
+  // Tablettes perdues, et maintenances du mois qui restent à faire
+  if(tabA()){const L=tablettesA().filter(actifTab),pe=L.filter(x=>x.etat==='perdue').length,m=new Date().getMonth()+1,an=new Date().getFullYear();
+    if(pe)lignes.push(`<div class="dx-li cliquable" data-a="vue" data-v="tablette"><span class="dx-emoji">📍</span><span><b>${pe} tablette${pe>1?'s':''} perdue${pe>1?'s':''}</b> : localisation SmartThings à lancer</span><span class="d">Voir</span></div>`);
+    const rm=tabPeut()?L.filter(x=>x.moisMaint===m&&x.etat!=='perdue'&&!maintFaiteTab(x,an)).length:0;
+    if(rm)lignes.push(`<div class="dx-li cliquable" data-a="vue" data-v="tablette"><span class="dx-emoji">🧰</span><span>${rm} maintenance${rm>1?'s':''} de tablette prévue${rm>1?'s':''} ce mois-ci</span><span class="d">Voir</span></div>`);}
   // Projets en retard et messages récents de la Vie du service
   if(accesMC()&&modA()){
     const pr=projetsA().filter(retardPrj);if(pr.length)lignes.push(`<div class="dx-li cliquable" data-a="vue" data-v="projets"><span class="dx-emoji">🚀</span><span><b>${pr.length} projet${pr.length>1?'s':''} en retard</b></span><span class="d">Voir</span></div>`);
@@ -2379,7 +2435,7 @@ function formMC(){
     <p class="dx-gris" id="mcCritInfo"${['majeure','critique'].includes(ui.mcNouvCrit)?'':' hidden'}>La note restera à suivre et les téléphones abonnés recevront une notification.</p>
     <div id="mcTab" class="dx-mc-tab"${t==='Tablette'?'':' hidden'}>
       <label>État de la tablette</label><div class="dx-puces dx-mc-types">${Object.keys(ETATS_TAB).map(e=>`<button type="button" class="${e===ui.mcNouvEtat?'on':''}" data-a="mc-etat-choix" data-e="${esc(e)}">${esc(e)}</button>`).join('')}</div>
-      <label for="mcTabNum">N° ou nom de la tablette</label><input id="mcTabNum" maxlength="40" placeholder="TAB-014" autocomplete="off" autocapitalize="characters">
+      <label for="mcTabNum">N° ou nom de la tablette</label><input id="mcTabNum" list="mcTabs" maxlength="40" placeholder="TAB-0014 ou IMEI" autocomplete="off" autocapitalize="characters"><datalist id="mcTabs">${tablettesA().filter(actifTab).map(x=>`<option value="${esc(x.id)}">${esc([x.agence,x.detenteur].filter(Boolean).join(' · '))}</option>`).join('')}</datalist>
       <label for="mcTabAgent">Détenteur (agent de terrain)</label><input id="mcTabAgent" maxlength="60" placeholder="Nom de l’agent" autocomplete="off">
     </div>
     <label for="mcLieu">Lieu (facultatif)</label><input id="mcLieu" list="mcLieux" maxlength="80" placeholder="Quartier, agence, rue…" autocomplete="off"><datalist id="mcLieux">${lieux.map(l=>`<option value="${esc(l)}">`).join('')}</datalist>
@@ -2400,18 +2456,18 @@ function formReleve(ouverts){
 const rendreJournalGarde=()=>garderSaisie($('v-journal'),rendreJournal);
 function rendreJournal(){
   const zone=$('v-journal');if(!zone||!ETAT)return;
-  if(!accesMC()){zone.innerHTML='<div class="dx-carte"><p>Le Journal de quart est réservé au Centre d’ordonnancement.</p></div>';return;}
+  if(!accesMC()){zone.innerHTML='<div class="dx-carte"><p>Le Journal d’activité est réservé au Centre d’ordonnancement.</p></div>';return;}
   const N=notesMC(),q=ui.mcCherche.trim().toLowerCase(),cur=quartEnCours(new Date());
   const ouverts=N.filter(x=>x.statut==='ouvert').sort((a,b)=>a.le<b.le?-1:1);
   const derniere=N.find(x=>x.type==='Relève');
-  let h=`<div class="dx-titre-vue">${tuileIc('journal','p')}<div><h2>Journal de quart</h2><p>${esc(libQuartMC(cur))}${ui.mcCharge?' · mise à jour…':''}</p></div></div>`;
-  if(!MC&&ui.mcCharge){$('v-journal').innerHTML=h+'<div class="dx-carte"><p class="dx-gris">Chargement du Journal de quart…</p></div>';return;}
+  let h=`<div class="dx-titre-vue">${tuileIc('journal','p')}<div><h2>Journal d’activité</h2><p>${esc(libQuartMC(cur))}${ui.mcCharge?' · mise à jour…':''}</p></div></div>`;
+  if(!MC&&ui.mcCharge){$('v-journal').innerHTML=h+'<div class="dx-carte"><p class="dx-gris">Chargement du Journal d’activité…</p></div>';return;}
   if(derniere)h+=`<p class="dx-gris dx-mc-der">Dernière relève : ${esc(derniere.nom)}, ${esc(quandMC(derniere.le).replace(/^./,c=>c.toLowerCase()))}</p>`;
   if(ui.mcEdit==='nouveau')h+=formMC();
   else if(ui.mcEdit==='releve')h+=formReleve(ouverts);
   else h+=`<div class="dx-ligne dx-mc-actions"><button class="dx-btn plein" type="button" data-a="mc-nouveau">Nouvelle note</button><button class="dx-btn" type="button" data-a="mc-releve">🔄 Prendre la relève</button></div>`;
   if(ouverts.length&&ui.mcStatut!=='clos')h+=`<div class="dx-carte"><h3>📌 Points à suivre</h3>${ouverts.map(x=>noteMC(x,'o')).join('')}</div>`;
-  h+=`<div class="dx-cherche">${svgI('loupe')}<input id="mcCherche" type="search" placeholder="Rechercher : lieu, nom, mot…" value="${esc(ui.mcCherche)}" aria-label="Rechercher dans le Journal de quart"></div>`;
+  h+=`<div class="dx-cherche">${svgI('loupe')}<input id="mcCherche" type="search" placeholder="Rechercher : lieu, nom, mot…" value="${esc(ui.mcCherche)}" aria-label="Rechercher dans le Journal d’activité"></div>`;
   const types=Object.keys(COUL_MC).filter(k=>N.some(x=>x.type===k));
   h+=`<div class="dx-puces">${PERIODES_MC.map(([j,l])=>`<button type="button" class="${ui.mcJours===j?'on':''}" data-a="mc-periode" data-j="${j}">${l}</button>`).join('')}</div>`;
   if(types.length>1)h+=`<div class="dx-puces"><button type="button" class="${ui.mcType?'':'on'}" data-a="mc-filtre" data-t="">Tout <span>${N.length}</span></button>${types.map(k=>`<button type="button" class="${ui.mcType===k?'on':''}" data-a="mc-filtre" data-t="${esc(k)}">${EMO_MC[k]} ${esc(k)} <span>${N.filter(x=>x.type===k).length}</span></button>`).join('')}</div>`;
@@ -2433,7 +2489,7 @@ function rendreJournal(){
 function carteMC(){
   if(!accesMC())return '';
   const N=notesMC(),ouverts=N.filter(x=>x.statut==='ouvert'),der=N.filter(x=>x.type!=='Relève').slice(0,2);
-  let h=`<div class="dx-carte cliquable" data-a="vue" data-v="journal"><h3>${tuileIc('journal','p')}Journal de quart</h3>`;
+  let h=`<div class="dx-carte cliquable" data-a="vue" data-v="journal"><h3>${tuileIc('journal','p')}Journal d’activité</h3>`;
   if(!MC)return h+'<p class="dx-gris">Chargement…</p></div>';
   const graves=ouverts.filter(x=>x.crit==='critique'||x.crit==='majeure');
   h+=`<div class="dx-li"><span class="dx-emoji">📌</span><span>${ouverts.length?`<b>${ouverts.length} point${ouverts.length>1?'s':''} à suivre</b>`:'Aucun point à suivre'}${graves.length?` · <b class="neg">${graves.length} majeur${graves.length>1?'s':''} ou critique${graves.length>1?'s':''}</b>`:''}</span><span class="d">Ouvrir</span></div>`;
@@ -2705,6 +2761,7 @@ function agenceA(nom,L){
   const mod=fa?`data-id="${esc(fa.id)}"`:`data-nouv="1" data-ag="${esc(nom||'')}" data-s="${esc((L[0]||{}).service||'')}" data-d="${esc((L[0]||{}).direction||'')}"`;
   return `<div class="dx-ann-ag" style="--co:${co}"><div class="dx-ann-agt"><b>📍 ${esc(nom||'Sans agence')}</b><span class="dx-gris">${A.length} agent${A.length>1?'s':''}</span>${nom?`<button class="dx-btn petit" type="button" data-a="ann-agence-mod" ${mod}>Modifier l’agence</button>`:''}</div>
     ${fl.map(f=>`<div class="dx-ann-fl"><span class="dx-gris">${esc(f.replace(/\b0\d(?:[\s.-]?\d){8}\b/g,'').replace(/[·\s/]+$/,'').trim()||'Numéro de l’agence')}</span>${boutonsTel(f,nom)}</div>`).join('')}
+    ${nom?tablettesAgence(nom,fl.join('/')):''}
     ${A.length?A.map(ficheA).join(''):'<p class="dx-gris dx-ann-sans">Aucun agent enregistré pour cette agence.</p>'}</div>`;
 }
 /** Fiche d'agence : nom, service, direction, numéros de l'agence (fixe, flotte, WhatsApp). */
@@ -2821,7 +2878,7 @@ const TYPES_EV={'Réunion':['#14a3a3','💬'],'Visite de la Direction':['#d4532a
 const reunionsA=()=>AG&&ETAT&&ETAT.moi&&AG.compte===ETAT.moi.id?AG.reunions||[]:[];
 const evenementsA=()=>AG&&ETAT&&ETAT.moi&&AG.compte===ETAT.moi.id?AG.evenements||[]:[];
 const reunion=id=>reunionsA().find(x=>x.id===id);
-const formAgOuvert=()=>!!((ui.reuForm||ui.reuCR||ui.agEdit)&&document.querySelector('#v-reunion form,#v-agenda form'));
+const formAgOuvert=()=>!!((ui.vue==='reunion'&&(ui.reuForm||ui.reuCR)&&document.querySelector('#v-reunion form'))||(ui.vue==='agenda'&&ui.agEdit&&document.querySelector('#v-agenda form')));
 const jourLong=iso=>iso?versDate(iso).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
 const jourCourt=iso=>iso?versDate(iso).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}):'';
 const heuresReu=x=>x.debut?hFr(x.debut)+(x.fin?' – '+hFr(x.fin):''):'';
@@ -3076,7 +3133,8 @@ const modA=()=>MOD&&ETAT&&ETAT.moi&&MOD.compte===ETAT.moi.id?MOD:null;
 const projetsA=()=>(modA()&&modA().projets)||[];
 const vieA=()=>(modA()&&modA().vie)||[];
 // Le rapport est lui-même un formulaire (commentaires) : il se redessine en gardant la saisie, il ne bloque pas les mises à jour
-const formModOuvert=()=>!!document.querySelector('#v-projets form,#v-social form');
+// Seul un formulaire de l'écran affiché compte : un formulaire laissé ouvert dans Projets ne doit pas empêcher d'afficher la Vie du service ou le Rapport (écrans blancs avant le 05/11/2026)
+const formModOuvert=()=>['projets','social'].includes(ui.vue)&&!!document.querySelector('#v-'+ui.vue+' form');
 
 async function chargerMod(){
   if(!accesMC()||!SESSION.jeton||ui.modCharge)return;
@@ -3232,9 +3290,9 @@ function sectionsRapport(mois){
   const NR=notesRapport(mois),N=NR.notes.filter(x=>moisDe(String(x.le).slice(0,10))===mois);
   if(N.length){const parT={};N.forEach(x=>{const t=x.tablette?'Tablette':x.type;parT[t]=(parT[t]||0)+1;});
     const ouv=N.filter(x=>x.statut==='ouvert'),gr=['critique','majeure','mineure'].map(k=>[k,N.filter(x=>x.crit===k).length]).filter(v=>v[1]);
-    S.push({k:'mc',t:'Journal de quart',h:`<p><b>${N.length} note${N.length>1?'s':''}</b> : ${Object.keys(parT).sort((a,b)=>parT[b]-parT[a]).map(t=>esc(t)+' '+parT[t]).join(' · ')}.</p>${gr.length?`<p>Criticité : ${gr.map(([k,n])=>CRIT_MC[k][2]+' '+n+' '+CRIT_MC[k][0].toLowerCase()+(n>1?'s':'')).join(' · ')}.</p>`:''}
+    S.push({k:'mc',t:'Journal d’activité',h:`<p><b>${N.length} note${N.length>1?'s':''}</b> : ${Object.keys(parT).sort((a,b)=>parT[b]-parT[a]).map(t=>esc(t)+' '+parT[t]).join(' · ')}.</p>${gr.length?`<p>Criticité : ${gr.map(([k,n])=>CRIT_MC[k][2]+' '+n+' '+CRIT_MC[k][0].toLowerCase()+(n>1?'s':'')).join(' · ')}.</p>`:''}
       ${ouv.length?`<p>${ouv.length} point${ouv.length>1?'s':''} encore à suivre :</p><ul>${ouv.slice(0,8).map(x=>`<li>n° ${x.num} · ${esc(String(x.texte||'').slice(0,140))}</li>`).join('')}</ul>`:'<p>Aucun point resté ouvert.</p>'}`});
-  } else S.push({k:'mc',t:'Journal de quart',h:`<p class="dx-gris">${NR.ok?'Aucune note ce mois-ci.':'Chargement des notes du Journal de quart…'}</p>`});
+  } else S.push({k:'mc',t:'Journal d’activité',h:`<p class="dx-gris">${NR.ok?'Aucune note ce mois-ci.':'Chargement des notes du Journal d’activité…'}</p>`});
   // 3. Réclamations
   let derniers=false;
   const lignesK=SERVICES_D.map(sv=>{
@@ -3251,7 +3309,12 @@ function sectionsRapport(mois){
   // 5. Projets
   const Pj=projetsA().filter(x=>x.statut!=='termine'||moisDe(String(x.maj||'').slice(0,10))===mois);
   S.push({k:'prj',t:'Projets',h:Pj.length?`<table class="dx-rap-t"><tr><th>Projet</th><th>Responsable</th><th>Avancement</th></tr>${Pj.map(x=>`<tr><td>${esc(x.titre)}${retardPrj(x)?' <b class="neg">(en retard)</b>':x.statut==='termine'?' (terminé)':''}</td><td>${esc(x.respNom||'—')}</td><td>${avancementPrj(x)} %</td></tr>`).join('')}</table>`:'<p class="dx-gris">Aucun projet suivi.</p>'});
-  // 6. Vie du service
+  // 6. Tablettes : état du parc aujourd'hui et mouvements du mois
+  if(tabA()&&tabPeut()){const L=tablettesA().filter(actifTab),Ev=[];L.forEach(x=>(x.hist||[]).forEach(e=>{if(moisDe(String(e.le).slice(0,10))===mois&&e.par!=='Reprise')Ev.push(e.quoi);}));
+    const c=f=>Ev.filter(f).length,E=['service','stock','configuration','maintenance','panne','perdue','verifier'].filter(e=>L.some(x=>x.etat===e));
+    S.push({k:'tab',t:'Tablettes',h:`<table class="dx-rap-t"><tr>${E.map(e=>`<th>${esc(libEtatTab(e))}</th>`).join('')}<th>Total</th></tr><tr>${E.map(e=>`<td>${L.filter(x=>x.etat===e).length}</td>`).join('')}<td><b>${L.length}</b></td></tr></table>
+      <p>Ce mois-ci : ${c(q=>q.startsWith('Remise'))} remise${c(q=>q.startsWith('Remise'))>1?'s':''}, ${c(q=>q.startsWith('Restituée'))} retour${c(q=>q.startsWith('Restituée'))>1?'s':''} au magasin, ${c(q=>q.startsWith('Maintenance faite'))} maintenance${c(q=>q.startsWith('Maintenance faite'))>1?'s':''}, ${c(q=>/→ En panne/.test(q))} panne${c(q=>/→ En panne/.test(q))>1?'s':''}, ${c(q=>/→ Perdue/.test(q))} perte${c(q=>/→ Perdue/.test(q))>1?'s':''}. ${L.filter(aRemplacerTab).length} tablettes ont dépassé l’âge de renouvellement.</p><p class="dx-gris">L’état du parc est celui du jour, pas celui de la fin du mois.</p>`});}
+  // 7. Vie du service
   const V=vieA().filter(x=>moisDe(String(x.le).slice(0,10))===mois);
   S.push({k:'vie',t:'Vie du service',h:V.length?`<ul>${V.slice(0,10).map(x=>`<li>${EMOJI_VIE[x.type]||''} ${esc(x.type)}${x.titre?' : '+esc(x.titre):''}</li>`).join('')}</ul>`:'<p class="dx-gris">Rien de publié ce mois-ci.</p>'});
   return S;
@@ -3328,6 +3391,7 @@ function repondreAllo(brut){
   // Politesse
   if(/^ (bonjour|bonsoir|salut|hello|coucou|allo)( [a-z]+)? $/.test(q))return `Bonjour ${esc(String(ETAT.moi.nom||'').split(/\s+/)[0])} ! Posez-moi une question sur les quarts, l’équipe, l’annuaire, les réunions ou les chiffres.`;
   if(/^ (merci|ok|d accord|super|parfait)( beaucoup| bien)? $/.test(q))return 'Avec plaisir.';
+  if(/tablette|imei|smartthings|\btab[- ]?\d/.test(q)&&accesMC())return alloTablettes(q,brut);
   if(/quel jour|quelle date|on est le|sommes[- ]nous/.test(q))return `Nous sommes le ${jourTitre(auj)} ${auj.slice(0,4)}.`;
   const jours=joursDeQ(q);
   // 1. Une personne nommée
@@ -3388,7 +3452,7 @@ function repondreAllo(brut){
     return L.length?L.slice(0,5).map(x=>`💬 ${esc(x.titre)} · ${esc(jourCourt(x.date))}${x.debut?' à '+esc(hFr(x.debut)):''}${x.lieu?' · '+esc(x.lieu):''}`).join('<br>'):'Aucune réunion prévue.';}
   if(/projet/.test(q)){const L=projetsA().filter(x=>/retard/.test(q)?retardPrj(x):/termine/.test(q)?x.statut==='termine':x.statut!=='termine');
     return L.length?L.slice(0,8).map(x=>`🚀 ${esc(x.titre)} · ${avancementPrj(x)} %${x.respNom?' · '+esc(x.respNom):''}${retardPrj(x)?' · <span class="neg">en retard</span>':''}`).join('<br>'):(/retard/.test(q)?'Aucun projet en retard.':'Aucun projet en cours.');}
-  // 7 ter. Alertes du Journal de quart (notes Majeures et Critiques encore à suivre)
+  // 7 ter. Alertes du Journal d’activité (notes Majeures et Critiques encore à suivre)
   if(/critique|majeure|alerte|urgence|grave/.test(q)&&!/reclamation|dexa|dexi|sdmr/.test(q)){
     const L=notesMC().filter(x=>x.statut==='ouvert'&&(x.crit==='critique'||x.crit==='majeure')).sort((a,b)=>(a.crit==='critique'?0:1)-(b.crit==='critique'?0:1));
     return L.length?L.slice(0,8).map(x=>`${CRIT_MC[x.crit][2]} n° ${x.num} · ${esc(String(x.texte||'').slice(0,100))}${x.lieu?' · '+esc(lieuFr(x.lieu)):''}`).join('<br>'):'Aucune note majeure ou critique à suivre.';
@@ -3434,7 +3498,7 @@ function rendreAllo(){
   h+=`<form class="dx-form dx-carte" id="fAllo"><label for="alloQ">Votre question</label><input id="alloQ" autocomplete="off" placeholder="Ex. : qui est de quart demain ?" maxlength="200"><button class="dx-btn plein" type="submit">Demander</button></form>`;
   h+=`<div class="dx-puces dx-allo-s">${SUGG_ALLO.map(s=>`<button type="button" class="dx-puce" data-a="allo-q" data-q="${esc(s)}">${esc(s)}</button>`).join('')}</div>`;
   h+=ui.alloHist.slice().reverse().map(x=>`<div class="dx-carte dx-allo"><p class="dx-allo-q">${esc(x.q)}</p><div class="dx-allo-r">${x.r}</div></div>`).join('');
-  if(!ui.alloHist.length)h+=`<div class="dx-carte"><p class="dx-gris">Allô C.O ne devine rien : il cherche dans les quarts, les absences, l’équipe, l’annuaire, les documents, le Journal de quart, les réunions, les projets et les chiffres. Une question tournée autrement que les exemples peut ne pas être comprise : essayez alors un nom ou un mot-clé.</p></div>`;
+  if(!ui.alloHist.length)h+=`<div class="dx-carte"><p class="dx-gris">Allô C.O ne devine rien : il cherche dans les quarts, les absences, l’équipe, l’annuaire, les documents, le Journal d’activité, les réunions, les projets et les chiffres. Une question tournée autrement que les exemples peut ne pas être comprise : essayez alors un nom ou un mot-clé.</p></div>`;
   z.innerHTML=h;
   if(!ANN&&!ui.annDemande&&accesMC()){ui.annDemande=true;chargerAnn();}
   if(!MC&&!ui.mcDemande&&accesMC()){ui.mcDemande=true;chargerMC();}
@@ -3491,7 +3555,7 @@ document.addEventListener('submit',async ev=>{
 });
 
 // ================= NOTIFICATIONS SUR LE TÉLÉPHONE (03/11/2026) =================
-// Alertes des notes Majeures et Critiques du Journal de quart, même téléphone verrouillé. Sur iPhone : seulement depuis l'icône
+// Alertes des notes Majeures et Critiques du Journal d’activité, même téléphone verrouillé. Sur iPhone : seulement depuis l'icône
 // UNIVERS C.O de l'écran d'accueil (exigence d'Apple). La page garde l'adresse du service et la session pour le « service worker »,
 // qui va chercher le détail de l'alerte à la réception du signal (le signal lui-même est vide).
 ui.notif=null;ui.notifNiveau=lsGet('notifNiveau','majeure');
@@ -3517,7 +3581,7 @@ async function etatNotif(){
 function zoneNotif(){
   if(!ETAT||!ETAT.mc)return '';
   if(!ui.notif){etatNotif().then(()=>{if(!$('dx-menu').hidden)renderMenu();});return '<section class="dx-carte"><h3>🔔 Notifications</h3><p class="dx-gris">…</p></section>';}
-  const N=ui.notif;let h='<section class="dx-carte"><h3>🔔 Notifications</h3><p class="dx-gris">Alertes des notes <b>Majeures</b> et <b>Critiques</b> du Journal de quart, même téléphone verrouillé.</p>';
+  const N=ui.notif;let h='<section class="dx-carte"><h3>🔔 Notifications</h3><p class="dx-gris">Alertes des notes <b>Majeures</b> et <b>Critiques</b> du Journal d’activité, même téléphone verrouillé.</p>';
   if(surIOS()&&!depuisIcone())h+='<p>Sur iPhone, les notifications ne marchent que depuis l’icône UNIVERS C.O : dans Safari, touchez <b>Partager</b> › <b>Sur l’écran d’accueil</b>, puis ouvrez UNIVERS C.O depuis cette icône et revenez ici.</p>';
   else if(!N.possible)h+='<p class="dx-gris">Ce navigateur ne permet pas les notifications. Sur iPhone, il faut iOS 16.4 ou plus récent et l’icône sur l’écran d’accueil.</p>';
   else if(N.permission==='denied')h+='<p>Les notifications sont refusées pour UNIVERS C.O. '+(surIOS()?'Sur iPhone : <b>Réglages</b> › <b>Notifications</b> › <b>UNIVERS C.O</b> › <b>Autoriser les notifications</b>.':'Sur Android, dans Chrome : touchez le cadenas à gauche de l’adresse › <b>Autorisations</b> › <b>Notifications</b> › <b>Autoriser</b>, puis rouvrez UNIVERS C.O.')+'</p>';
@@ -3551,6 +3615,316 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
   if(a==='notif-on')activerNotif(b);
   else if(a==='notif-off'){if(b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Confirmer';return;}desactiverNotif();}
   else if(a==='notif-essai'){b.disabled=true;memoSessionSW();appel('apiNotifEssai',SESSION.jeton).then(r=>toast(r.message)).catch(e=>toast(messageErreur(e))).finally(()=>{b.disabled=false;});}
+});
+
+// ---------- Tablettes (05/11/2026) ----------
+// Parc des tablettes des agents de terrain : fiche par tablette (numéro TAB-0001… en plus de l'IMEI), états, remises et
+// restitutions, échanges, maintenance planifiée, magasin (stock, chargeurs, puces), tableaux, bouton de localisation SmartThings.
+// Le Centre d'ordonnancement modifie ; un chef d'agence (ou un directeur) voit les tablettes de son périmètre, sans modifier.
+let TAB=lsGet('tab',null);
+ui.tabCharge=false;ui.tabDemande=false;ui.tabErreur='';ui.tabOnglet=lsGet('tabOnglet','parc');ui.tabEtat='';ui.tabSvc='';ui.tabCherche='';
+ui.tabVoir=null;ui.tabForm=null;ui.tabMois=null;
+const tabA=()=>TAB&&ETAT&&ETAT.moi&&TAB.compte===ETAT.moi.id?TAB:null;
+const tablettesA=()=>(tabA()&&tabA().tablettes)||[];
+const tabPeut=()=>!!(tabA()&&tabA().peutModifier);
+const tablette=id=>tablettesA().find(x=>x.id===id);
+const formTabOuvert=()=>ui.vue==='tablette'&&!!document.querySelector('#v-tablette form');
+const COUL_TAB={service:'#1a7f4b',stock:'#2a78d6',maintenance:'#eb6834',panne:'#d4532a',configuration:'#7a5af0',perdue:'#c2371f',reformee:'#77766f',verifier:'#8a6d3b'};
+const ETATS_TAB_L={service:'En service',stock:'En stock',maintenance:'En maintenance',panne:'En panne',configuration:'Configuration pour mise en service',perdue:'Perdue',reformee:'Réformée',verifier:'À vérifier'};
+const libEtatTab=e=>(tabA()&&tabA().etats&&tabA().etats[e])||ETATS_TAB_L[e]||e;
+const pastilleTab=e=>`<span class="dx-mc-etat" style="background:${COUL_TAB[e]||'#5a6b7d'}">${esc(libEtatTab(e))}</span>`;
+const MOIS_TAB_C=['Janv','Févr','Mars','Avr','Mai','Juin','Juil','Août','Sept','Oct','Nov','Déc'];
+const MOIS_TAB=['','janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const normTab=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,'');
+const chiffresTab=s=>String(s||'').replace(/\D/g,'');
+const ageTab=x=>{if(!x.miseEnService)return null;const d=versDate(x.miseEnService);return (Date.now()-d.getTime())/(365.25*864e5);};
+const aRemplacerTab=x=>{const a=ageTab(x);return a!=null&&a>=((tabA()&&tabA().renouvellement)||2)&&!['perdue','reformee'].includes(x.etat);};
+const joursTab=iso=>iso?Math.floor((Date.now()-new Date(iso).getTime())/864e5):0;
+const actifTab=x=>!['reformee'].includes(x.etat);
+const libAgeTab=x=>{const a=ageTab(x);if(a==null)return '';const m=Math.round(a*12);return m<12?m+' mois':Math.floor(m/12)+' an'+(Math.floor(m/12)>1?'s':'')+(m%12?' '+(m%12)+' mois':'');};
+const maintFaiteTab=(x,annee)=>(x.maint||[]).find(m=>String(m.le).slice(0,4)===String(annee));
+/** Localisation : application SmartThings sur un téléphone Android, sinon la page SmartThings Find de Samsung. */
+const STF='https://smartthingsfind.samsung.com/';
+const lienLocalisation=()=>/Android/i.test(navigator.userAgent)?'intent://#Intent;package=com.samsung.android.oneconnect;S.browser_fallback_url='+encodeURIComponent(STF)+';end':STF;
+
+async function chargerTab(){
+  if(!SESSION.jeton||ui.tabCharge)return;
+  ui.tabCharge=true;ui.tabErreur='';
+  try{appliquerTab(await appelFiable('apiTablettes',SESSION.jeton));}
+  catch(err){if(estSession(err))finSession();else{ui.tabErreur=messageErreur(err);ui.tabDemande=false;}}
+  ui.tabCharge=false;rendreTabGarde();
+}
+function appliquerTab(r){TAB=Object.assign({},r,{compte:ETAT&&ETAT.moi?ETAT.moi.id:'',recu:Date.now()});delete TAB.message;lsSet('tab',TAB);rendreTabGarde();}
+function rendreTabGarde(){
+  if(formTabOuvert())return;
+  if(ui.vue==='tablette')garderSaisie($('v-tablette'),rendreTablettes);
+  else if(ui.vue==='accueil')rendreAccueil();
+}
+async function ecrireTab(op,d,f,attente){
+  const btn=f&&f.querySelector('[type=submit]');if(btn){btn.disabled=true;btn.dataset.lib=btn.textContent;btn.textContent='Enregistrement…';}
+  toast(attente||'Enregistrement…');
+  try{const r=await appel('apiTablettesEcrire',SESSION.jeton,(f&&(f.dataset.op||(f.dataset.op=newId())))||newId(),op,d);
+    ui.tabForm=null;appliquerTab(r);rendreTablettes();toast(r.message||'Enregistré.');return true;}
+  catch(err){if(estSession(err))finSession();toast(messageErreur(err));if(btn){btn.disabled=false;btn.textContent=btn.dataset.lib;}return false;}
+}
+const attenteTab=()=>{if(tabA())return '';if(!ui.tabCharge&&!ui.tabDemande){ui.tabDemande=true;setTimeout(chargerTab,0);}
+  return ui.tabErreur&&!ui.tabCharge?`<div class="dx-carte"><p class="neg">Impossible de charger les tablettes : ${esc(ui.tabErreur)}</p><button class="dx-btn plein" type="button" data-a="tab-reessayer">Réessayer</button></div>`
+    :`<div class="dx-carte"><p class="dx-gris">Chargement des tablettes…</p></div>`;};
+
+/** Points à surveiller : vérifications de la reprise, pertes, pannes et maintenances qui durent, localisation KO. */
+function surveillerTab(){
+  const L=tablettesA().filter(actifTab),R=[];
+  L.forEach(x=>{
+    if(x.etat==='perdue')R.push([x,'🔴','Perdue depuis '+joursTab(x.etatDepuis)+' j : lancer la localisation SmartThings.',0]);
+    else if(['panne','maintenance'].includes(x.etat)&&joursTab(x.etatDepuis)>7)R.push([x,'🟠',libEtatTab(x.etat)+' depuis '+joursTab(x.etatDepuis)+' jours.',1]);
+    if((x.alertes||[]).length)R.push([x,'⚠️',x.alertes.join(' '),2]);
+    else if(x.loc==='ko'&&x.etat==='service')R.push([x,'📍','Localisation SmartThings KO.',3]);
+  });
+  return R.sort((a,b)=>a[3]-b[3]);
+}
+function filtreTab(L){
+  const q=normTab(ui.tabCherche),c=chiffresTab(ui.tabCherche);
+  return L.filter(x=>(!ui.tabEtat||(ui.tabEtat==='panne'?['panne','maintenance'].includes(x.etat):ui.tabEtat==='remplacer'?aRemplacerTab(x):x.etat===ui.tabEtat))&&(!ui.tabSvc||x.service===ui.tabSvc)
+    &&(!q||[x.id,x.serie,x.modele,x.agence,x.direction,x.detenteur,x.service].some(v=>normTab(v).includes(q))||(c.length>=4&&(String(x.imei).includes(c)||chiffresTab(x.puce).includes(c)))));
+}
+const ligneTab=x=>`<div class="dx-li cliquable dx-tab-li" data-a="tab-voir" data-id="${esc(x.id)}"><span class="dx-tab-n"><b>${esc(x.id)}</b><small>${esc(x.modele||'')}</small></span>
+  <span class="dx-tab-q">${esc(x.agence||'—')}${x.detenteur?`<small>${esc(x.detenteur)}</small>`:''}</span><span class="d">${pastilleTab(x.etat)}${(x.alertes||[]).length?'<em class="dx-tab-av">⚠️</em>':''}</span></div>`;
+
+function rendreTablettes(){
+  const z=$('v-tablette');if(!z)return;
+  let h=`<div class="dx-titre-vue">${tuileIc('tablette','p')}<div><h2>Tablettes</h2><p>${tabA()&&!tabPeut()?'Les tablettes de votre périmètre':'Parc, remises, maintenance et localisation'}</p></div></div>`;
+  if(!tabA()){z.innerHTML=h+attenteTab();return;}
+  if(ui.tabForm){z.innerHTML=h+formTab();return;}
+  if(ui.tabVoir&&tablette(ui.tabVoir)){z.innerHTML=h+ficheTab(tablette(ui.tabVoir));return;}
+  const L=tablettesA().filter(actifTab),n=f=>L.filter(f).length;
+  if(!tablettesA().length){z.innerHTML=h+`<div class="dx-carte"><p class="dx-gris">Aucune tablette enregistrée pour l’instant.</p>${tabPeut()?'<button class="dx-btn plein" type="button" data-a="tab-nouveau">+ Ajouter une tablette</button>':''}</div>`;return;}
+  const K=[['service','En service',x=>x.etat==='service'],['stock','En stock',x=>x.etat==='stock'],['panne','Panne / maint.',x=>['panne','maintenance'].includes(x.etat)],['perdue','Perdues',x=>x.etat==='perdue'],['remplacer','À remplacer',aRemplacerTab]];
+  h+=`<div class="dx-carte dx-tab-k">${K.map(([k,l,f])=>`<button type="button" class="dx-prj-k${ui.tabEtat===k?' on':''}" data-a="tab-k" data-k="${k}"><b style="color:${k==='remplacer'?'#8a6d3b':COUL_TAB[k]}">${n(f)}</b><span>${l}</span></button>`).join('')}</div>`;
+  const S=surveillerTab(),onglets=[['parc','Parc',L.length],['surveiller','À surveiller',S.length],['maint','Maintenance',0]].concat(tabPeut()?[['magasin','Magasin',0]]:[]).concat([['tableaux','Tableaux',0]]);
+  if(!onglets.some(o=>o[0]===ui.tabOnglet))ui.tabOnglet='parc';
+  h+=`<div class="dx-puces">${onglets.map(([k,l,c])=>`<button type="button" class="${ui.tabOnglet===k?'on':''}" data-a="tab-onglet" data-o="${k}">${l}${c?` <span>${c}</span>`:''}</button>`).join('')}</div>`;
+  if(ui.tabOnglet==='parc')h+=ongletParc(L);
+  else if(ui.tabOnglet==='surveiller')h+=ongletSurveiller(S);
+  else if(ui.tabOnglet==='maint')h+=ongletMaint(L);
+  else if(ui.tabOnglet==='magasin')h+=ongletMagasin(L);
+  else h+=ongletTableaux(L);
+  z.innerHTML=h;
+}
+function ongletParc(L){
+  let h=`<div class="dx-cherche">${svgI('loupe')}<input id="tabCherche" type="search" placeholder="N° TAB, IMEI, agence, détenteur, puce…" value="${esc(ui.tabCherche)}" aria-label="Rechercher une tablette" autocomplete="off"></div>`;
+  const svcs=[...new Set(L.map(x=>x.service).filter(Boolean))].sort();
+  if(svcs.length>1)h+=`<div class="dx-puces"><button type="button" class="${ui.tabSvc?'':'on'}" data-a="tab-svc" data-s="">Tous</button>${svcs.map(s=>`<button type="button" class="${ui.tabSvc===s?'on':''}" data-a="tab-svc" data-s="${esc(s)}">${esc(s)} <span>${L.filter(x=>x.service===s).length}</span></button>`).join('')}</div>`;
+  if(tabPeut())h+=`<button class="dx-btn plein dx-large" type="button" data-a="tab-nouveau">+ Ajouter une tablette</button>`;
+  h+=`<div class="dx-carte" id="tabListe">${listeParc(L)}</div>`;
+  return h;
+}
+function listeParc(L){
+  const F=filtreTab(L).sort((a,b)=>(a.service?0:1)-(b.service?0:1)||[a.service,a.direction,a.agence,a.id].join('|').localeCompare([b.service,b.direction,b.agence,b.id].join('|'),'fr'));
+  if(!F.length)return `<p class="dx-gris">Aucune tablette ne correspond.</p>`;
+  let h=`<p class="dx-gris">${F.length} tablette${F.length>1?'s':''}${ui.tabEtat?' · '+esc(ui.tabEtat==='remplacer'?'à remplacer (âge)':ui.tabEtat==='panne'?'en panne ou en maintenance':libEtatTab(ui.tabEtat))+' <button type="button" class="dx-lien" data-a="tab-k" data-k="'+esc(ui.tabEtat)+'">tout afficher</button>':''}</p>`,dir=null;
+  F.forEach(x=>{const g=[x.service,x.direction].filter(Boolean).join(' · ')||'Magasin et sans affectation';if(g!==dir){dir=g;h+=`<h4 class="dx-tab-g">${esc(g)}</h4>`;}h+=ligneTab(x);});
+  return h;
+}
+function ongletSurveiller(S){
+  if(!S.length)return `<div class="dx-carte"><p class="dx-gris">Rien à surveiller : aucune perte, aucune panne de plus de 7 jours, aucune vérification en attente.</p></div>`;
+  return `<div class="dx-carte"><p class="dx-gris">Pertes, pannes et maintenances de plus de 7 jours, vérifications laissées par la reprise de l’inventaire.</p>${S.map(([x,ic,t])=>`<div class="dx-li cliquable" data-a="tab-voir" data-id="${esc(x.id)}"><span class="dx-emoji">${ic}</span><span><b>${esc(x.id)}</b> · ${esc(x.agence||'sans agence')}<br><small class="dx-gris">${esc(t)}</small></span></div>`).join('')}</div>`;
+}
+function ongletMaint(L){
+  const auj=new Date(),an=auj.getFullYear(),m=ui.tabMois||auj.getMonth()+1,T=(tabA().taches||[]);
+  const P=L.filter(x=>x.moisMaint===m&&x.etat!=='perdue'),faites=P.filter(x=>maintFaiteTab(x,an));
+  let h=`<div class="dx-carte"><h3>Planning ${an}</h3><div class="dx-tab-mois">${MOIS_TAB.slice(1).map((l,i)=>{const Q=L.filter(x=>x.moisMaint===i+1&&x.etat!=='perdue'),f=Q.filter(x=>maintFaiteTab(x,an)).length;
+    return `<button type="button" class="${m===i+1?'on':''}${Q.length&&f===Q.length?' fait':''}" data-a="tab-mois" data-m="${i+1}"><b>${MOIS_TAB_C[i]}</b><span>${Q.length?f+'/'+Q.length:'–'}</span></button>`;}).join('')}</div>
+    <p class="dx-gris">${T.length?'Tâches : '+T.map(esc).join(' · ')+'.':''}</p></div>`;
+  h+=`<div class="dx-carte"><h3>${esc(MOIS_TAB[m].replace(/^./,c=>c.toUpperCase()))} : ${faites.length} faite${faites.length>1?'s':''} sur ${P.length}</h3>`;
+  if(P.length)h+=`<div class="dx-prj-barre"><span style="width:${Math.round(100*faites.length/P.length)}%;background:#1a7f4b"></span></div>`;
+  h+=P.length?P.sort((a,b)=>(a.agence||'').localeCompare(b.agence||'','fr')).map(x=>{const f=maintFaiteTab(x,an);
+    return `<div class="dx-li"><span class="dx-emoji">${f?'✅':'⏳'}</span><span class="cliquable" data-a="tab-voir" data-id="${esc(x.id)}"><b>${esc(x.id)}</b> · ${esc(x.agence||'')}<br><small class="dx-gris">${esc(x.detenteur||'')}${f?' · faite le '+esc(jourCourt(f.le)):''}</small></span>${!f&&tabPeut()?`<button class="dx-btn petit d" type="button" data-a="tab-f" data-f="maint" data-id="${esc(x.id)}">Faite</button>`:''}</div>`;}).join('')
+    :`<p class="dx-gris">Aucune maintenance prévue ce mois-ci.</p>`;
+  const sans=L.filter(x=>x.etat==='service'&&!x.moisMaint).length;
+  if(sans)h+=`<p class="dx-gris">${sans} tablette${sans>1?'s':''} en service sans mois de maintenance (à fixer dans leur fiche).</p>`;
+  return h+'</div>';
+}
+function ongletMagasin(L){
+  const A=tabA(),st=L.filter(x=>['stock','configuration'].includes(x.etat)),pa=L.filter(x=>['panne','maintenance'].includes(x.etat)&&normTab(x.agence)==='CGIO');
+  let h=`<div class="dx-carte"><h3>Stock disponible · ${st.length}</h3>${st.length?st.map(ligneTab).join(''):'<p class="dx-gris">Aucune tablette en stock.</p>'}</div>`;
+  h+=`<div class="dx-carte"><h3>En panne ou en maintenance au magasin · ${pa.length}</h3>${pa.length?pa.map(ligneTab).join(''):'<p class="dx-gris">Aucune.</p>'}</div>`;
+  h+=`<div class="dx-carte"><h3>Chargeurs · ${Number(A.stockChargeurs)||0} en stock</h3><div class="dx-ligne"><button class="dx-btn petit" type="button" data-a="tab-f" data-f="chargeur" data-s="entree">+ Entrée</button><button class="dx-btn petit" type="button" data-a="tab-f" data-f="chargeur" data-s="sortie">− Sortie</button></div>
+    ${(A.chargeurs||[]).slice(0,15).map(c=>`<div class="dx-li"><span class="dx-emoji">${c.sens==='entree'?'📥':'📤'}</span><span>${c.sens==='entree'?'Entrée':'Sortie'} de ${c.nombre}${c.destination?' → '+esc(c.destination):''}<br><small class="dx-gris">${esc(jourCourt(c.le))}${c.par?' · '+esc(c.par):''}</small></span></div>`).join('')}</div>`;
+  if((A.puces||[]).length)h+=`<div class="dx-carte"><h3>Puces sans tablette · ${A.puces.length}</h3>${A.puces.map(p=>`<div class="dx-li"><span class="dx-emoji">📶</span><span>${esc(p.numero)}<br><small class="dx-gris">${esc([p.usage,p.agence].filter(Boolean).join(' · '))}</small></span></div>`).join('')}</div>`;
+  return h;
+}
+function ongletTableaux(L){
+  const A=tabA(),E=['service','stock','configuration','maintenance','panne','perdue','verifier'].filter(e=>L.some(x=>x.etat===e));
+  const svcs=[...new Set(L.map(x=>x.service||'Magasin'))].sort();
+  let h=`<div class="dx-carte"><h3>Par service et par état</h3><div class="dx-tab-tw"><table class="dx-tab-t"><thead><tr><th></th>${E.map(e=>`<th title="${esc(libEtatTab(e))}"><i style="background:${COUL_TAB[e]}"></i>${COURT_TAB[e]}</th>`).join('')}<th>Total</th></tr></thead><tbody>
+    ${svcs.map(s=>{const Q=L.filter(x=>(x.service||'Magasin')===s);return `<tr><th>${esc(s)}</th>${E.map(e=>`<td>${Q.filter(x=>x.etat===e).length||''}</td>`).join('')}<td><b>${Q.length}</b></td></tr>`;}).join('')}
+    <tr class="tot"><th>Total</th>${E.map(e=>`<td>${L.filter(x=>x.etat===e).length}</td>`).join('')}<td><b>${L.length}</b></td></tr></tbody></table></div></div>`;
+  // agences sans tablette en état de marche
+  const ag={};L.filter(x=>x.agence&&normTab(x.agence)!=='CGIO').forEach(x=>{(ag[x.agence]=ag[x.agence]||[]).push(x);});
+  const sans=Object.keys(ag).filter(k=>!ag[k].some(x=>x.etat==='service')).sort();
+  h+=`<div class="dx-carte"><h3>Agences sans tablette en service · ${sans.length}</h3>${sans.length?sans.map(k=>`<div class="dx-li"><span class="dx-emoji">🚫</span><span>${esc(k)}<br><small class="dx-gris">${ag[k].map(x=>esc(x.id)+' '+esc(libEtatTab(x.etat).toLowerCase())).join(', ')}</small></span></div>`).join(''):'<p class="dx-gris">Toutes les agences du parc ont au moins une tablette en service.</p>'}</div>`;
+  const imm=L.filter(x=>['panne','maintenance'].includes(x.etat));
+  if(imm.length){const D=imm.filter(x=>x.etatDepuis),moy=D.length?Math.round(D.reduce((s,x)=>s+joursTab(x.etatDepuis),0)/D.length):0;
+    h+=`<div class="dx-carte"><h3>Immobilisées · ${imm.length}</h3><p>${D.length?`${D.length===imm.length?'En':D.length+' d’entre elles en'} panne ou en maintenance depuis ${moy} jour${moy>1?'s':''} en moyenne.`:''} ${imm.length>D.length?`${imm.length-D.length} reprise${imm.length-D.length>1?'s':''} de l’inventaire sans date de début : la durée se comptera à leur prochain changement d’état.`:''}</p></div>`;}
+  const mods=[...new Set(L.map(x=>x.modele).filter(Boolean))].sort();
+  h+=`<div class="dx-carte"><h3>Âge du parc</h3><p class="dx-gris">Renouvellement conseillé à ${A.renouvellement||2} ans.</p><div class="dx-tab-tw"><table class="dx-tab-t"><thead><tr><th>Modèle</th><th>Nombre</th><th>Âge moyen</th><th>À remplacer</th></tr></thead><tbody>
+    ${mods.map(m=>{const Q=L.filter(x=>x.modele===m),ag2=Q.map(ageTab).filter(a=>a!=null),moy=ag2.length?ag2.reduce((s,a)=>s+a,0)/ag2.length:null;
+      return `<tr><th>${esc(m)}</th><td>${Q.length}</td><td>${moy==null?'–':moy.toFixed(1).replace('.',',')+' an'+(moy>=2?'s':'')}</td><td>${Q.filter(aRemplacerTab).length||''}</td></tr>`;}).join('')}</tbody></table></div></div>`;
+  if((A.lots||[]).length)h+=`<div class="dx-carte"><h3>Lots d’achat</h3><div class="dx-tab-tw"><table class="dx-tab-t"><thead><tr><th>Date</th><th>Modèle</th><th>Achetées</th><th>Au registre</th></tr></thead><tbody>
+    ${A.lots.map(l=>`<tr><th>${esc(jourCourt(l.le))} ${esc(String(l.le).slice(0,4))}</th><td>${esc(l.modele)}</td><td>${l.quantite}</td><td>${tablettesA().filter(x=>x.modele===l.modele).length}</td></tr>`).join('')}</tbody></table></div>
+    <p class="dx-gris">« Au registre » compte toutes les tablettes du modèle, tous lots confondus.</p></div>`;
+  if((A.budget||[]).length){const tot=A.budget.reduce((s,b)=>s+(Number(b.total)||0),0);
+    h+=`<div class="dx-carte"><h3>Budget annuel de maintenance</h3><div class="dx-tab-tw"><table class="dx-tab-t"><thead><tr><th>Poste</th><th>Qté</th><th>Total</th></tr></thead><tbody>
+    ${A.budget.map(b=>`<tr><th>${esc(b.designation.charAt(0)+b.designation.slice(1).toLowerCase())}</th><td>${b.quantite}</td><td>${nbTab(b.total)}</td></tr>`).join('')}<tr class="tot"><th>Total</th><td></td><td><b>${nbTab(tot)}</b></td></tr></tbody></table></div><p class="dx-gris">En FCFA, repris de l’inventaire.</p></div>`;}
+  return h;
+}
+const COURT_TAB={service:'Serv.',stock:'Stock',configuration:'Config.',maintenance:'Maint.',panne:'Panne',perdue:'Perdue',verifier:'À vérif.',reformee:'Réf.'};
+/** Tablettes d'une agence de l'Annuaire (même agence, ou puce égale à un numéro de l'agence). */
+function tablettesAgence(nom,numeros){
+  if(!tabA())return '';const n=normTab(nom),N=String(numeros||'').split(/[\/,;\n]+/).map(chiffresTab).filter(c=>c.length>=8);
+  const L=tablettesA().filter(x=>actifTab(x)&&(normTab(x.agence)===n||(x.puce&&N.includes(chiffresTab(x.puce)))));
+  return L.length?`<div class="dx-ann-tab">${L.map(x=>`<button type="button" class="dx-lien" data-a="tab-ouvrir" data-id="${esc(x.id)}">📱 ${esc(x.id)}</button> <small class="dx-gris">${esc(x.detenteur||x.modele||'')} · ${esc(libEtatTab(x.etat).toLowerCase())}</small>`).join('<br>')}</div>`:'';
+}
+/** Allô C.O : une tablette (n° TAB, IMEI, puce) ou une liste (état, lieu). */
+function alloTablettes(q,brut){
+  if(!tabA()){if(!ui.tabCharge){ui.tabDemande=true;chargerTab();}return 'Je charge le parc des tablettes : reposez la question dans un instant.';}
+  const L=tablettesA().filter(actifTab),s=String(brut||'');
+  const m=s.match(/tab[\s-]*(\d{1,4})\b/i),nums=(s.match(/\d[\d\s]{6,}\d/g)||[]).map(chiffresTab);
+  const fiche=x=>`<b>${esc(x.id)}</b> · ${esc(x.modele||'')} · ${esc(libEtatTab(x.etat))}${x.agence?' · '+esc(x.agence):''}${x.detenteur?' · détenteur '+esc(x.detenteur):''}${x.puce?' · puce '+esc(x.puce):''}${x.imei?' · IMEI '+esc(x.imei):''} <button type="button" class="dx-lien" data-a="tab-ouvrir" data-id="${esc(x.id)}">ouvrir la fiche</button>`;
+  let x=m?L.find(o=>o.id==='TAB-'+('000'+m[1]).slice(-4)):null;
+  if(!x&&nums.length)x=L.find(o=>nums.some(c=>(c.length>=14&&o.imei===c)||(c.length>=8&&chiffresTab(o.puce)===c)));
+  if(x)return fiche(x);
+  if(m||nums.some(c=>c.length>=14))return 'Je ne trouve pas cette tablette dans le parc.';
+  const E=/perdu/.test(q)?'perdue':/panne|cass|hs /.test(q)?'panne':/maintenance/.test(q)?'maintenance':/stock|magasin|disponible/.test(q)?'stock':/verifier/.test(q)?'verifier':/remplacer|renouvel|vieill/.test(q)?'remplacer':/service|marche/.test(q)?'service':'';
+  const lieux=[...new Set(L.flatMap(o=>[o.agence,o.direction,o.service]).filter(Boolean))].filter(l=>l.length>2&&q.includes(' '+normQ(l)+' '));
+  let F=L.filter(o=>!E||(E==='remplacer'?aRemplacerTab(o):E==='panne'?['panne','maintenance'].includes(o.etat):o.etat===E));
+  if(lieux.length)F=F.filter(o=>lieux.some(l=>[o.agence,o.direction,o.service].includes(l)));
+  if(!E&&!lieux.length)return `Le parc compte ${L.length} tablettes : ${['service','stock','maintenance','panne','perdue','verifier'].map(e=>[e,L.filter(o=>o.etat===e).length]).filter(v=>v[1]).map(([e,n])=>n+' '+esc(libEtatTab(e).toLowerCase())).join(', ')}. Demandez par exemple « tablettes en panne à Daloa » ou « qui a la tablette TAB-0014 ».`;
+  const lib=(E==='remplacer'?'à remplacer':E?libEtatTab(E).toLowerCase():'')+(lieux.length?' ('+lieux.map(esc).join(', ')+')':'');
+  if(!F.length)return 'Aucune tablette '+lib+'.';
+  return `<b>${F.length} tablette${F.length>1?'s':''} ${lib}</b> : `+F.slice(0,15).map(o=>`<button type="button" class="dx-lien" data-a="tab-ouvrir" data-id="${esc(o.id)}">${esc(o.id)}</button> ${esc(o.agence||'')}${o.detenteur?' ('+esc(o.detenteur)+')':''}`).join(' · ')+(F.length>15?' …':'');
+}
+const nbTab=n=>Number(n||0).toLocaleString('fr-FR');
+
+function ficheTab(x){
+  const peut=tabPeut(),age=libAgeTab(x),notesJ=(typeof notesMC==='function'&&accesMC()?notesMC():[]).filter(n=>n.tablette&&(n.tablette.id===x.id||normTab(n.tablette.numero)===normTab(x.id)||(x.imei&&chiffresTab(n.tablette.numero)===x.imei)));
+  let h=`<button class="dx-btn petit" type="button" data-a="tab-retour">← Toutes les tablettes</button>
+  <div class="dx-carte"><div class="dx-tab-tete"><h3>${esc(x.id)}</h3>${pastilleTab(x.etat)}</div><p class="dx-gris">${esc(x.modele||'')}${x.etatDepuis?' · '+esc(libEtatTab(x.etat).toLowerCase())+' depuis le '+esc(jourCourt(String(x.etatDepuis).slice(0,10))):''}</p>
+  <a class="dx-btn plein dx-large dx-tab-loc" href="${lienLocalisation()}" target="_blank" rel="noopener">📍 Localiser la tablette (SmartThings)</a>
+  ${x.imei?`<p class="dx-gris dx-tab-imei">IMEI <b>${esc(x.imei)}</b> <button type="button" class="dx-lien" data-a="tab-copier" data-t="${esc(x.imei)}">copier</button> · à retrouver dans SmartThings, compte Samsung de la flotte.</p>`:''}`;
+  if((x.alertes||[]).length)h+=`<div class="dx-tab-alerte"><b>⚠️ À vérifier</b><p>${x.alertes.map(esc).join('<br>')}</p>${peut?`<button class="dx-btn petit" type="button" data-a="tab-f" data-f="verifie" data-id="${esc(x.id)}">C’est vérifié</button>`:''}</div>`;
+  const ch=[['Service',x.service],['Direction',x.direction],['Agence',x.agence],['Détenteur',x.detenteur],['Puce',x.puce?`<a href="tel:${esc(chiffresTab(x.puce))}">${esc(x.puce)}</a>`:'',1],['N° de série',x.serie],
+    ['Mise en service',x.miseEnService?jourLong(x.miseEnService)+(age?' ('+age+')':''):''],['Renouvellement',aRemplacerTab(x)?'À remplacer (plus de '+((tabA().renouvellement)||2)+' ans)':''],
+    ['Localisation',(tabA().loc||{})[x.loc]||''],['Maintenance prévue',x.moisMaint?MOIS_TAB[x.moisMaint]:'']];
+  h+=`<dl class="dx-tab-dl">${ch.filter(c=>c[1]).map(c=>`<dt>${c[0]}</dt><dd>${c[2]?c[1]:esc(c[1])}</dd>`).join('')}</dl>`;
+  if(x.notes)h+=`<p class="dx-tab-notes">📝 ${esc(x.notes).replace(/\n/g,'<br>')}</p>`;
+  if(peut){h+=`<div class="dx-tab-act">${[['etat','Changer l’état'],['affecter','Remettre à…'],['restituer','Restituer au magasin'],['echanger','Remplacer par une autre'],['maint','Maintenance faite'],['modifier','Modifier la fiche']]
+    .filter(([k])=>!(k==='restituer'&&['stock','perdue'].includes(x.etat))&&!(k==='echanger'&&!['service','panne','maintenance','perdue'].includes(x.etat)))
+    .map(([k,l])=>`<button class="dx-btn" type="button" data-a="tab-f" data-f="${k}" data-id="${esc(x.id)}">${l}</button>`).join('')}</div>`;
+    if(x.detenteur||x.agence)h+=`<button class="dx-btn dx-large" type="button" data-a="tab-bon" data-id="${esc(x.id)}">🖨️ Bon de remise à faire signer</button>`;}
+  h+='</div>';
+  if(notesJ.length)h+=`<div class="dx-carte"><h3>Dans le Journal d’activité</h3>${notesJ.slice(0,10).map(n=>`<div class="dx-li cliquable" data-a="vue" data-v="journal"><span class="dx-emoji">📒</span><span>N° ${n.num} · ${esc(n.tablette.etat)}<br><small class="dx-gris">${esc(quandMC(n.le))} · ${esc(n.nom)} · ${esc(String(n.texte||'').slice(0,90))}</small></span></div>`).join('')}</div>`;
+  if((x.maint||[]).length)h+=`<div class="dx-carte"><h3>Maintenances</h3>${x.maint.map(m=>`<div class="dx-li"><span class="dx-emoji">🧰</span><span>${esc(jourCourt(m.le))} ${esc(String(m.le).slice(0,4))} · ${m.taches.length} tâche${m.taches.length>1?'s':''}<br><small class="dx-gris">${esc(m.par)}${m.note?' · '+esc(m.note):''}</small></span></div>`).join('')}</div>`;
+  h+=`<div class="dx-carte"><h3>Historique</h3>${(x.hist||[]).map(e=>`<div class="dx-li"><span><small class="dx-gris">${esc(new Date(e.le).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}))} · ${esc(e.par)}</small><br>${esc(e.quoi)}</span></div>`).join('')||'<p class="dx-gris">Aucun événement.</p>'}</div>`;
+  return h;
+}
+
+// ================= formulaires =================
+const optionsTab=(L,v)=>L.map(o=>`<option value="${esc(o[0])}"${o[0]===v?' selected':''}>${esc(o[1])}</option>`).join('');
+const listeValeurs=(k)=>[...new Set(tablettesA().map(x=>x[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
+const datalistTab=(id,k)=>`<datalist id="${id}">${listeValeurs(k).map(v=>`<option value="${esc(v)}">`).join('')}</datalist>`;
+function champsAffect(x){
+  return `<label for="tfSvc">Service</label><input id="tfSvc" list="tlSvc" maxlength="30" value="${esc(x?x.service:'')}" autocapitalize="characters" autocomplete="off">${datalistTab('tlSvc','service')}
+    <label for="tfDir">Direction</label><input id="tfDir" list="tlDir" maxlength="40" value="${esc(x?x.direction:'')}" autocapitalize="characters" autocomplete="off">${datalistTab('tlDir','direction')}
+    <label for="tfAg">Agence</label><input id="tfAg" list="tlAg" maxlength="60" value="${esc(x?x.agence:'')}" autocapitalize="characters" autocomplete="off">${datalistTab('tlAg','agence')}
+    <label for="tfDet">Détenteur (équipe ou agent)</label><input id="tfDet" maxlength="80" value="${esc(x?x.detenteur:'')}" autocomplete="off">
+    <label for="tfPuce">N° de puce</label><input id="tfPuce" type="tel" maxlength="30" value="${esc(x?x.puce:'')}" placeholder="05 96 00 00 00" autocomplete="off">`;
+}
+function formTab(){
+  const f=ui.tabForm,x=f.id?tablette(f.id):null,an=isoJ(new Date());
+  const tete=t=>`<div class="dx-carte"><form class="dx-form dx-edit" id="fTab" data-f="${esc(f.type)}"${x?` data-id="${esc(x.id)}"`:''}><b>${t}</b>${x?`<span class="dx-gris">${esc(x.id)} · ${esc(x.modele||'')} · ${esc(libEtatTab(x.etat))}</span>`:''}`;
+  const pied=(l)=>`<div class="dx-ligne"><button class="dx-btn plein" type="submit">${l||'Enregistrer'}</button><button class="dx-btn" type="button" data-a="tab-annuler">Annuler</button></div></form></div>`;
+  const note=(l)=>`<label for="tfNote">${l||'Commentaire (facultatif)'}</label><textarea id="tfNote" rows="2" maxlength="300"></textarea>`;
+  if(f.type==='modifier'||f.type==='nouveau'){
+    return tete(x?'Modifier la fiche':'Nouvelle tablette')+`${x?'':'<p class="dx-gris">Le numéro TAB est attribué automatiquement.</p>'}
+      <label for="tfMod">Modèle</label><input id="tfMod" list="tlMod" maxlength="40" value="${esc(x?x.modele:'')}" placeholder="Galaxy Tab 9" autocomplete="off">${datalistTab('tlMod','modele')}
+      <label for="tfImei">IMEI</label><input id="tfImei" inputmode="numeric" maxlength="20" value="${esc(x?x.imei:'')}" autocomplete="off">
+      <label for="tfSerie">N° de série</label><input id="tfSerie" maxlength="30" value="${esc(x?x.serie:'')}" autocapitalize="characters" autocomplete="off">
+      ${x?'':`<label for="tfEtat">État</label><select id="tfEtat">${optionsTab([['stock','En stock'],['service','En service'],['configuration','Configuration pour mise en service']],'stock')}</select>`}
+      ${champsAffect(x)}
+      <label for="tfMes">Mise en service</label><input id="tfMes" type="date" value="${esc(x?x.miseEnService:'')}">
+      <label for="tfLoc">Localisation SmartThings</label><select id="tfLoc">${optionsTab([['','Non renseignée'],['ok','OK'],['ko','KO'],['verifier','À vérifier']],x?x.loc:'')}</select>
+      <label for="tfMois">Mois de maintenance</label><select id="tfMois">${optionsTab([['0','Non prévu']].concat(MOIS_TAB.slice(1).map((m,i)=>[String(i+1),m])),String(x?x.moisMaint||0:0))}</select>
+      <label for="tfNotes">Notes</label><textarea id="tfNotes" rows="2" maxlength="1500">${esc(x?x.notes:'')}</textarea>`+pied(x?'Enregistrer':'Ajouter la tablette');
+  }
+  if(f.type==='etat')return tete('Changer l’état')+`<label>Nouvel état</label><div class="dx-puces dx-mc-types">${['service','stock','configuration','maintenance','panne','perdue','reformee'].filter(e=>e!==x.etat).map(e=>`<button type="button" data-a="tab-etat-choix" data-e="${e}">${esc(libEtatTab(e))}</button>`).join('')}</div>
+    <input type="hidden" id="tfEtat" value=""><p class="dx-gris" id="tfPerdue" hidden>Une note Majeure sera ouverte dans le Journal d’activité et les téléphones abonnés recevront une notification.</p>`+note('Motif ou commentaire')+pied();
+  if(f.type==='affecter')return tete('Remettre la tablette')+champsAffect(x)+`<label for="tfLe">Date de remise</label><input id="tfLe" type="date" value="${an}">`+note()+pied('Enregistrer la remise');
+  if(f.type==='restituer')return tete('Restituer au magasin')+`<p class="dx-gris">${esc([x.detenteur,x.agence].filter(Boolean).join(', ')||'Sans détenteur')}</p><label for="tfEtat">État au retour</label><select id="tfEtat">${optionsTab([['stock','En stock (bon état)'],['panne','En panne'],['maintenance','En maintenance'],['configuration','Configuration pour mise en service'],['reformee','Réformée']],'stock')}</select>`+note('Constat au retour (facultatif)')+pied('Enregistrer le retour');
+  if(f.type==='echanger'){const S=tablettesA().filter(o=>['stock','configuration'].includes(o.etat));
+    if(!S.length)return tete('Remplacer par une autre')+`<p>Aucune tablette en stock pour la remplacer.</p><div class="dx-ligne"><button class="dx-btn" type="button" data-a="tab-annuler">Retour</button></div></form></div>`;
+    return tete('Remplacer par une autre')+`<p class="dx-gris">La tablette choisie reprend l’affectation de ${esc(x.id)} (${esc([x.detenteur,x.agence].filter(Boolean).join(', ')||'sans détenteur')}) et sa puce.</p>
+    <label for="tfNouv">Tablette de remplacement</label><select id="tfNouv">${optionsTab(S.map(o=>[o.id,o.id+' · '+(o.modele||'')+(o.imei?' · IMEI …'+o.imei.slice(-5):'')]),'')}</select>
+    <label for="tfEtat">État de ${esc(x.id)}</label><select id="tfEtat">${optionsTab([['panne','En panne'],['maintenance','En maintenance'],['perdue','Perdue'],['reformee','Réformée'],['stock','En stock']],x.etat==='perdue'?'perdue':'panne')}</select>`+note()+pied('Enregistrer l’échange');}
+  if(f.type==='maint'){const T=tabA().taches||[];
+    return tete('Maintenance faite')+`<label for="tfLe">Date</label><input id="tfLe" type="date" value="${an}"><label>Tâches faites</label>${T.map((t,i)=>`<label class="dx-coche"><input type="checkbox" class="tfT" value="${i}" checked> ${esc(t)}</label>`).join('')}
+    ${x.etat==='maintenance'?'<label class="dx-coche"><input type="checkbox" id="tfRemettre" checked> Remettre la tablette en service</label>':''}`+note('Observations (facultatif)')+pied();}
+  if(f.type==='verifie')return tete('Vérification faite')+`<p>${(x.alertes||[]).map(esc).join('<br>')}</p>${x.etat==='verifier'?`<label for="tfEtat">État constaté</label><select id="tfEtat">${optionsTab([['service','En service'],['stock','En stock'],['panne','En panne'],['maintenance','En maintenance'],['perdue','Perdue'],['reformee','Réformée']],'service')}</select>`:''}
+    <p class="dx-gris">Corrigez d’abord la fiche si besoin (Modifier la fiche).</p>`+note('Ce qui a été vérifié')+pied('Confirmer');
+  if(f.type==='chargeur')return tete(f.sens==='entree'?'Entrée de chargeurs':'Sortie de chargeurs')+`<label for="tfNb">Nombre</label><input id="tfNb" type="number" inputmode="numeric" min="1" max="1000" value="1">
+    ${f.sens==='entree'?'':'<label for="tfDest">Destination</label><input id="tfDest" list="tlAg" maxlength="80" placeholder="Agence, agent, mission…" autocomplete="off">'+datalistTab('tlAg','agence')}<label for="tfLe">Date</label><input id="tfLe" type="date" value="${an}">`+pied();
+  return '';
+}
+/** Bon de remise imprimable (deux signatures), sans rien envoyer. */
+function bonRemise(x){
+  const z=$('tabBon')||document.body.appendChild(Object.assign(document.createElement('div'),{id:'tabBon'}));
+  const r=(x.remises||[])[0];
+  z.innerHTML=`<h1>Bon de remise de tablette</h1><p>Centre d’ordonnancement · SODECI</p><table>${[['N° interne',x.id],['Modèle',x.modele],['IMEI',x.imei],['N° de série',x.serie],['N° de puce',x.puce],['Service',x.service],['Direction',x.direction],['Agence',x.agence],['Remise à',x.detenteur],['Date de remise',r?jourLong(r.le):jourLong(isoJ(new Date()))]]
+    .map(([k,v])=>`<tr><th>${k}</th><td>${esc(v||'')}</td></tr>`).join('')}</table>
+    <p>Accessoires remis : ☐ chargeur ☐ câble ☐ sacoche ☐ autre : ……………</p><p>État constaté à la remise : ……………………………………………</p>
+    <div class="sig"><div>Pour le Centre d’ordonnancement<br>Nom et signature</div><div>Le bénéficiaire<br>Nom et signature</div></div>`;
+  document.body.classList.add('dx-imprime-bon');setTimeout(()=>{try{window.print();}finally{setTimeout(()=>document.body.classList.remove('dx-imprime-bon'),500);}},50);
+}
+
+// ================= événements =================
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest&&ev.target.closest('[data-a^="tab-"]');if(!b)return;const a=b.dataset.a;
+  if(a==='tab-reessayer'){ui.tabDemande=true;chargerTab();}
+  else if(a==='tab-onglet'){ui.tabOnglet=b.dataset.o;lsSet('tabOnglet',ui.tabOnglet);rendreTablettes();}
+  else if(a==='tab-k'){ui.tabEtat=ui.tabEtat===b.dataset.k?'':b.dataset.k;ui.tabOnglet='parc';rendreTablettes();}
+  else if(a==='tab-svc'){ui.tabSvc=b.dataset.s;rendreTablettes();}
+  else if(a==='tab-mois'){ui.tabMois=+b.dataset.m;rendreTablettes();}
+  else if(a==='tab-voir'){ui.tabVoir=b.dataset.id;rendreTablettes();window.scrollTo(0,0);if(accesMC()&&!ui.mcDemande&&typeof chargerMC==='function'){ui.mcDemande=true;chargerMC();}}
+  else if(a==='tab-retour'){ui.tabVoir=null;rendreTablettes();}
+  else if(a==='tab-ouvrir'){ui.tabVoir=b.dataset.id;ui.tabForm=null;allerVue('tablette');window.scrollTo(0,0);}
+  else if(a==='tab-nouveau'){ui.tabForm={type:'nouveau'};rendreTablettes();window.scrollTo(0,0);}
+  else if(a==='tab-f'){ui.tabForm={type:b.dataset.f==='modifier'?'modifier':b.dataset.f,id:b.dataset.id||null,sens:b.dataset.s||''};rendreTablettes();window.scrollTo(0,0);}
+  else if(a==='tab-annuler'){ui.tabForm=null;rendreTablettes();}
+  else if(a==='tab-etat-choix'){$('tfEtat').value=b.dataset.e;b.parentNode.querySelectorAll('button').forEach(o=>o.classList.toggle('on',o===b));$('tfPerdue').hidden=b.dataset.e!=='perdue';}
+  else if(a==='tab-copier'){(navigator.clipboard?navigator.clipboard.writeText(b.dataset.t):Promise.reject()).then(()=>toast('IMEI copié.'),()=>toast('Copie impossible : notez l’IMEI '+b.dataset.t+'.'));}
+  else if(a==='tab-bon'){const x=tablette(b.dataset.id);if(x)bonRemise(x);}
+});
+document.addEventListener('input',ev=>{const e=ev.target;if(!e)return;
+  if(e.id==='tabCherche'){ui.tabCherche=e.value;const z=$('tabListe');if(z)z.innerHTML=listeParc(tablettesA().filter(actifTab));}
+  // Journal d’activité : une tablette reconnue remplit le détenteur
+  else if(e.id==='mcTabNum'){const n=normTab(e.value),c=chiffresTab(e.value),x=n&&tablettesA().find(o=>normTab(o.id)===n||(c.length>=10&&o.imei===c));const ag=$('mcTabAgent');if(x&&ag&&!ag.value.trim()&&x.detenteur)ag.value=x.detenteur;}
+});
+document.addEventListener('submit',ev=>{
+  const f=ev.target;if(f.id!=='fTab')return;ev.preventDefault();
+  const t=f.dataset.f,id=f.dataset.id||null,v=k=>{const e=$(k);return e?e.value:'';},note=v('tfNote');
+  const aff=()=>({service:v('tfSvc'),direction:v('tfDir'),agence:v('tfAg'),detenteur:v('tfDet'),puce:v('tfPuce')});
+  if(t==='nouveau'||t==='modifier'){const d=Object.assign({id,modele:v('tfMod'),imei:v('tfImei'),serie:v('tfSerie'),etat:v('tfEtat'),miseEnService:v('tfMes'),loc:v('tfLoc'),moisMaint:v('tfMois'),notes:v('tfNotes')},aff());
+    if(!d.modele.trim()){toast('Indiquez le modèle.');return;}
+    if(d.imei&&chiffresTab(d.imei).length!==15&&!confirm('L’IMEI n’a pas 15 chiffres. Enregistrer quand même ?'))return;
+    ecrireTab('tab',d,f).then(ok=>{if(ok&&!id){const L=tablettesA().slice().sort((a,b)=>String(b.cree).localeCompare(String(a.cree)));if(L[0])ui.tabVoir=L[0].id;rendreTablettes();}});}
+  else if(t==='etat'){if(!v('tfEtat')){toast('Choisissez le nouvel état.');return;}ecrireTab('tab-etat',{id,etat:v('tfEtat'),note},f);}
+  else if(t==='affecter'){const d=Object.assign({id,le:v('tfLe'),note},aff());if(!d.detenteur.trim()&&!d.agence.trim()){toast('Indiquez le détenteur ou l’agence.');return;}ecrireTab('tab-affecter',d,f);}
+  else if(t==='restituer')ecrireTab('tab-restituer',{id,etat:v('tfEtat'),note},f);
+  else if(t==='echanger')ecrireTab('tab-echanger',{id,nouvelle:v('tfNouv'),etat:v('tfEtat'),note},f);
+  else if(t==='maint'){const T=[...f.querySelectorAll('.tfT:checked')].map(c=>+c.value);if(!T.length){toast('Cochez au moins une tâche faite.');return;}
+    ecrireTab('tab-maint',{id,le:v('tfLe'),taches:T,note,remettre:!!($('tfRemettre')&&$('tfRemettre').checked)},f);}
+  else if(t==='verifie')ecrireTab('tab-verifie',{id,etat:v('tfEtat'),note},f);
+  else if(t==='chargeur'){const d={sens:ui.tabForm.sens,nombre:v('tfNb'),destination:v('tfDest'),le:v('tfLe')};if(d.sens==='sortie'&&!d.destination.trim()){toast('Indiquez la destination.');return;}ecrireTab('chargeur',d,f);}
 });
 
 // ================= démarrage =================
