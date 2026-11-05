@@ -579,6 +579,9 @@ table.pq{border-collapse:collapse;font-size:10px;font-weight:700}
 .dx-tab-t th{text-transform:none;letter-spacing:0;color:var(--ink);font-weight:600;background:none}.dx-tab-t thead th{color:var(--ink2)}
 .dx-ann-tab{margin:4px 0 2px;font-size:13px;line-height:1.7}
 .dx-tab-t th,.dx-tab-t td{padding:6px 3px;font-size:12px}.dx-tab-t thead th{font-size:10.5px}
+.dx-sig{display:block;width:100%;height:160px;border:1.5px dashed var(--line);border-radius:10px;background:#fff;touch-action:none;margin-top:4px}
+.dx-tab-bonpret{background:rgba(26,127,75,.1);border-radius:10px;padding:10px 12px;margin:10px 0}.dx-tab-bonpret p{margin:2px 0 8px;font-size:12.5px;overflow-wrap:anywhere}
+.dx-tab-bonpret .dx-btn{text-decoration:none;text-align:center}
 </style>
 <script>
 // Témoin de démarrage : prévient la page d'accueil dès que la page s'exécute (elle relance l'ouverture sinon).
@@ -1197,7 +1200,7 @@ let ETAT=null,AFFICHE_V=null,CHARGE=false;
 const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const attendre=ms=>new Promise(r=>setTimeout(r,ms));
 /** Délai maximal par fonction : sur le réseau mobile, un appel à Google peut rester sans réponse. */
-const DELAIS={apiEtat:15000,apiConnexion:15000,apiChangerCode:20000,apiCodeOublie:30000,apiDefiFaceID:12000,apiConnexionFaceID:20000,apiEnregistrerFaceID:30000,apiRetirerFaceID:30000,apiImporterDrive:240000,apiComptes:20000,apiCompte:30000,apiJournal:20000,apiDeconnexion:10000,apiPlateforme:30000,apiDocEnvoyer:180000,apiDocOuvrir:120000,apiTrace:20000,apiStats:40000,apiCourante:30000,apiCouranteEcrire:40000,apiCourantePhoto:180000,apiCouranteVoirPhoto:120000,apiCouranteVoirAudio:120000,apiAnnuaire:30000,apiAnnuaireEcrire:40000,apiAnnuaireImporter:180000,apiAgenda:30000,apiAgendaEcrire:40000,apiService:40000,apiComptesEquipe:120000,apiComptesNouveauxCodes:120000,apiModules:30000,apiModulesEcrire:180000,apiVieVoirPhoto:120000,apiNotifCle:30000,apiNotifAbonner:30000,apiNotifDesabonner:30000,apiNotifEssai:60000};
+const DELAIS={apiEtat:15000,apiConnexion:15000,apiChangerCode:20000,apiCodeOublie:30000,apiDefiFaceID:12000,apiConnexionFaceID:20000,apiEnregistrerFaceID:30000,apiRetirerFaceID:30000,apiImporterDrive:240000,apiComptes:20000,apiCompte:30000,apiJournal:20000,apiDeconnexion:10000,apiPlateforme:30000,apiDocEnvoyer:180000,apiDocOuvrir:120000,apiTrace:20000,apiStats:40000,apiCourante:30000,apiCouranteEcrire:40000,apiCourantePhoto:180000,apiCouranteVoirPhoto:120000,apiCouranteVoirAudio:120000,apiAnnuaire:30000,apiAnnuaireEcrire:40000,apiAnnuaireImporter:180000,apiAgenda:30000,apiAgendaEcrire:40000,apiService:40000,apiComptesEquipe:120000,apiComptesNouveauxCodes:120000,apiModules:30000,apiModulesEcrire:180000,apiTablettesEcrire:180000,apiTablettes:30000,apiVieVoirPhoto:120000,apiNotifCle:30000,apiNotifAbonner:30000,apiNotifDesabonner:30000,apiNotifEssai:60000};
 /** Page d'accueil (DX.api) : appel direct du service de données par fetch, une seule connexion Google.
  *  Corps en text/plain : pas de requête préalable (CORS). Les refus gardent la forme « REFUS: … » de google.script.run. */
 function appelDirect(fn,args){
@@ -1259,7 +1262,9 @@ function appliquerEtat(e,deCache){
 const TABLEAU_VIERGE=$('dx-tableau').innerHTML;
 /** Services du Centre (02/11/2026) : DEXA (état général), DEXI et SDMR (chargés à la demande, gardés sur le téléphone). */
 /** Numéro affiché dans le menu : il permet de vérifier que le téléphone a bien pris la dernière version. */
-const VERSION_APP='31';
+const VERSION_APP='32';
+// Nom affiché : « V3.2 » pour la 32e version (05/11/2026, à sa demande)
+const VERSION_LIB='V'+VERSION_APP.slice(0,-1)+'.'+VERSION_APP.slice(-1);
 const SERVICES_D=['DEXA','DEXI','SDMR'];
 ui.svc=lsGet('svc','DEXA');
 const SVCD={};
@@ -1432,7 +1437,7 @@ function renderMenu(){
     h+=`<section class="dx-carte"><h3>Comptes</h3>${zoneComptes()}</section>`;
     h+=`<section class="dx-carte"><h3>Journal</h3>${ui.journal?ui.journal.length?'<ul class="dx-liste">'+ui.journal.map(j=>`<li><span class="dx-gris">${esc(new Date(j.le).toLocaleString('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}</span> · ${esc(j.action)} — ${esc(j.detail)}</li>`).join('')+'</ul>':'<p class="dx-gris">Rien pour l\'instant.</p>':'<button class="dx-btn" type="button" data-a="journal">Voir les imports et les comptes récents</button>'}</section>`;
   }
-  h+='<p class="dx-gris dx-pied">Les données restent dans le compte Google de l\'application. Chaque compte ne reçoit que les chiffres de son périmètre.<br>UNIVERS C.O · version '+VERSION_APP+'</p>';
+  h+='<p class="dx-gris dx-pied">Les données restent dans le compte Google de l\'application. Chaque compte ne reçoit que les chiffres de son périmètre.<br>UNIVERS C.O · version '+VERSION_LIB+'</p>';
   $('dxMenuCorps').innerHTML=h;
   if(m.role==='admin'&&ui.comptes)majPerimetre();
 }
@@ -3313,7 +3318,7 @@ function sectionsRapport(mois){
   if(tabA()&&tabPeut()){const L=tablettesA().filter(actifTab),Ev=[];L.forEach(x=>(x.hist||[]).forEach(e=>{if(moisDe(String(e.le).slice(0,10))===mois&&e.par!=='Reprise')Ev.push(e.quoi);}));
     const c=f=>Ev.filter(f).length,E=['service','stock','configuration','maintenance','panne','perdue','verifier'].filter(e=>L.some(x=>x.etat===e));
     S.push({k:'tab',t:'Tablettes',h:`<table class="dx-rap-t"><tr>${E.map(e=>`<th>${esc(libEtatTab(e))}</th>`).join('')}<th>Total</th></tr><tr>${E.map(e=>`<td>${L.filter(x=>x.etat===e).length}</td>`).join('')}<td><b>${L.length}</b></td></tr></table>
-      <p>Ce mois-ci : ${c(q=>q.startsWith('Remise'))} remise${c(q=>q.startsWith('Remise'))>1?'s':''}, ${c(q=>q.startsWith('Restituée'))} retour${c(q=>q.startsWith('Restituée'))>1?'s':''} au magasin, ${c(q=>q.startsWith('Maintenance faite'))} maintenance${c(q=>q.startsWith('Maintenance faite'))>1?'s':''}, ${c(q=>/→ En panne/.test(q))} panne${c(q=>/→ En panne/.test(q))>1?'s':''}, ${c(q=>/→ Perdue/.test(q))} perte${c(q=>/→ Perdue/.test(q))>1?'s':''}. ${L.filter(aRemplacerTab).length} tablettes ont dépassé l’âge de renouvellement.</p><p class="dx-gris">L’état du parc est celui du jour, pas celui de la fin du mois.</p>`});}
+      <p>Ce mois-ci : ${c(q=>/^(Remise|Attribuée)/.test(q))} attribution${c(q=>/^(Remise|Attribuée)/.test(q))>1?'s':''}, ${c(q=>q.startsWith('Restituée'))} retour${c(q=>q.startsWith('Restituée'))>1?'s':''} au magasin, ${c(q=>q.startsWith('Maintenance faite'))} maintenance${c(q=>q.startsWith('Maintenance faite'))>1?'s':''}, ${c(q=>/→ En panne/.test(q))} panne${c(q=>/→ En panne/.test(q))>1?'s':''}, ${c(q=>/→ Perdue/.test(q))} perte${c(q=>/→ Perdue/.test(q))>1?'s':''}. ${L.filter(aRemplacerTab).length} tablettes ont dépassé l’âge de renouvellement.</p><p class="dx-gris">L’état du parc est celui du jour, pas celui de la fin du mois.</p>`});}
   // 7. Vie du service
   const V=vieA().filter(x=>moisDe(String(x.le).slice(0,10))===mois);
   S.push({k:'vie',t:'Vie du service',h:V.length?`<ul>${V.slice(0,10).map(x=>`<li>${EMOJI_VIE[x.type]||''} ${esc(x.type)}${x.titre?' : '+esc(x.titre):''}</li>`).join('')}</ul>`:'<p class="dx-gris">Rien de publié ce mois-ci.</p>'});
@@ -3664,7 +3669,7 @@ async function ecrireTab(op,d,f,attente){
   const btn=f&&f.querySelector('[type=submit]');if(btn){btn.disabled=true;btn.dataset.lib=btn.textContent;btn.textContent='Enregistrement…';}
   toast(attente||'Enregistrement…');
   try{const r=await appel('apiTablettesEcrire',SESSION.jeton,(f&&(f.dataset.op||(f.dataset.op=newId())))||newId(),op,d);
-    ui.tabForm=null;appliquerTab(r);rendreTablettes();toast(r.message||'Enregistré.');return true;}
+    ui.tabForm=null;appliquerTab(r);rendreTablettes();toast(r.message||'Enregistré.');return r;}
   catch(err){if(estSession(err))finSession();toast(messageErreur(err));if(btn){btn.disabled=false;btn.textContent=btn.dataset.lib;}return false;}
 }
 const attenteTab=()=>{if(tabA())return '';if(!ui.tabCharge&&!ui.tabDemande){ui.tabDemande=true;setTimeout(chargerTab,0);}
@@ -3694,7 +3699,7 @@ function rendreTablettes(){
   const z=$('v-tablette');if(!z)return;
   let h=`<div class="dx-titre-vue">${tuileIc('tablette','p')}<div><h2>Tablettes</h2><p>${tabA()&&!tabPeut()?'Les tablettes de votre périmètre':'Parc, remises, maintenance et localisation'}</p></div></div>`;
   if(!tabA()){z.innerHTML=h+attenteTab();return;}
-  if(ui.tabForm){z.innerHTML=h+formTab();return;}
+  if(ui.tabForm){z.innerHTML=h+formTab();if(ui.tabForm.type==='bon')preparerSignatures();return;}
   if(ui.tabVoir&&tablette(ui.tabVoir)){z.innerHTML=h+ficheTab(tablette(ui.tabVoir));return;}
   const L=tablettesA().filter(actifTab),n=f=>L.filter(f).length;
   if(!tablettesA().length){z.innerHTML=h+`<div class="dx-carte"><p class="dx-gris">Aucune tablette enregistrée pour l’instant.</p>${tabPeut()?'<button class="dx-btn plein" type="button" data-a="tab-nouveau">+ Ajouter une tablette</button>':''}</div>`;return;}
@@ -3812,18 +3817,20 @@ function ficheTab(x){
   <div class="dx-carte"><div class="dx-tab-tete"><h3>${esc(x.id)}</h3>${pastilleTab(x.etat)}</div><p class="dx-gris">${esc(x.modele||'')}${x.etatDepuis?' · '+esc(libEtatTab(x.etat).toLowerCase())+' depuis le '+esc(jourCourt(String(x.etatDepuis).slice(0,10))):''}</p>
   <a class="dx-btn plein dx-large dx-tab-loc" href="${lienLocalisation()}" target="_blank" rel="noopener">📍 Localiser la tablette (SmartThings)</a>
   ${x.imei?`<p class="dx-gris dx-tab-imei">IMEI <b>${esc(x.imei)}</b> <button type="button" class="dx-lien" data-a="tab-copier" data-t="${esc(x.imei)}">copier</button> · à retrouver dans SmartThings, compte Samsung de la flotte.</p>`:''}`;
+  if(ui.tabBonPret&&ui.tabBonPret.id===x.id)h+=`<div class="dx-tab-bonpret"><b>✅ ${esc(ui.tabBonPret.titre)}</b><p class="dx-gris">${esc(ui.tabBonPret.nom)}</p><div class="dx-ligne"><button class="dx-btn plein" type="button" data-a="tab-bon-envoyer">📤 Envoyer (WhatsApp, e-mail…)</button><a class="dx-btn" href="${ui.tabBonPret.url}" target="_blank" rel="noopener" download="${esc(ui.tabBonPret.nom)}">Ouvrir</a></div></div>`;
   if((x.alertes||[]).length)h+=`<div class="dx-tab-alerte"><b>⚠️ À vérifier</b><p>${x.alertes.map(esc).join('<br>')}</p>${peut?`<button class="dx-btn petit" type="button" data-a="tab-f" data-f="verifie" data-id="${esc(x.id)}">C’est vérifié</button>`:''}</div>`;
   const ch=[['Service',x.service],['Direction',x.direction],['Agence',x.agence],['Détenteur',x.detenteur],['Puce',x.puce?`<a href="tel:${esc(chiffresTab(x.puce))}">${esc(x.puce)}</a>`:'',1],['N° de série',x.serie],
     ['Mise en service',x.miseEnService?jourLong(x.miseEnService)+(age?' ('+age+')':''):''],['Renouvellement',aRemplacerTab(x)?'À remplacer (plus de '+((tabA().renouvellement)||2)+' ans)':''],
     ['Localisation',(tabA().loc||{})[x.loc]||''],['Maintenance prévue',x.moisMaint?MOIS_TAB[x.moisMaint]:'']];
   h+=`<dl class="dx-tab-dl">${ch.filter(c=>c[1]).map(c=>`<dt>${c[0]}</dt><dd>${c[2]?c[1]:esc(c[1])}</dd>`).join('')}</dl>`;
   if(x.notes)h+=`<p class="dx-tab-notes">📝 ${esc(x.notes).replace(/\n/g,'<br>')}</p>`;
-  if(peut){h+=`<div class="dx-tab-act">${[['etat','Changer l’état'],['affecter','Remettre à…'],['restituer','Restituer au magasin'],['echanger','Remplacer par une autre'],['maint','Maintenance faite'],['modifier','Modifier la fiche']]
+  if(peut){h+=`<div class="dx-tab-act">${[['etat','Changer l’état'],['affecter','Attribuer à un agent'],['restituer','Restituer au magasin'],['echanger','Remplacer par une autre'],['maint','Maintenance faite'],['modifier','Modifier la fiche']]
     .filter(([k])=>!(k==='restituer'&&['stock','perdue'].includes(x.etat))&&!(k==='echanger'&&!['service','panne','maintenance','perdue'].includes(x.etat)))
     .map(([k,l])=>`<button class="dx-btn" type="button" data-a="tab-f" data-f="${k}" data-id="${esc(x.id)}">${l}</button>`).join('')}</div>`;
-    if(x.detenteur||x.agence)h+=`<button class="dx-btn dx-large" type="button" data-a="tab-bon" data-id="${esc(x.id)}">🖨️ Bon de remise à faire signer</button>`;}
+    if(x.etat==='service')h+=`<button class="dx-btn dx-large" type="button" data-a="tab-f" data-f="bon" data-id="${esc(x.id)}">✍️ Bon de remise à signer sur le téléphone</button>`;}
   h+='</div>';
   if(notesJ.length)h+=`<div class="dx-carte"><h3>Dans le Journal d’activité</h3>${notesJ.slice(0,10).map(n=>`<div class="dx-li cliquable" data-a="vue" data-v="journal"><span class="dx-emoji">📒</span><span>N° ${n.num} · ${esc(n.tablette.etat)}<br><small class="dx-gris">${esc(quandMC(n.le))} · ${esc(n.nom)} · ${esc(String(n.texte||'').slice(0,90))}</small></span></div>`).join('')}</div>`;
+  if((x.bons||[]).length)h+=`<div class="dx-carte"><h3>Bons de remise signés</h3>${x.bons.map(b=>`<div class="dx-li"><span class="dx-emoji">✍️</span><span>${esc(jourCourt(b.le))} ${esc(String(b.le).slice(0,4))} · ${esc(b.beneficiaire)}<br><small class="dx-gris">Remis par ${esc(b.remisPar)}${(b.accessoires||[]).length?' · '+esc(b.accessoires.join(', ')):''}</small></span>${b.doc?`<button class="dx-btn petit d" type="button" data-a="tab-bon-ouvrir" data-doc="${esc(b.doc)}" data-id="${esc(x.id)}" data-t="${esc('Bon de remise du '+jourCourt(b.le)+' · '+b.beneficiaire)}">Envoyer</button>`:''}</div>`).join('')}</div>`;
   if((x.maint||[]).length)h+=`<div class="dx-carte"><h3>Maintenances</h3>${x.maint.map(m=>`<div class="dx-li"><span class="dx-emoji">🧰</span><span>${esc(jourCourt(m.le))} ${esc(String(m.le).slice(0,4))} · ${m.taches.length} tâche${m.taches.length>1?'s':''}<br><small class="dx-gris">${esc(m.par)}${m.note?' · '+esc(m.note):''}</small></span></div>`).join('')}</div>`;
   h+=`<div class="dx-carte"><h3>Historique</h3>${(x.hist||[]).map(e=>`<div class="dx-li"><span><small class="dx-gris">${esc(new Date(e.le).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}))} · ${esc(e.par)}</small><br>${esc(e.quoi)}</span></div>`).join('')||'<p class="dx-gris">Aucun événement.</p>'}</div>`;
   return h;
@@ -3859,7 +3866,7 @@ function formTab(){
   }
   if(f.type==='etat')return tete('Changer l’état')+`<label>Nouvel état</label><div class="dx-puces dx-mc-types">${['service','stock','configuration','maintenance','panne','perdue','reformee'].filter(e=>e!==x.etat).map(e=>`<button type="button" data-a="tab-etat-choix" data-e="${e}">${esc(libEtatTab(e))}</button>`).join('')}</div>
     <input type="hidden" id="tfEtat" value=""><p class="dx-gris" id="tfPerdue" hidden>Une note Majeure sera ouverte dans le Journal d’activité et les téléphones abonnés recevront une notification.</p>`+note('Motif ou commentaire')+pied();
-  if(f.type==='affecter')return tete('Remettre la tablette')+champsAffect(x)+`<label for="tfLe">Date de remise</label><input id="tfLe" type="date" value="${an}">`+note()+pied('Enregistrer la remise');
+  if(f.type==='affecter')return tete('Attribuer la tablette')+`<p class="dx-gris">À qui la tablette est confiée : son agence et l’agent ou l’équipe qui l’utilise.</p>`+champsAffect(x)+`<label for="tfLe">Date d’attribution</label><input id="tfLe" type="date" value="${an}">`+note()+pied('Enregistrer l’attribution');
   if(f.type==='restituer')return tete('Restituer au magasin')+`<p class="dx-gris">${esc([x.detenteur,x.agence].filter(Boolean).join(', ')||'Sans détenteur')}</p><label for="tfEtat">État au retour</label><select id="tfEtat">${optionsTab([['stock','En stock (bon état)'],['panne','En panne'],['maintenance','En maintenance'],['configuration','Configuration pour mise en service'],['reformee','Réformée']],'stock')}</select>`+note('Constat au retour (facultatif)')+pied('Enregistrer le retour');
   if(f.type==='echanger'){const S=tablettesA().filter(o=>['stock','configuration'].includes(o.etat));
     if(!S.length)return tete('Remplacer par une autre')+`<p>Aucune tablette en stock pour la remplacer.</p><div class="dx-ligne"><button class="dx-btn" type="button" data-a="tab-annuler">Retour</button></div></form></div>`;
@@ -3869,22 +3876,101 @@ function formTab(){
   if(f.type==='maint'){const T=tabA().taches||[];
     return tete('Maintenance faite')+`<label for="tfLe">Date</label><input id="tfLe" type="date" value="${an}"><label>Tâches faites</label>${T.map((t,i)=>`<label class="dx-coche"><input type="checkbox" class="tfT" value="${i}" checked> ${esc(t)}</label>`).join('')}
     ${x.etat==='maintenance'?'<label class="dx-coche"><input type="checkbox" id="tfRemettre" checked> Remettre la tablette en service</label>':''}`+note('Observations (facultatif)')+pied();}
+  if(f.type==='bon')return tete('Bon de remise')+`<p class="dx-gris">${esc([x.agence,x.detenteur].filter(Boolean).join(' · '))}. Tout se remplit et se signe sur ce téléphone ; le bon signé est rangé dans Documents.</p>
+    <label for="tfLe">Date de remise</label><input id="tfLe" type="date" value="${an}">
+    <label for="tfBen">Bénéficiaire (nom et prénom)</label><input id="tfBen" maxlength="80" autocomplete="off" placeholder="L’agent qui reçoit la tablette">
+    <label for="tfPar">Remis par</label><input id="tfPar" maxlength="80" value="${esc((ETAT&&ETAT.moi&&ETAT.moi.nom)||'')}" autocomplete="off">
+    <label>Accessoires remis</label>${ACC_BON.map((a,i)=>`<label class="dx-coche"><input type="checkbox" class="tfAcc" value="${esc(a)}"${i===0?' checked':''}> ${esc(a)}</label>`).join('')}
+    <label for="tfAutre">Autre accessoire (facultatif)</label><input id="tfAutre" maxlength="60" autocomplete="off">
+    <label for="tfEtatC">État constaté à la remise</label><input id="tfEtatC" maxlength="200" value="Bon état" autocomplete="off">
+    <div class="dx-lab"><label>Signature de la personne qui remet</label><button type="button" class="dx-lien" data-a="tab-sig-effacer" data-c="sigPar">Effacer</button></div><canvas class="dx-sig" id="sigPar" aria-label="Zone de signature de la personne qui remet"></canvas>
+    <div class="dx-lab"><label>Signature du bénéficiaire</label><button type="button" class="dx-lien" data-a="tab-sig-effacer" data-c="sigBen">Effacer</button></div><canvas class="dx-sig" id="sigBen" aria-label="Zone de signature du bénéficiaire"></canvas>
+    <p class="dx-gris">Signez avec le doigt dans chaque cadre.</p>`+pied('Signer et enregistrer le bon');
   if(f.type==='verifie')return tete('Vérification faite')+`<p>${(x.alertes||[]).map(esc).join('<br>')}</p>${x.etat==='verifier'?`<label for="tfEtat">État constaté</label><select id="tfEtat">${optionsTab([['service','En service'],['stock','En stock'],['panne','En panne'],['maintenance','En maintenance'],['perdue','Perdue'],['reformee','Réformée']],'service')}</select>`:''}
     <p class="dx-gris">Corrigez d’abord la fiche si besoin (Modifier la fiche).</p>`+note('Ce qui a été vérifié')+pied('Confirmer');
   if(f.type==='chargeur')return tete(f.sens==='entree'?'Entrée de chargeurs':'Sortie de chargeurs')+`<label for="tfNb">Nombre</label><input id="tfNb" type="number" inputmode="numeric" min="1" max="1000" value="1">
     ${f.sens==='entree'?'':'<label for="tfDest">Destination</label><input id="tfDest" list="tlAg" maxlength="80" placeholder="Agence, agent, mission…" autocomplete="off">'+datalistTab('tlAg','agence')}<label for="tfLe">Date</label><input id="tfLe" type="date" value="${an}">`+pied();
   return '';
 }
-/** Bon de remise imprimable (deux signatures), sans rien envoyer. */
-function bonRemise(x){
-  const z=$('tabBon')||document.body.appendChild(Object.assign(document.createElement('div'),{id:'tabBon'}));
-  const r=(x.remises||[])[0];
-  z.innerHTML=`<h1>Bon de remise de tablette</h1><p>Centre d’ordonnancement · SODECI</p><table>${[['N° interne',x.id],['Modèle',x.modele],['IMEI',x.imei],['N° de série',x.serie],['N° de puce',x.puce],['Service',x.service],['Direction',x.direction],['Agence',x.agence],['Remise à',x.detenteur],['Date de remise',r?jourLong(r.le):jourLong(isoJ(new Date()))]]
-    .map(([k,v])=>`<tr><th>${k}</th><td>${esc(v||'')}</td></tr>`).join('')}</table>
-    <p>Accessoires remis : ☐ chargeur ☐ câble ☐ sacoche ☐ autre : ……………</p><p>État constaté à la remise : ……………………………………………</p>
-    <div class="sig"><div>Pour le Centre d’ordonnancement<br>Nom et signature</div><div>Le bénéficiaire<br>Nom et signature</div></div>`;
-  document.body.classList.add('dx-imprime-bon');setTimeout(()=>{try{window.print();}finally{setTimeout(()=>document.body.classList.remove('dx-imprime-bon'),500);}},50);
+// ================= bon de remise signé sur le téléphone =================
+const ACC_BON=['Chargeur','Câble USB','Sacoche','Puce (carte SIM)','Coque de protection'];
+/** Zones de signature : tracé au doigt (ou à la souris), sans faire défiler la page. */
+function preparerSignatures(){
+  document.querySelectorAll('canvas.dx-sig').forEach(c=>{
+    if(c.dataset.pret)return;c.dataset.pret='1';
+    const dpr=window.devicePixelRatio||1,w=c.clientWidth||300,h=c.clientHeight||160;c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);
+    const g=c.getContext('2d');g.scale(dpr,dpr);g.lineWidth=2.4;g.lineCap='round';g.lineJoin='round';g.strokeStyle='#0b1d30';
+    let p=null;const pos=e=>{const r=c.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];};
+    c.addEventListener('pointerdown',e=>{e.preventDefault();c.setPointerCapture(e.pointerId);p=pos(e);g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(p[0]+.1,p[1]+.1);g.stroke();c.dataset.signe='1';});
+    c.addEventListener('pointermove',e=>{if(!p)return;e.preventDefault();const q=pos(e);g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(q[0],q[1]);g.stroke();p=q;});
+    ['pointerup','pointercancel','pointerleave'].forEach(k=>c.addEventListener(k,()=>{p=null;}));
+  });
 }
+function effacerSignature(id){const c=$(id);if(!c)return;c.getContext('2d').save();c.getContext('2d').setTransform(1,0,0,1,0,0);c.getContext('2d').clearRect(0,0,c.width,c.height);c.getContext('2d').restore();delete c.dataset.signe;}
+/** Page A4 du bon (image), puis PDF d'une page autour de cette image. */
+function dessinerBon(x,d){
+  const W=1240,H=1754,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  g.fillStyle='#fff';g.fillRect(0,0,W,H);g.fillStyle='#111';g.textBaseline='alphabetic';
+  const F=(t,s,b)=>{g.font=(b?'700 ':'400 ')+s+'px -apple-system,"Segoe UI",Roboto,Arial,sans-serif';};
+  const lignes=(t,max)=>{const L=[];String(t||'').split('\n').forEach(par=>{let l='';par.split(' ').forEach(m=>{const e=l?l+' '+m:m;if(g.measureText(e).width>max&&l){L.push(l);l=m;}else l=e;});L.push(l);});return L;};
+  F(0,46,1);g.fillText('Bon de remise de tablette',90,140);F(0,26);g.fillStyle='#444';g.fillText('Centre d’ordonnancement · SODECI',90,184);
+  g.textAlign='right';g.fillText('Réf. '+d.ref,W-90,140);g.fillText(jourLong(d.le),W-90,184);g.textAlign='left';
+  g.fillStyle='#0f2b46';g.fillRect(90,210,W-180,4);
+  const R=[['N° interne',x.id],['Modèle',x.modele],['IMEI',x.imei],['N° de série',x.serie],['N° de puce',x.puce],['Service',x.service],['Direction',x.direction],['Agence',x.agence],['Équipe / détenteur',x.detenteur],['Bénéficiaire',d.beneficiaire],['Remis par',d.remisPar]];
+  let y=250;const col=400;
+  R.forEach(([k,v],i)=>{if(i%2===0){g.fillStyle='#f3f5f8';g.fillRect(90,y,W-180,62);}g.fillStyle='#555';F(0,26,1);g.fillText(k,110,y+41);g.fillStyle='#111';F(0,28);g.fillText(String(v||'—'),90+col,y+41);y+=62;});
+  g.strokeStyle='#c8ced8';g.lineWidth=2;g.strokeRect(90,250,W-180,y-250);
+  y+=60;F(0,30,1);g.fillStyle='#0f2b46';g.fillText('Accessoires remis',90,y);y+=46;F(0,28);g.fillStyle='#111';
+  let xx=90;ACC_BON.concat(d.autre?[d.autre]:[]).forEach(a=>{const ok=d.accessoires.includes(a)||a===d.autre,w=g.measureText(a).width+80;if(xx+w>W-90){xx=90;y+=50;}
+    g.strokeStyle='#111';g.lineWidth=3;g.strokeRect(xx,y-26,30,30);if(ok){g.beginPath();g.moveTo(xx+6,y-11);g.lineTo(xx+13,y-2);g.lineTo(xx+26,y-22);g.stroke();}g.fillText(a,xx+42,y);xx+=w;});
+  y+=70;F(0,30,1);g.fillStyle='#0f2b46';g.fillText('État constaté à la remise',90,y);y+=44;F(0,28);g.fillStyle='#111';lignes(d.etatConstate||'—',W-180).slice(0,4).forEach(l=>{g.fillText(l,90,y);y+=38;});
+  y+=50;const bw=(W-180-40)/2,bh=300;
+  [[d.sigPar,'Remis par : '+d.remisPar],[d.sigBen,'Le bénéficiaire : '+d.beneficiaire]].forEach(([s,lib],i)=>{const bx=90+i*(bw+40);
+    g.strokeStyle='#999';g.lineWidth=2;g.strokeRect(bx,y,bw,bh);F(0,24,1);g.fillStyle='#333';g.fillText(lib.length>38?lib.slice(0,37)+'…':lib,bx+16,y+36);
+    const r=Math.min((bw-32)/s.width,(bh-70)/s.height);g.drawImage(s,bx+16+((bw-32)-s.width*r)/2,y+50+((bh-70)-s.height*r)/2,s.width*r,s.height*r);});
+  y+=bh+44;F(0,22);g.fillStyle='#555';g.fillText('Signé le '+new Date().toLocaleDateString('fr-FR')+' à '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+', sur téléphone, dans UNIVERS C.O.',90,y);
+  F(0,20);g.fillStyle='#888';g.fillText('Document numérique : à conserver dans Documents › Bons de remise des tablettes. Réf. '+d.ref,90,H-70);
+  return c;
+}
+function pdfDepuisJpeg(jpg,w,h){
+  const enc=s=>new TextEncoder().encode(s),P=[],off=[];let n=0;const pousser=b=>{P.push(b);n+=b.length;};
+  pousser(enc('%PDF-1.4\n'));pousser(new Uint8Array([37,226,227,207,211,10]));
+  const obj=(i,s)=>{off[i]=n;pousser(enc(i+' 0 obj\n'+s+'\nendobj\n'));};
+  obj(1,'<</Type/Catalog/Pages 2 0 R>>');obj(2,'<</Type/Pages/Kids[3 0 R]/Count 1>>');
+  obj(3,'<</Type/Page/Parent 2 0 R/MediaBox[0 0 595.28 841.89]/Resources<</XObject<</Im0 4 0 R>>>>/Contents 5 0 R>>');
+  off[4]=n;pousser(enc('4 0 obj\n<</Type/XObject/Subtype/Image/Width '+w+'/Height '+h+'/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length '+jpg.length+'>>\nstream\n'));pousser(jpg);pousser(enc('\nendstream\nendobj\n'));
+  const cont='q 595.28 0 0 841.89 0 0 cm /Im0 Do Q';obj(5,'<</Length '+cont.length+'>>\nstream\n'+cont+'\nendstream');
+  const xr=n;let s='xref\n0 6\n0000000000 65535 f \n';for(let i=1;i<=5;i++)s+=String(off[i]).padStart(10,'0')+' 00000 n \n';
+  pousser(enc(s+'trailer\n<</Size 6/Root 1 0 R>>\nstartxref\n'+xr+'\n%%EOF\n'));
+  return new Blob(P,{type:'application/pdf'});
+}
+const b64Octets=u=>{let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s);};
+async function signerBon(f,id){
+  const x=tablette(id);if(!x)return;
+  const v=k=>{const e=$(k);return e?e.value.trim():'';},d={le:v('tfLe')||isoJ(new Date()),beneficiaire:v('tfBen'),remisPar:v('tfPar'),autre:v('tfAutre'),etatConstate:v('tfEtatC'),
+    accessoires:[...f.querySelectorAll('.tfAcc:checked')].map(c=>c.value)};
+  if(!d.beneficiaire){toast('Indiquez le nom du bénéficiaire.');return;}
+  if(!d.remisPar){toast('Indiquez qui remet la tablette.');return;}
+  if(!($('sigPar').dataset.signe&&$('sigBen').dataset.signe)){toast('Les deux signatures sont nécessaires.');return;}
+  if(d.autre)d.accessoires.push(d.autre);
+  const mt=new Date();d.ref='BR-'+x.id+'-'+d.le.replace(/-/g,'')+'-'+String(mt.getHours()).padStart(2,'0')+String(mt.getMinutes()).padStart(2,'0');
+  d.sigPar=$('sigPar');d.sigBen=$('sigBen');
+  const page=dessinerBon(x,d),url=page.toDataURL('image/jpeg',.82),bin=atob(url.split(',')[1]),jpg=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)jpg[i]=bin.charCodeAt(i);
+  const pdf=pdfDepuisJpeg(jpg,page.width,page.height),oct=new Uint8Array(await pdf.arrayBuffer());
+  const r=await ecrireTab('tab-bon',{id,ref:d.ref,le:d.le,beneficiaire:d.beneficiaire,remisPar:d.remisPar,accessoires:d.accessoires,etatConstate:d.etatConstate,b64:b64Octets(oct)},f,'Envoi du bon signé…');
+  if(r){if(ui.tabBonPret)try{URL.revokeObjectURL(ui.tabBonPret.url);}catch(e){}
+    ui.tabBonPret={id,titre:'Bon de remise signé',nom:(r.bon&&r.bon.nom)||('Bon de remise '+x.id+'.pdf'),blob:pdf,url:URL.createObjectURL(pdf)};ui.tabVoir=id;rendreTablettes();window.scrollTo(0,0);
+    if(typeof actualiser==='function')actualiser();}
+}
+/** Bon déjà signé : on le recharge depuis Documents, puis un second toucher l'envoie (exigence du partage sur téléphone). */
+async function preparerBon(doc,id,titre){
+  toast('Préparation du bon…');
+  try{const r=await appelFiable('apiDocOuvrir',SESSION.jeton,doc);const bin=atob(r.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+    const blob=new Blob([u],{type:r.type||'application/pdf'});if(ui.tabBonPret)try{URL.revokeObjectURL(ui.tabBonPret.url);}catch(e){}
+    ui.tabBonPret={id,titre,nom:r.nom,blob,url:URL.createObjectURL(blob)};rendreTablettes();window.scrollTo(0,0);toast('Bon prêt : touchez « Envoyer ».');}
+  catch(err){if(estSession(err))finSession();toast(messageErreur(err));}
+}
+function envoyerBon(){const b=ui.tabBonPret;if(!b)return;remettreFichier(b.blob,b.nom);}
 
 // ================= événements =================
 document.addEventListener('click',ev=>{
@@ -3902,7 +3988,9 @@ document.addEventListener('click',ev=>{
   else if(a==='tab-annuler'){ui.tabForm=null;rendreTablettes();}
   else if(a==='tab-etat-choix'){$('tfEtat').value=b.dataset.e;b.parentNode.querySelectorAll('button').forEach(o=>o.classList.toggle('on',o===b));$('tfPerdue').hidden=b.dataset.e!=='perdue';}
   else if(a==='tab-copier'){(navigator.clipboard?navigator.clipboard.writeText(b.dataset.t):Promise.reject()).then(()=>toast('IMEI copié.'),()=>toast('Copie impossible : notez l’IMEI '+b.dataset.t+'.'));}
-  else if(a==='tab-bon'){const x=tablette(b.dataset.id);if(x)bonRemise(x);}
+  else if(a==='tab-sig-effacer')effacerSignature(b.dataset.c);
+  else if(a==='tab-bon-envoyer')envoyerBon();
+  else if(a==='tab-bon-ouvrir')preparerBon(b.dataset.doc,b.dataset.id,b.dataset.t);
 });
 document.addEventListener('input',ev=>{const e=ev.target;if(!e)return;
   if(e.id==='tabCherche'){ui.tabCherche=e.value;const z=$('tabListe');if(z)z.innerHTML=listeParc(tablettesA().filter(actifTab));}
@@ -3924,6 +4012,7 @@ document.addEventListener('submit',ev=>{
   else if(t==='maint'){const T=[...f.querySelectorAll('.tfT:checked')].map(c=>+c.value);if(!T.length){toast('Cochez au moins une tâche faite.');return;}
     ecrireTab('tab-maint',{id,le:v('tfLe'),taches:T,note,remettre:!!($('tfRemettre')&&$('tfRemettre').checked)},f);}
   else if(t==='verifie')ecrireTab('tab-verifie',{id,etat:v('tfEtat'),note},f);
+  else if(t==='bon')signerBon(f,id);
   else if(t==='chargeur'){const d={sens:ui.tabForm.sens,nombre:v('tfNb'),destination:v('tfDest'),le:v('tfLe')};if(d.sens==='sortie'&&!d.destination.trim()){toast('Indiquez la destination.');return;}ecrireTab('chargeur',d,f);}
 });
 

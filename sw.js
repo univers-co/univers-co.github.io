@@ -1,7 +1,7 @@
 /* UNIVERS C.O — cache de l'interface seulement (page, icônes). Les données ne passent jamais par ici :
    les échanges avec le service Google sont des envois (POST) vers une autre adresse, non mis en cache.
    La page s'ouvre tout de suite depuis le cache ; la version en ligne est relue en arrière-plan pour l'ouverture suivante. */
-var VERSION = 'univers-co-6a0eef182d';
+var VERSION = 'univers-co-cf4e7e8eff';
 // Session gardée par la page pour les notifications (adresse du service + jeton) : jamais effacée par une mise à jour
 var SESSION_SW = 'dx-session';
 // cache: 'reload' : la nouvelle version est relue chez GitHub, jamais reprise du cache du navigateur (10 min)
